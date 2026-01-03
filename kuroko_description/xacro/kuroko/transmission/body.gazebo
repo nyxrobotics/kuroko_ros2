@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="${XACRO_DIR}/physics/default_gazebo_params.xacro"/>
+  <xacro:macro name="body_gazebo" params="gazebo_hw_interface">
+    <xacro:default_motor_transmission joint_name="chest"
+      gazebo_hw_interface="$(arg gazebo_hw_interface)"/>
+    <xacro:default_link_collision link_name="chest_link" friction="0.1"/>
+    <xacro:default_link_collision link_name="waist_link" friction="0.1"/>
+  </xacro:macro>
+</robot>
