@@ -7,6 +7,7 @@ install(DIRECTORY
   launch
   xacro
   meshes
+  rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

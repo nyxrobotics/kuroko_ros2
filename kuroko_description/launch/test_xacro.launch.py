@@ -73,7 +73,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "rviz_config",
-                default_value=PathJoinSubstitution([pkg_share, "rviz", "urdf.rviz"]),
+                default_value=PathJoinSubstitution([pkg_share, "rviz", "test_xacro.rviz"]),
                 description="RViz2 config file",
             ),
             joint_state_publisher_gui,
