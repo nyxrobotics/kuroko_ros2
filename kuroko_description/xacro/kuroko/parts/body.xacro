@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="body_xacro" params="box_visual:=false">
     <!-- waist -->
@@ -10,6 +9,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/waist.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -35,6 +35,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/chest.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">

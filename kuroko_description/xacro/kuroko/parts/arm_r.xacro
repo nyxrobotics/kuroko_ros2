@@ -17,6 +17,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/shoulder_r_pitch.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -40,6 +41,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/shoulder_r_roll.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -63,6 +65,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/elbow_r_front.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -88,6 +91,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/elbow_r_rear.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">

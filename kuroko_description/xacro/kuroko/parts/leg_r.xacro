@@ -17,6 +17,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/hip_r_roll.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -41,6 +42,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/hip_r_pitch.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -66,6 +68,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/shin_r_active.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -91,6 +94,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_active.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -137,6 +141,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/shin_r_front_passive.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -162,6 +167,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_middle_passive.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -208,6 +214,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/shin_r_rear_passive.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -233,6 +240,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/knee_r_passive.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -284,6 +292,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_rear_passive.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -313,6 +322,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/ankle_r_pitch_passive.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -342,6 +352,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/ankle_r_roll.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
@@ -366,6 +377,7 @@
           <geometry>
             <mesh filename="${MESH_DIR}/kuroko/stl/ankle_r_yaw.stl"/>
           </geometry>
+          <material name="dark_gray"/>
         </visual>
       </xacro:unless>
       <xacro:if value="$(arg box_visual)">
