@@ -28,15 +28,7 @@
             <resolution>0.01</resolution>
           </range>
         </ray>
-        <plugin name="gazebo_ros_${name}_controller" filename="libgazebo_ros_range.so">
-          <gaussianNoise>0.005</gaussianNoise>
-          <alwaysOn>true</alwaysOn>
-          <updateRate>${update_rate}</updateRate>
-          <topicName>${ros_topic}</topicName>
-          <frameName>${name}_link</frameName>
-          <radiation>INFRARED</radiation>
-          <fov>${fov}</fov>
-        </plugin>
+        <!-- TODO:Loading Gazebo Plugin for Range Sensor -->
       </sensor>
     </gazebo>
   </xacro:macro>

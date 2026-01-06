@@ -5,33 +5,8 @@
       <material>Gazebo/Gray</material>
     </gazebo>
     <gazebo>
-      <plugin filename="libhector_gazebo_ros_imu.so" name="imu_controller">
-        <alwaysOn>true</alwaysOn>
-        <updateRate>${update_rate}</updateRate>
-        <bodyName>${name}_link</bodyName>
-        <topicName>/kuroko/sensors/imu/data</topicName>
-        <serviceName>/kuroko/sensors/imu/service</serviceName>
-        <frameId>${name}_link</frameId>
-        <gaussianNoise>0</gaussianNoise>
-        <xyzOffset>0 0 0</xyzOffset>
-        <rateOffset>0 0 0</rateOffset>
-        <rpyOffset>0 0 0</rpyOffset>
-      </plugin>
-      <plugin filename="libhector_gazebo_ros_magnetic.so" name="magnetic_controller">
-        <alwaysOn>true</alwaysOn>
-        <updateRate>${update_rate}</updateRate>
-        <bodyName>${name}_link</bodyName>
-        <topicName>/kuroko/sensors/imu/mag</topicName>
-        <frameId>${name}_link</frameId>
-        <useMagneticFieldMsgs>true</useMagneticFieldMsgs>
-        <magnitude>0.000047</magnitude>
-        <declination>-7.81</declination>
-        <inclination>49.48</inclination>
-        <offset>0 0 0</offset>
-        <drift>0 0 0</drift>
-        <driftFrequency>0 0 0</driftFrequency>
-        <gaussianNoise>0 0 0</gaussianNoise>
-      </plugin>
+      <!-- TODO:Loading Gazebo Plugin for IMU -->
+      <!-- TODO:Loading Gazebo Plugin for Magnetic Sensor -->
     </gazebo>
   </xacro:macro>
 </robot>

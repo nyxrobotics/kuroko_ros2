@@ -52,17 +52,7 @@
             <k3>0.0</k3>
           </distortion>
         </camera>
-        <plugin name="${name}_camera_plugin" filename="libgazebo_ros_camera.so">
-          <alwaysOn>true</alwaysOn>
-          <updateRate>30</updateRate>
-          <cameraName>camera</cameraName>
-          <imageTopicName>resized/image</imageTopicName>
-          <cameraInfoTopicName>resized/camera_info</cameraInfoTopicName>
-          <frameName>${name}_optical_link</frameName>
-          <hackBaseline>0</hackBaseline>
-          <autoDistortion>true</autoDistortion>
-          <borderCrop>true</borderCrop>
-        </plugin>
+        <!-- TODO:Loading Gazebo Plugin for RGB Camera -->
       </sensor>
     </gazebo>
   </xacro:macro>

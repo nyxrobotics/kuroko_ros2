@@ -26,10 +26,7 @@
             <stddev>0.01</stddev>
           </noise>
         </ray>
-        <plugin name="${sensor_name}_gazebo_plugin" filename="libgazebo_ros_gpu_laser.so">
-          <frameName>${firame_id}</frameName>
-          <topicName>${topic_name}</topicName>
-        </plugin>
+        <!-- TODO:Loading Gazebo Plugin for 2D LiDAR -->
       </sensor>
     </gazebo>
   </xacro:macro>
