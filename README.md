@@ -1,24 +1,22 @@
 # kuroko_ros2
 
-ROS 2 Humble mono-repo for the Kuroko humanoid: Gazebo (gz-sim) simulation and real-robot bringup, with cmd_vel teleop and learned locomotion policies.
+ROS 2 (Humble) packages for the Kuroko robot.
 
-## Repository structure
+## Packages
 
-Packages are placed directly under the repository root (no extra `src/` directory).
+- **Simulation**
+  - `kuroko_sim_gz`: gz-sim (Gazebo) launch and spawn
+  - `kuroko_sim_bringup`: simulation bringup (stub)
 
-### Common packages
-- `kuroko_description`
-- `kuroko_control`
-- `kuroko_policy`
+- **Common / Description**
+  - `kuroko_description`: URDF/Xacro + RViz test launch
 
-### Simulation-only packages
-- `kuroko_sim_gz`
-- `kuroko_sim_bringup`
+- **Hardware**
+  - `kuroko_hw_interface`: hardware interface (stub)
+  - `kuroko_hw_bringup`: hardware bringup (stub)
 
-### Hardware-only packages
-- `kuroko_hw_interface`
-- `kuroko_hw_bringup`
+- **Control**
+  - `kuroko_control`: controllers (stub)
 
-## License
-
-Apache-2.0 (see `LICENSE`).
+- **Policy / RL**
+  - `kuroko_policy`: policy integration (stub)
