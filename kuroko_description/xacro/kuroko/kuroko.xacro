@@ -10,8 +10,10 @@
   <xacro:include filename="${XACRO_DIR}/physics/materials.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/box_physics.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/gazebo_passive_joint.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/physics/gz_sim_servo.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/body.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/transmission/body.gazebo"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/body_gz_sim.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_r.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/transmission/arm_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_l.xacro"/>
@@ -37,6 +39,7 @@
     </joint>
     <xacro:body_xacro box_visual="$(arg box_visual)"/>
     <xacro:body_gazebo gazebo_hw_interface="${gazebo_hw_interface}"/>
+    <xacro:body_gz_sim/>
     <xacro:arm_r_xacro box_visual="$(arg box_visual)"/>
     <xacro:arm_r_gazebo gazebo_hw_interface="${gazebo_hw_interface}"/>
     <xacro:arm_l_xacro box_visual="$(arg box_visual)"/>

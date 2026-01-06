@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="gazebo_poassive_joint"
+  <xacro:macro name="gazebo_passive_joint"
     params="name:='joint' parent:='parent' child:='child' xyz:='0 0 0' rpy:='0 0 0' axis:='0 1 0' lower:=-3.1416 upper:=3.1416">
     <gazebo>
       <joint name="${name}" type="revolute">
