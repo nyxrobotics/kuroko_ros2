@@ -12,16 +12,11 @@
   <xacro:include filename="${XACRO_DIR}/physics/gazebo_passive_joint.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/gz_sim_servo.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/body.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/transmission/body.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/body_gz_sim.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_r.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/transmission/arm_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_l.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/transmission/arm_l.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_r.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/transmission/leg_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_l.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/transmission/leg_l.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/sensors/range/tfluna.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/imu/imu_n100mini.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
@@ -38,16 +33,11 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
     <xacro:body_xacro box_visual="$(arg box_visual)"/>
-    <xacro:body_gazebo gazebo_hw_interface="${gazebo_hw_interface}"/>
     <xacro:body_gz_sim/>
     <xacro:arm_r_xacro box_visual="$(arg box_visual)"/>
-    <xacro:arm_r_gazebo gazebo_hw_interface="${gazebo_hw_interface}"/>
     <xacro:arm_l_xacro box_visual="$(arg box_visual)"/>
-    <xacro:arm_l_gazebo gazebo_hw_interface="${gazebo_hw_interface}"/>
     <xacro:leg_r_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
-    <xacro:leg_r_gazebo gazebo_hw_interface="${gazebo_hw_interface}"/>
     <xacro:leg_l_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
-    <xacro:leg_l_gazebo gazebo_hw_interface="${gazebo_hw_interface}"/>
     <xacro:imu_n100mini parent="waist_link" name="imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
     </xacro:imu_n100mini>
