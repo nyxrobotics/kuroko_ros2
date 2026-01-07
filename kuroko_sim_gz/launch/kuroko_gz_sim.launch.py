@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Top-level launch: Gazebo Sim world + Kuroko spawn + ros2_control controllers.
+"""Top-level launch: Gazebo Sim world + Kuroko spawn + /clock bridge + ros2_control controllers.
 
-This version avoids hard-coding the *kuroko_sim_gz* package name by resolving this package's share directory
-via __file__ and using relative paths for its own resources.
+- Avoids hard-coding the *kuroko_sim_gz* package name by resolving this package's share directory via __file__.
+- Starts Gazebo world (paused by default), spawns Kuroko, bridges /clock from Gazebo to ROS 2,
+  then spawns ros2_control controllers.
 
-The controller YAML lives in *kuroko_description*, so we still resolve that via FindPackageShare.
+Controller YAML lives in *kuroko_description*, so we resolve that via FindPackageShare.
 """
 
 from pathlib import Path
@@ -34,10 +35,10 @@ def generate_launch_description() -> LaunchDescription:
     z = LaunchConfiguration("z")
     yaw = LaunchConfiguration("yaw")
 
-    controllers_yaml = LaunchConfiguration("controllers_yaml")
     controller_manager = LaunchConfiguration("controller_manager")
     use_sim_time = LaunchConfiguration("use_sim_time")
 
+    # World (paused by default)
     spawn_world_inc = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(launch_dir / "spawn_world.launch.py")),
         launch_arguments={
@@ -46,6 +47,7 @@ def generate_launch_description() -> LaunchDescription:
         }.items(),
     )
 
+    # Robot
     spawn_kuroko_inc = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(launch_dir / "spwan_kuroko.launch.py")),
         launch_arguments={
@@ -59,6 +61,16 @@ def generate_launch_description() -> LaunchDescription:
         }.items(),
     )
 
+    # /clock bridge (Gazebo -> ROS 2)
+    clock_bridge_inc = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(str(launch_dir / "gz_clock_bridge.launch.py")),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+        }.items(),
+    )
+
+    # Controllers
+    controllers_yaml = LaunchConfiguration("controllers_yaml")
     controllers_inc = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(launch_dir / "trajectory_controller.launch.py")),
         launch_arguments={
@@ -86,7 +98,7 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("x", default_value="0.0"),
             DeclareLaunchArgument("y", default_value="0.0"),
             DeclareLaunchArgument("z", default_value="0.35"),
-            DeclareLaunchArgument("yaw", default_value="0.0", description="Yaw (rad)."),
+            DeclareLaunchArgument("yaw", default_value="3.14", description="Yaw (rad)."),
             DeclareLaunchArgument(
                 "controllers_yaml",
                 default_value=[kuroko_description_share, "/config/gz_trajectory_controller.yaml"],
@@ -100,6 +112,7 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("use_sim_time", default_value="true"),
             spawn_world_inc,
             spawn_kuroko_inc,
+            clock_bridge_inc,
             controllers_inc,
         ]
     )
