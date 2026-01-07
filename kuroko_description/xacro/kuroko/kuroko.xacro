@@ -10,13 +10,12 @@
   <xacro:include filename="${XACRO_DIR}/physics/materials.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/box_physics.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/gazebo_passive_joint.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/physics/gz_sim_servo.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/body.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/body_gz_sim.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_r.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_l.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_r.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_l.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_trajectory_control.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/range/tfluna.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/imu/imu_n100mini.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
@@ -33,7 +32,6 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
     <xacro:body_xacro box_visual="$(arg box_visual)"/>
-    <xacro:body_gz_sim/>
     <xacro:arm_r_xacro box_visual="$(arg box_visual)"/>
     <xacro:arm_l_xacro box_visual="$(arg box_visual)"/>
     <xacro:leg_r_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
@@ -47,6 +45,7 @@
     <xacro:tfluna parent="waist_link" name="tfluna" ros_topic="/kuroko/sensors/range">
       <origin xyz="0.07 0 -0.044" rpy="0 0 0"/>
     </xacro:tfluna>
+    <xacro:gz_sim_trajectory_control/>
   </xacro:macro>
 
   <!-- Load Macros -->
