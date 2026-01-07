@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """Top-level launch: Gazebo Sim world + Kuroko spawn + ros2_control controllers.
 
-This version avoids hard-coding the package name (e.g. FindPackageShare("kuroko_sim_gz")).
-It resolves *this* package's share directory via __file__ and uses relative paths.
+This version avoids hard-coding the *kuroko_sim_gz* package name by resolving this package's share directory
+via __file__ and using relative paths for its own resources.
 
-Layout expected after install:
-  .../share/<this_pkg>/launch/<this_file>
-  .../share/<this_pkg>/worlds/...
-  .../share/<this_pkg>/config/...
+The controller YAML lives in *kuroko_description*, so we still resolve that via FindPackageShare.
 """
 
 from pathlib import Path
@@ -16,6 +13,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.substitutions import FindPackageShare
 
 
 def _this_pkg_share() -> Path:
@@ -70,6 +68,8 @@ def generate_launch_description() -> LaunchDescription:
         }.items(),
     )
 
+    kuroko_description_share = FindPackageShare("kuroko_description")
+
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -85,12 +85,12 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("robot_name", default_value="kuroko", description="Entity name in Gazebo."),
             DeclareLaunchArgument("x", default_value="0.0"),
             DeclareLaunchArgument("y", default_value="0.0"),
-            DeclareLaunchArgument("z", default_value="0.4"),
+            DeclareLaunchArgument("z", default_value="0.35"),
             DeclareLaunchArgument("yaw", default_value="0.0", description="Yaw (rad)."),
             DeclareLaunchArgument(
                 "controllers_yaml",
-                default_value=str(pkg_share / "config" / "gz_trajectory_controller.yaml"),
-                description="YAML file for controller_manager (joint_state_broadcaster + joint_trajectory_controller).",
+                default_value=[kuroko_description_share, "/config/gz_trajectory_controller.yaml"],
+                description="Controller YAML (lives in kuroko_description/config).",
             ),
             DeclareLaunchArgument(
                 "controller_manager",

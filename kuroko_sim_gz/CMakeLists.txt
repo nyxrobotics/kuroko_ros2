@@ -3,7 +3,7 @@ project(kuroko_sim_gz)
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY launch worlds config
+install(DIRECTORY launch worlds
   DESTINATION share/${PROJECT_NAME}
 )
 
