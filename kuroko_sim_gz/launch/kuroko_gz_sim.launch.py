@@ -62,7 +62,7 @@ def generate_launch_description() -> LaunchDescription:
     )
 
     # /clock bridge (Gazebo -> ROS 2)
-    clock_bridge_inc = IncludeLaunchDescription(
+    gz_bridge_inc = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(launch_dir / "gz_bridge.launch.py")),
         launch_arguments={
             "use_sim_time": use_sim_time,
@@ -112,7 +112,7 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("use_sim_time", default_value="true"),
             spawn_world_inc,
             spawn_kuroko_inc,
-            clock_bridge_inc,
+            gz_bridge_inc,
             controllers_inc,
         ]
     )

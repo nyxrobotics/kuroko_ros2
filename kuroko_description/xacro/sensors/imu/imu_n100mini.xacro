@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
-  xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
-  xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
-  xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:include filename="imu_n100mini_gazebo.xacro"/>
-  <xacro:macro name="imu_n100mini" params="name parent:='base_link' update_rate:=400 *origin">
+  <xacro:macro name="imu_n100mini" params="name parent:='base_link' update_rate:=400 *origin namespace">
     <xacro:property name="depth" value="0.01"/>
     <xacro:property name="width" value="0.01"/>
     <xacro:property name="height" value="0.01"/>
@@ -36,6 +33,6 @@
       <disableFixedJointLumping>true</disableFixedJointLumping>
       <preserveFixedJoint>true</preserveFixedJoint>
     </gazebo>
-    <xacro:n100mini_gazebo name="${name}" update_rate="${update_rate}"/>
+    <xacro:n100mini_gazebo name="${name}" update_rate="${update_rate}" namespace="${namespace}"/>
   </xacro:macro>
 </robot>

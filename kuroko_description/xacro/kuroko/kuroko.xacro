@@ -21,7 +21,9 @@
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_l.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_l.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/sensors/range/tfluna.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/sensors/imu/enable_gz_imu_plugin.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/imu/imu_n100mini.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/sensors/camera/enable_gz_rendering_plugin.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
 
 
@@ -49,10 +51,10 @@
     <xacro:leg_r_gazebo/>
     <xacro:leg_l_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
     <xacro:leg_l_gazebo/>
-    <xacro:imu_n100mini parent="waist_link" name="imu">
+    <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
     </xacro:imu_n100mini>
-    <xacro:usb_camera parent="waist_link" name="camera">
+    <xacro:usb_camera parent="waist_link" name="camera" namespace="/kuroko/sensors/camera">
       <origin xyz="0.07 0 -0.026" rpy="0 0 0"/>
     </xacro:usb_camera>
     <xacro:tfluna parent="waist_link" name="tfluna" ros_topic="/kuroko/sensors/range">
@@ -60,6 +62,8 @@
     </xacro:tfluna>
     <!-- <xacro:gz_sim_trajectory_control/> -->
     <xacro:gz_sim_position_control/>
+    <xacro:enable_gz_rendering_plugin/>
+    <xacro:enable_gz_imu_plugin/>
   </xacro:macro>
 
   <!-- Load Macros -->

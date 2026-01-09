@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="n100mini_gazebo" params="name update_rate">
+  <xacro:macro name="n100mini_gazebo" params="namespace name update_rate">
     <gazebo reference="${name}_link">
       <material>Gazebo/Gray</material>
-    </gazebo>
-    <gazebo>
-      <!-- TODO:Loading Gazebo Plugin for IMU -->
-      <!-- TODO:Loading Gazebo Plugin for Magnetic Sensor -->
+      <sensor name="imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>${update_rate}</update_rate>
+        <topic>${namespace}/data</topic>
+        <gz_frame_id>${name}_link</gz_frame_id>
+      </sensor>
+      <sensor name="magnetometer" type="magnetometer">
+        <always_on>true</always_on>
+        <update_rate>${update_rate}</update_rate>
+        <topic>${namespace}/mag</topic>
+        <gz_frame_id>${name}_link</gz_frame_id>
+      </sensor>
     </gazebo>
   </xacro:macro>
 </robot>

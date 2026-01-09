@@ -1,41 +1,74 @@
 #!/usr/bin/env python3
-"""Bridge Gazebo Sim clock (/clock) to ROS 2.
-
-Starts ros_gz_bridge/parameter_bridge for:
-  /clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock
-
-Usage:
-  ros2 launch <your_pkg> gz_bridge.launch.py
-
-Notes:
-- Provides /clock publisher in ROS 2 so nodes using use_sim_time can run.
-- If Gazebo is paused, /clock will not advance (hz may show 0).
-- Ensure ROS_DOMAIN_ID and RMW_IMPLEMENTATION match between Gazebo and ROS 2 processes.
-"""
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
 
 
-def generate_launch_description() -> LaunchDescription:
+def generate_launch_description():
+    model_name = LaunchConfiguration("model_name")
     use_sim_time = LaunchConfiguration("use_sim_time")
 
-    clock_bridge = Node(
+    bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        name="gz_bridge",
+        name="ros_gz_bridge",
         output="screen",
         arguments=[
+            # clock
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+
+            # IMU
+            [
+                TextSubstitution(text="/"),
+                model_name,
+                TextSubstitution(
+                    text="/sensors/imu/data@sensor_msgs/msg/Imu[gz.msgs.IMU"
+                ),
+            ],
+
+            # Magnetometer
+            [
+                TextSubstitution(text="/"),
+                model_name,
+                TextSubstitution(
+                    text="/sensors/imu/mag@sensor_msgs/msg/MagneticField[gz.msgs.Magnetometer"
+                ),
+            ],
+
+            # Camera image
+            [
+                TextSubstitution(text="/"),
+                model_name,
+                TextSubstitution(
+                    text="/sensors/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image"
+                ),
+            ],
+
+            # Camera info
+            [
+                TextSubstitution(text="/"),
+                model_name,
+                TextSubstitution(
+                    text="/sensors/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo"
+                ),
+            ],
         ],
         parameters=[{"use_sim_time": use_sim_time}],
     )
 
     return LaunchDescription(
         [
-            DeclareLaunchArgument("use_sim_time", default_value="true"),
-            clock_bridge,
+            DeclareLaunchArgument(
+                "model_name",
+                default_value="kuroko",
+                description="Model name prefix used in Gazebo topic paths",
+            ),
+            DeclareLaunchArgument(
+                "use_sim_time",
+                default_value="true",
+            ),
+            bridge,
         ]
     )
