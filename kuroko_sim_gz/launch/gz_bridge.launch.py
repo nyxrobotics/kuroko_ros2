@@ -5,7 +5,7 @@ Starts ros_gz_bridge/parameter_bridge for:
   /clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock
 
 Usage:
-  ros2 launch <your_pkg> gz_clock_bridge.launch.py
+  ros2 launch <your_pkg> gz_bridge.launch.py
 
 Notes:
 - Provides /clock publisher in ROS 2 so nodes using use_sim_time can run.
@@ -25,7 +25,7 @@ def generate_launch_description() -> LaunchDescription:
     clock_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        name="gz_clock_bridge",
+        name="gz_bridge",
         output="screen",
         arguments=[
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
