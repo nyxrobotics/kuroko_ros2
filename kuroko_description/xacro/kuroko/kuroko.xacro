@@ -11,10 +11,15 @@
   <xacro:include filename="${XACRO_DIR}/physics/box_physics.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/gazebo_passive_joint.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/body.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/body.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_r.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/arm_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_l.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/arm_l.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_r.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_l.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_l.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_trajectory_control.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/range/tfluna.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/imu/imu_n100mini.xacro"/>
@@ -32,10 +37,15 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
     <xacro:body_xacro box_visual="$(arg box_visual)"/>
+    <xacro:body_gazebo/>
     <xacro:arm_r_xacro box_visual="$(arg box_visual)"/>
+    <xacro:arm_r_gazebo/>
     <xacro:arm_l_xacro box_visual="$(arg box_visual)"/>
+    <xacro:arm_l_gazebo/>
     <xacro:leg_r_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
+    <xacro:leg_r_gazebo/>
     <xacro:leg_l_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
+    <xacro:leg_l_gazebo/>
     <xacro:imu_n100mini parent="waist_link" name="imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
     </xacro:imu_n100mini>
