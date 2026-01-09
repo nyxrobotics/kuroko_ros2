@@ -383,8 +383,36 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="0 0 -0.004" rpy="0 0 0" size="0.12 0.075 0.008"/>
       </xacro:if>
-      <xacro:box_collision xyz="0 0 -0.004" rpy="0 0 0" size="0.12 0.075 0.008"/>
       <xacro:box_inertial xyz="0 0 -0.004" rpy="0 0 0" size="0.12 0.075 0.008" mass="0.043"/>
+      <!-- <xacro:box_collision xyz="0 0 -0.004" rpy="0 0 0" size="0.12 0.075 0.008"/> -->
+      <collision>
+        <origin xyz="0.052 0.0295 0" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="0.008" />
+        </geometry>
+        <material name="gray" />
+      </collision>
+      <collision>
+        <origin xyz="-0.052 0.0295 0" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="0.008" />
+        </geometry>
+        <material name="gray" />
+      </collision>
+      <collision>
+        <origin xyz="-0.052 -0.0295 0" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="0.008" />
+        </geometry>
+        <material name="gray" />
+      </collision>
+      <collision>
+        <origin xyz="0.052 -0.0295 0" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="0.008" />
+        </geometry>
+        <material name="gray" />
+      </collision>
     </link>
 
   </xacro:macro>
