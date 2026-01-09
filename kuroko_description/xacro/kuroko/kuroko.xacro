@@ -20,10 +20,13 @@
   <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_l.xacro"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_l.gazebo"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_trajectory_control.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/range/tfluna.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/imu/imu_n100mini.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
+
+
+  <!-- <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_trajectory_control.xacro"/> -->
+  <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_position_control.xacro"/>
 
   <!-- DOTO:Loading Gazebo Controllers for joints -->
 
@@ -55,7 +58,8 @@
     <xacro:tfluna parent="waist_link" name="tfluna" ros_topic="/kuroko/sensors/range">
       <origin xyz="0.07 0 -0.044" rpy="0 0 0"/>
     </xacro:tfluna>
-    <xacro:gz_sim_trajectory_control/>
+    <!-- <xacro:gz_sim_trajectory_control/> -->
+    <xacro:gz_sim_position_control/>
   </xacro:macro>
 
   <!-- Load Macros -->

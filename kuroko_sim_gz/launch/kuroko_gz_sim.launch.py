@@ -72,7 +72,7 @@ def generate_launch_description() -> LaunchDescription:
     # Controllers
     controllers_yaml = LaunchConfiguration("controllers_yaml")
     controllers_inc = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(str(launch_dir / "trajectory_controller.launch.py")),
+        PythonLaunchDescriptionSource(str(launch_dir / "position_controller.launch.py")),
         launch_arguments={
             "controllers_yaml": controllers_yaml,
             "controller_manager": controller_manager,
@@ -101,7 +101,7 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("yaw", default_value="3.14", description="Yaw (rad)."),
             DeclareLaunchArgument(
                 "controllers_yaml",
-                default_value=[kuroko_description_share, "/config/gz_trajectory_controller.yaml"],
+                default_value=[kuroko_description_share, "/config/gz_position_controller.yaml"],
                 description="Controller YAML (lives in kuroko_description/config).",
             ),
             DeclareLaunchArgument(
