@@ -6,8 +6,8 @@
       <parent link="waist_link"/>
       <child link="hip_l_roll_link"/>
       <origin xyz="0 0 -0.08425" rpy="0 0 0"/>
-      <axis xyz="-1 0 0"/>
-      <limit effort="3.1" lower="-0.5550" upper="1.8640" velocity="6.5"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="3.1" lower="-1.8640" upper="0.5550" velocity="6.5"/>
       <dynamics damping="0.477" friction="0.0"/>
     </joint>
     <link name="hip_l_roll_link">
@@ -57,8 +57,8 @@
       <parent link="hip_l_pitch_link"/>
       <child link="shin_l_active_link"/>
       <origin xyz="-0.0185 0.02925 -0.0305" rpy="0 1.047197551 0"/>
-      <axis xyz="0 -1 0"/>
-      <limit effort="8.9" lower="-0.4974" upper="1.8588" velocity="6.9"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="8.9" lower="-1.8588" upper="0.4974" velocity="6.9"/>
       <dynamics damping="1.29" friction="0.0"/>
     </joint>
     <link name="shin_l_active_link">
@@ -365,7 +365,7 @@
       <parent link="ankle_l_roll_link"/>
       <child link="ankle_l_yaw_link"/>
       <origin xyz="0 0 -0.03825" rpy="0 0 0"/>
-      <axis xyz="0 0 -1"/>
+      <axis xyz="0 0 1"/>
       <limit effort="3.1" lower="-3.1416" upper="3.1416" velocity="6.5"/>
       <dynamics damping="0.477" friction="0.0"/>
     </joint>

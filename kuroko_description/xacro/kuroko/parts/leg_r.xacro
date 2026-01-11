@@ -31,7 +31,7 @@
       <parent link="hip_r_roll_link"/>
       <child link="hip_r_pitch_link"/>
       <origin xyz="0 -0.027 0" rpy="0 0 0"/>
-      <axis xyz="0 -1 0"/>
+      <axis xyz="0 1 0"/>
       <limit effort="3.1" lower="-3.1" upper="3.1" velocity="6.5"/>
       <dynamics damping="0.477" friction="0.0"/>
     </joint>
@@ -366,7 +366,7 @@
       <parent link="ankle_r_roll_link"/>
       <child link="ankle_r_yaw_link"/>
       <origin xyz="0 0 -0.03825" rpy="0 0 0"/>
-      <axis xyz="0 0 -1"/>
+      <axis xyz="0 0 1"/>
       <limit effort="3.1" lower="-3.1" upper="3.1" velocity="6.5"/>
       <dynamics damping="0.477" friction="0.0"/>
     </joint>
