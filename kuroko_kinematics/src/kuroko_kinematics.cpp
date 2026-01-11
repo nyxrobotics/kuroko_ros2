@@ -55,7 +55,7 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[3].child_ = 4;
     joint_tree_[3].offset_position_ = eigen_math::transitionXYZ(0.0, -0.1275, 0.01275);
     joint_tree_[3].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[3].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
+    joint_tree_[3].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
     joint_tree_[3].joint_limit_lower_ = -3.1;
     joint_tree_[3].joint_limit_upper_ = 3.1;
 
@@ -64,9 +64,9 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[4].child_ = 5;
     joint_tree_[4].offset_position_ = eigen_math::transitionXYZ(0.0, -0.1275, 0.01275);
     joint_tree_[4].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[4].joint_axis_ = eigen_math::transitionXYZ(-1.0, 0.0, 0.0);
-    joint_tree_[4].joint_limit_lower_ = -1.0472;
-    joint_tree_[4].joint_limit_upper_ = 2.0071;
+    joint_tree_[4].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+    joint_tree_[4].joint_limit_lower_ = -2.0071;
+    joint_tree_[4].joint_limit_upper_ = 1.0472;
 
     // Gripper
     joint_tree_[5].name_ = "elbow_r_front";
@@ -83,7 +83,7 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[6].child_ = -1;
     joint_tree_[6].offset_position_ = eigen_math::transitionXYZ(0.0, 0.008, -0.052);
     joint_tree_[6].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[6].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
+    joint_tree_[6].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
     joint_tree_[6].joint_limit_lower_ = -2.6180;
     joint_tree_[6].joint_limit_upper_ = 2.6180;
 
@@ -102,9 +102,9 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[8].child_ = 9;
     joint_tree_[8].offset_position_ = eigen_math::transitionXYZ(0.0, 0.038, 0.0);
     joint_tree_[8].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[8].joint_axis_ = eigen_math::transitionXYZ(-1.0, 0.0, 0.0);
-    joint_tree_[8].joint_limit_lower_ = -2.0071;
-    joint_tree_[8].joint_limit_upper_ = 1.0472;
+    joint_tree_[8].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+    joint_tree_[8].joint_limit_lower_ = -1.0472;
+    joint_tree_[8].joint_limit_upper_ = 2.0071;
 
     // Gripper
     joint_tree_[9].name_ = "elbow_l_front";
@@ -112,7 +112,7 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[9].child_ = -1;
     joint_tree_[9].offset_position_ = eigen_math::transitionXYZ(0.0, -0.008, -0.052);
     joint_tree_[9].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[9].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
+    joint_tree_[9].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
     joint_tree_[9].joint_limit_lower_ = -2.6180;
     joint_tree_[9].joint_limit_upper_ = 2.6180;
 
@@ -141,7 +141,7 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[12].child_ = 13;  // thigh_r_active
     joint_tree_[12].offset_position_ = eigen_math::transitionXYZ(0.0, -0.027, 0.0);
     joint_tree_[12].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[12].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
+    joint_tree_[12].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
     joint_tree_[12].joint_limit_lower_ = -3.1;
     joint_tree_[12].joint_limit_upper_ = 3.1;
 
@@ -207,7 +207,7 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[18].child_ = 19;  // leg_r_end
     joint_tree_[18].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.03825);
     joint_tree_[18].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[18].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, -1.0);
+    joint_tree_[18].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 1.0);
     joint_tree_[18].joint_limit_lower_ = -3.1;
     joint_tree_[18].joint_limit_upper_ = 3.1;
 
@@ -280,9 +280,9 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[25].child_ = 26;  // hip_l_pitch
     joint_tree_[25].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.08425);
     joint_tree_[25].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[25].joint_axis_ = eigen_math::transitionXYZ(-1.0, 0.0, 0.0);
-    joint_tree_[25].joint_limit_lower_ = -0.5550;
-    joint_tree_[25].joint_limit_upper_ = 1.8640;
+    joint_tree_[25].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+    joint_tree_[25].joint_limit_lower_ = -1.8640;
+    joint_tree_[25].joint_limit_upper_ = -0.5550;
 
     joint_tree_[26].name_ = "hip_l_pitch";
     joint_tree_[26].parent_ = 25;  // hip_l_roll
@@ -298,18 +298,18 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[27].child_ = 28;    // knee_l_passive
     joint_tree_[27].offset_position_ = eigen_math::transitionXYZ(0.015, 0.02925, -0.0305);
     joint_tree_[27].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
-    joint_tree_[27].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
-    joint_tree_[27].joint_limit_lower_ = -1.8588;
-    joint_tree_[27].joint_limit_upper_ = 0.4974;
+    joint_tree_[27].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+    joint_tree_[27].joint_limit_lower_ = -0.4974;
+    joint_tree_[27].joint_limit_upper_ = 1.8588;
 
     joint_tree_[28].name_ = "knee_l_passive";
     joint_tree_[28].parent_ = 27;  // thigh_l_active
     joint_tree_[28].child_ = 29;  // shin_l_front_passive
     joint_tree_[28].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
     joint_tree_[28].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
-    joint_tree_[28].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
-    joint_tree_[28].joint_limit_lower_ = -0.4974;
-    joint_tree_[28].joint_limit_upper_ = 1.8588;
+    joint_tree_[28].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+    joint_tree_[28].joint_limit_lower_ = -1.8588;
+    joint_tree_[28].joint_limit_upper_ = 0.4974;
     joint_tree_[28].joint_mimic_ = "thigh_l_active";
     joint_tree_[28].joint_mimic_multiplier_ = -1.0;
 
@@ -318,9 +318,9 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[29].child_ = 30;    // ankle_l_pitch_passive
     joint_tree_[29].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
     joint_tree_[29].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
-    joint_tree_[29].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
-    joint_tree_[29].joint_limit_lower_ = -0.4974;
-    joint_tree_[29].joint_limit_upper_ = 1.8588;
+    joint_tree_[29].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+    joint_tree_[29].joint_limit_lower_ = -1.8588;
+    joint_tree_[29].joint_limit_upper_ = 0.4974;
     joint_tree_[29].joint_mimic_ = "shin_l_active";
     joint_tree_[29].joint_mimic_multiplier_ = 1.0;
 
@@ -329,9 +329,9 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[30].child_ = 31;  // ankle_l_roll
     joint_tree_[30].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
     joint_tree_[30].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
-    joint_tree_[30].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
-    joint_tree_[30].joint_limit_lower_ = -1.8588;
-    joint_tree_[30].joint_limit_upper_ = 0.4974;
+    joint_tree_[30].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+    joint_tree_[30].joint_limit_lower_ = -0.4974;
+    joint_tree_[30].joint_limit_upper_ = 1.8588;
     joint_tree_[30].joint_mimic_ = "shin_l_active";
     joint_tree_[30].joint_mimic_multiplier_ = -1.0;
 
@@ -349,7 +349,7 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[32].child_ = 33;  // leg_l_end
     joint_tree_[32].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.03825);
     joint_tree_[32].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[32].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, -1.0);
+    joint_tree_[32].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 1.0);
     joint_tree_[32].joint_limit_lower_ = -3.1;
     joint_tree_[32].joint_limit_upper_ = 3.1;
 
@@ -367,16 +367,16 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[34].child_ = 35;    // thigh_l_rear_passive_mimic
     joint_tree_[34].offset_position_ = eigen_math::transitionXYZ(-0.0185, 0.02925, -0.0305);
     joint_tree_[34].offset_orientation_ = eigen_math::rotationFromRPY(0, 1.047197551, 0);
-    joint_tree_[34].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
-    joint_tree_[34].joint_limit_lower_ = -0.4974;
-    joint_tree_[34].joint_limit_upper_ = 1.8588;
+    joint_tree_[34].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+    joint_tree_[34].joint_limit_lower_ = -1.8588;
+    joint_tree_[34].joint_limit_upper_ = 0.4974;
 
     joint_tree_[35].name_ = "thigh_l_rear_passive_mimic";
     joint_tree_[35].parent_ = 34;  // shin_l_active
     joint_tree_[35].child_ = 36;  // thigh_l_rear_passive
     joint_tree_[35].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.03);
     joint_tree_[35].offset_orientation_ = eigen_math::rotationFromRPY(0, -1.832597551, 0);
-    joint_tree_[35].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
+    joint_tree_[35].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
     joint_tree_[35].joint_limit_lower_ = -3.1;
     joint_tree_[35].joint_limit_upper_ = 3.1;
     joint_tree_[35].joint_mimic_ = "shin_l_active";
@@ -387,7 +387,7 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[36].child_ = -1;
     joint_tree_[36].offset_position_ = eigen_math::transitionXYZ(0, 0, 0);
     joint_tree_[36].offset_orientation_ = eigen_math::rotationFromRPY(0, 0, 0);
-    joint_tree_[36].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
+    joint_tree_[36].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
     joint_tree_[36].joint_limit_lower_ = -3.1;
     joint_tree_[36].joint_limit_upper_ = 3.1;
     joint_tree_[36].joint_mimic_ = "thigh_l_active";
@@ -398,7 +398,7 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[37].child_ = -1;
     joint_tree_[37].offset_position_ = eigen_math::transitionXYZ(-0.0185, 0.02925, -0.0305);
     joint_tree_[37].offset_orientation_ = eigen_math::rotationFromRPY(0, -0.785398163, 0);
-    joint_tree_[37].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
+    joint_tree_[37].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
     joint_tree_[37].joint_limit_lower_ = -3.1;
     joint_tree_[37].joint_limit_upper_ = 3.1;
     joint_tree_[37].joint_mimic_ = "thigh_l_active";
@@ -409,9 +409,9 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[38].child_ = -1;
     joint_tree_[38].offset_position_ = eigen_math::transitionXYZ(-0.0335, 0, 0);
     joint_tree_[38].offset_orientation_ = eigen_math::rotationFromRPY(0, 0.785398163, 0);
-    joint_tree_[38].joint_axis_ = eigen_math::transitionXYZ(0.0, -1.0, 0.0);
-    joint_tree_[38].joint_limit_lower_ = -0.4974;
-    joint_tree_[38].joint_limit_upper_ = 1.8588;
+    joint_tree_[38].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+    joint_tree_[38].joint_limit_lower_ = -1.8588;
+    joint_tree_[38].joint_limit_upper_ = 0.4974;
     joint_tree_[38].joint_mimic_ = "shin_l_active";
     joint_tree_[38].joint_mimic_multiplier_ = 1.0;
 
