@@ -31,15 +31,25 @@ def _launch_setup(context: LaunchContext, *args, **kwargs):
         + "/xacro/kuroko/kuroko.xacro"
     )
 
-    doc = xacro.process_file(
+    doc_rviz = xacro.process_file(
         xacro_file,
         mappings={
-            # Simulation-friendly URDF: mimic disabled, closed loops enabled
+            # Rviz URDF: mimic enabled, closed loops disabled
+            "gazebo": "false",
+            "robot_name": robot_name,
+        },
+    )
+    robot_description_rviz = doc_rviz.toxml()
+
+    doc_gz = xacro.process_file(
+        xacro_file,
+        mappings={
+            # GZ URDF: mimic disabled, closed loops enabled
             "gazebo": "true",
             "robot_name": robot_name,
         },
     )
-    robot_description = doc.toxml()
+    robot_description_gz = doc_gz.toxml()
 
     rsp = Node(
         package="robot_state_publisher",
@@ -48,7 +58,7 @@ def _launch_setup(context: LaunchContext, *args, **kwargs):
         parameters=[
             {
                 "use_sim_time": use_sim_time,
-                "robot_description": robot_description,
+                "robot_description": robot_description_rviz,
             }
         ],
     )
@@ -75,7 +85,7 @@ def _launch_setup(context: LaunchContext, *args, **kwargs):
         ],
         parameters=[
             {
-                "robot_description": robot_description,
+                "robot_description": robot_description_gz,
             }
         ],
     )
