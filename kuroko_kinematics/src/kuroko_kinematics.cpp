@@ -162,10 +162,8 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[14].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
     joint_tree_[14].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
     joint_tree_[14].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[14].joint_limit_lower_ = -1.8588;
-    joint_tree_[14].joint_limit_upper_ = 0.4974;
     joint_tree_[14].joint_mimic_ = "thigh_r_active";
-    joint_tree_[14].joint_mimic_multiplier_ = 1.0;
+    joint_tree_[14].joint_mimic_multiplier_ = -1.0;
 
     // Right shin front passive
     joint_tree_[15].name_ = "shin_r_front_passive";
@@ -174,8 +172,6 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[15].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
     joint_tree_[15].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
     joint_tree_[15].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[15].joint_limit_lower_ = -1.8588;
-    joint_tree_[15].joint_limit_upper_ = 0.4974;
     joint_tree_[15].joint_mimic_ = "shin_r_active";
     joint_tree_[15].joint_mimic_multiplier_ = 1.0;
 
@@ -186,10 +182,8 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[16].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
     joint_tree_[16].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
     joint_tree_[16].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[16].joint_limit_lower_ = -0.4974;
-    joint_tree_[16].joint_limit_upper_ = 1.8588;
     joint_tree_[16].joint_mimic_ = "shin_r_active";
-    joint_tree_[16].joint_mimic_multiplier_ = 1.0;
+    joint_tree_[16].joint_mimic_multiplier_ = -1.0;
 
     // Right ankle roll
     joint_tree_[17].name_ = "ankle_r_roll";
@@ -218,8 +212,6 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[19].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.004);
     joint_tree_[19].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
     joint_tree_[19].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[19].joint_limit_lower_ = -100;
-    joint_tree_[19].joint_limit_upper_ = 100;
 
     joint_tree_[20].name_ = "shin_r_active";
     joint_tree_[20].parent_ = 12;   // hip_r_pitch
@@ -236,8 +228,6 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[21].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.03);
     joint_tree_[21].offset_orientation_ = eigen_math::rotationFromRPY(0, -1.832597551, 0);
     joint_tree_[21].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[21].joint_limit_lower_ = -3.1;
-    joint_tree_[21].joint_limit_upper_ = 3.1;
     joint_tree_[21].joint_mimic_ = "shin_r_active";
     joint_tree_[21].joint_mimic_multiplier_ = 1.0;
 
@@ -247,8 +237,6 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[22].offset_position_ = eigen_math::transitionXYZ(0, 0, 0);
     joint_tree_[22].offset_orientation_ = eigen_math::rotationFromRPY(0, 0, 0);
     joint_tree_[22].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[22].joint_limit_lower_ = -3.1;
-    joint_tree_[22].joint_limit_upper_ = 3.1;
     joint_tree_[22].joint_mimic_ = "thigh_r_active";
     joint_tree_[22].joint_mimic_multiplier_ = 1.0;
 
@@ -258,8 +246,6 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[23].offset_position_ = eigen_math::transitionXYZ(-0.0185, -0.02925, -0.0305);
     joint_tree_[23].offset_orientation_ = eigen_math::rotationFromRPY(0, -0.785398163, 0);
     joint_tree_[23].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[23].joint_limit_lower_ = -3.1;
-    joint_tree_[23].joint_limit_upper_ = 3.1;
     joint_tree_[23].joint_mimic_ = "thigh_r_active";
     joint_tree_[23].joint_mimic_multiplier_ = 1.0;
 
@@ -269,8 +255,6 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[24].offset_position_ = eigen_math::transitionXYZ(-0.0335, 0, 0);
     joint_tree_[24].offset_orientation_ = eigen_math::rotationFromRPY(0, 0.785398163, 0);
     joint_tree_[24].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[24].joint_limit_lower_ = -1.8588;
-    joint_tree_[24].joint_limit_upper_ = 0.4974;
     joint_tree_[24].joint_mimic_ = "shin_r_active";
     joint_tree_[24].joint_mimic_multiplier_ = 1.0;
 
@@ -308,10 +292,8 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[28].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
     joint_tree_[28].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
     joint_tree_[28].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[28].joint_limit_lower_ = -1.8588;
-    joint_tree_[28].joint_limit_upper_ = 0.4974;
     joint_tree_[28].joint_mimic_ = "thigh_l_active";
-    joint_tree_[28].joint_mimic_multiplier_ = 1.0;
+    joint_tree_[28].joint_mimic_multiplier_ = -1.0;
 
     joint_tree_[29].name_ = "shin_l_front_passive";
     joint_tree_[29].parent_ = 28;   // knee_l_passive
@@ -319,8 +301,6 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[29].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
     joint_tree_[29].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
     joint_tree_[29].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[29].joint_limit_lower_ = -1.8588;
-    joint_tree_[29].joint_limit_upper_ = 0.4974;
     joint_tree_[29].joint_mimic_ = "shin_l_active";
     joint_tree_[29].joint_mimic_multiplier_ = 1.0;
 
@@ -330,10 +310,8 @@ KurokoKinematics::KurokoKinematics()
     joint_tree_[30].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
     joint_tree_[30].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
     joint_tree_[30].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[30].joint_limit_lower_ = -0.4974;
-    joint_tree_[30].joint_limit_upper_ = 1.8588;
     joint_tree_[30].joint_mimic_ = "shin_l_active";
-    joint_tree_[30].joint_mimic_multiplier_ = 1.0;
+    joint_tree_[30].joint_mimic_multiplier_ = -1.0;
 
     joint_tree_[31].name_ = "ankle_l_roll";
     joint_tree_[31].parent_ = 30;  // ankle_l_pitch_passive
@@ -434,7 +412,7 @@ KurokoKinematics::KurokoKinematics()
 KurokoKinematics::~KurokoKinematics() = default;
 
 bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& joints_out,
-                                                         std::vector<double> target_pose_in)
+                                                        std::vector<double> target_pose_in)
 {
   // Check inputs are valid values
   if (target_pose_in.size() < 6)
@@ -450,7 +428,7 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
       return false;
     }
   }
-  // Calculating Inverse Kinematics for Right Leg
+  // Calculating Inverse Kinematics for Left Leg
   double x = target_pose_in[0];
   double y = target_pose_in[1];
   double z = target_pose_in[2];
@@ -459,14 +437,20 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
   double yaw = target_pose_in[5];
 
   // Define link lengths based on the robot's dimensions
-  double hip_roll_to_pitch_y = joint_tree_[getLinkIndex("hip_r_pitch")].offset_position_.y() + joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.y();
-  double hip_pitch_to_thigh_z = joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.z();
-  double thigh_length = fabs(joint_tree_[getLinkIndex("knee_r_passive")].offset_position_.z());
-  double shin_length = fabs(joint_tree_[getLinkIndex("ankle_r_pitch_passive")].offset_position_.z());
+  double hip_roll_to_pitch_y =
+    joint_tree_[getLinkIndex("hip_r_pitch")].offset_position_.y()
+    + joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.y();
+  double hip_pitch_to_thigh_z =
+    joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.z();
+  double thigh_length =
+    fabs(joint_tree_[getLinkIndex("knee_r_passive")].offset_position_.z());
+  double shin_length =
+    fabs(joint_tree_[getLinkIndex("ankle_r_pitch_passive")].offset_position_.z());
   double ankle_pitch_to_roll_z =
-      joint_tree_[getLinkIndex("ankle_r_roll")].offset_position_.z();
-  double ankle_roll_to_yaw_z = joint_tree_[getLinkIndex("ankle_r_yaw")].offset_position_.z() +
-                                      joint_tree_[getLinkIndex("leg_r_end")].offset_position_.z();
+    joint_tree_[getLinkIndex("ankle_r_roll")].offset_position_.z();
+  double ankle_roll_to_yaw_z =
+    joint_tree_[getLinkIndex("ankle_r_yaw")].offset_position_.z()
+    + joint_tree_[getLinkIndex("leg_r_end")].offset_position_.z();
 
   // Ankle yaw
   double ankle_yaw = yaw;
@@ -475,7 +459,7 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
   double hip_pitch = pitch;
 
   // Hip roll
-  double waist_to_ankle_roll_x = x;
+  // double waist_to_ankle_roll_x = x;
   double waist_to_ankle_roll_y = y + ankle_roll_to_yaw_z * sin(roll);
   double waist_to_ankle_roll_z = z - ankle_roll_to_yaw_z * cos(roll);
   double waist_to_ankle_roll_yz_plane_distance =
@@ -489,9 +473,9 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
   // Thigh upper and Shin lower joints
   double hip_roll_to_target_x = x;
   double hip_roll_to_target_z = z * cos(hip_roll) - y * sin(hip_roll);
-  double hip_roll_to_target_y = z * sin(hip_roll) + y * cos(hip_roll);
+  // double hip_roll_to_target_y = z * sin(hip_roll) + y * cos(hip_roll);
 
-  double hip_pitch_to_target_y = hip_roll_to_target_y - hip_roll_to_pitch_y;
+  // double hip_pitch_to_target_y = hip_roll_to_target_y - hip_roll_to_pitch_y;
   double hip_pitch_to_target_z = hip_roll_to_target_z * cos(-hip_pitch) - hip_roll_to_target_x * sin(-hip_pitch);
   double hip_pitch_to_target_x = hip_roll_to_target_z * sin(-hip_pitch) + hip_roll_to_target_x * cos(-hip_pitch);
 
@@ -532,15 +516,6 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
   double triangle_knee_line_angle = atan2(-thigh_upper_to_shin_lower_x, -thigh_upper_to_shin_lower_z);
   double shin_pitch = triangle_knee_line_angle + triangle_shin_angle;
   double thigh_pitch = -((M_PI - triangle_knee_angle) - shin_pitch);
-
-  // std::cout << "[solveInverseKinematicsForRightLeg]:" << std::endl;
-  // std::cout << "hip_roll: " << hip_roll << std::endl;
-  // std::cout << "hip_pitch: " << hip_pitch << std::endl;
-  // std::cout << "thigh_pitch: " << thigh_pitch << std::endl;
-  // std::cout << "shin_pitch: " << shin_pitch << std::endl;
-  // std::cout << "ankle_roll: " << ankle_roll << std::endl;
-  // std::cout << "ankle_yaw: " << ankle_yaw << std::endl;
-
   // Set the output joint angles
   hip_roll = (std::isfinite(hip_roll)) ? hip_roll : 0.0;
   hip_pitch = (std::isfinite(hip_pitch)) ? hip_pitch : 0.0;
@@ -548,6 +523,7 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
   shin_pitch = (std::isfinite(shin_pitch)) ? shin_pitch : 0.0;
   ankle_roll = (std::isfinite(ankle_roll)) ? ankle_roll : 0.0;
   ankle_yaw = (std::isfinite(ankle_yaw)) ? ankle_yaw : 0.0;
+
   double ankle_yaw_joint = joint_tree_[getLinkIndex("ankle_r_yaw")].joint_axis_.z() *
                            (ankle_yaw - eigen_math::rpyFromRotation(
                                             joint_tree_[getLinkIndex("ankle_r_yaw")].offset_orientation_)
@@ -558,9 +534,8 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
                                               .x());
   double shin_pitch_joint =
       joint_tree_[getLinkIndex("shin_r_front_passive")].joint_axis_.y() *
-      (shin_pitch - eigen_math::rpyFromRotation(
-                        joint_tree_[getLinkIndex("shin_r_front_passive")].offset_orientation_)
-                        .y());
+      (shin_pitch * joint_tree_[getLinkIndex("shin_r_front_passive")].joint_mimic_multiplier_
+       - eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("shin_r_front_passive")].offset_orientation_).y());
   double thigh_pitch_joint = joint_tree_[getLinkIndex("thigh_r_active")].joint_axis_.y() *
                              (thigh_pitch - eigen_math::rpyFromRotation(
                                                 joint_tree_[getLinkIndex("thigh_r_active")].offset_orientation_)
@@ -591,11 +566,7 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
   ankle_yaw_joint =
       std::max(std::min(ankle_yaw_joint, joint_tree_[getLinkIndex("ankle_r_yaw")].joint_limit_upper_),
                joint_tree_[getLinkIndex("ankle_r_yaw")].joint_limit_lower_);
-  double shin_pitch_joint =
-      shin_pitch_joint / joint_tree_[getLinkIndex("shin_r_front_passive")].joint_mimic_multiplier_;
-  shin_pitch_joint =
-      std::max(std::min(shin_pitch_joint, joint_tree_[getLinkIndex("shin_r_active")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("shin_r_active")].joint_limit_lower_);
+
   joints_out.resize(6);
   joints_out[0] = hip_roll_joint;
   joints_out[1] = hip_pitch_joint;
@@ -609,6 +580,21 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
 bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joints_out,
                                                         std::vector<double> target_pose_in)
 {
+  // Check inputs are valid values
+  if (target_pose_in.size() < 6)
+  {
+    std::cout << "Invalid target pose size: " << target_pose_in.size() << std::endl;
+    return false;
+  }
+  for (int i = 0; i < 6; i++)
+  {
+    if (std::isfinite(target_pose_in[i]) == false)
+    {
+      std::cout << "Invalid target pose[" << i << "] :" << target_pose_in[i] << std::endl;
+      return false;
+    }
+  }
+
   // Calculating Inverse Kinematics for Left Leg
   double x = target_pose_in[0];
   double y = target_pose_in[1];
@@ -618,14 +604,20 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
   double yaw = target_pose_in[5];
 
   // Define link lengths based on the robot's dimensions
-  double hip_roll_to_pitch_y = joint_tree_[getLinkIndex("hip_l_pitch")].offset_position_.y() + joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.y();
-  double hip_pitch_to_thigh_z = joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.z();
-  double thigh_length = fabs(joint_tree_[getLinkIndex("knee_l_passive")].offset_position_.z());
-  double shin_length = fabs(joint_tree_[getLinkIndex("ankle_l_pitch_passive")].offset_position_.z());
+  double hip_roll_to_pitch_y =
+    joint_tree_[getLinkIndex("hip_l_pitch")].offset_position_.y()
+    + joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.y();
+  double hip_pitch_to_thigh_z =
+    joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.z();
+  double thigh_length =
+    fabs(joint_tree_[getLinkIndex("knee_l_passive")].offset_position_.z());
+  double shin_length =
+    fabs(joint_tree_[getLinkIndex("ankle_l_pitch_passive")].offset_position_.z());
   double ankle_pitch_to_roll_z =
-      joint_tree_[getLinkIndex("ankle_l_roll")].offset_position_.z();
-  double ankle_roll_to_yaw_z = joint_tree_[getLinkIndex("ankle_l_yaw")].offset_position_.z() +
-                                      joint_tree_[getLinkIndex("leg_l_end")].offset_position_.z();
+    joint_tree_[getLinkIndex("ankle_l_roll")].offset_position_.z();
+  double ankle_roll_to_yaw_z =
+    joint_tree_[getLinkIndex("ankle_l_yaw")].offset_position_.z()
+    + joint_tree_[getLinkIndex("leg_l_end")].offset_position_.z();
 
   // Ankle yaw
   double ankle_yaw = yaw;
@@ -634,7 +626,7 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
   double hip_pitch = pitch;
 
   // Hip roll
-  double waist_to_ankle_roll_x = x;
+  // double waist_to_ankle_roll_x = x;
   double waist_to_ankle_roll_y = y + ankle_roll_to_yaw_z * sin(roll);
   double waist_to_ankle_roll_z = z - ankle_roll_to_yaw_z * cos(roll);
   double waist_to_ankle_roll_yz_plane_distance =
@@ -648,9 +640,9 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
   // Thigh upper and Shin lower joints
   double hip_roll_to_target_x = x;
   double hip_roll_to_target_z = z * cos(hip_roll) - y * sin(hip_roll);
-  double hip_roll_to_target_y = z * sin(hip_roll) + y * cos(hip_roll);
+  // double hip_roll_to_target_y = z * sin(hip_roll) + y * cos(hip_roll);
 
-  double hip_pitch_to_target_y = hip_roll_to_target_y - hip_roll_to_pitch_y;
+  // double hip_pitch_to_target_y = hip_roll_to_target_y - hip_roll_to_pitch_y;
   double hip_pitch_to_target_z = hip_roll_to_target_z * cos(-hip_pitch) - hip_roll_to_target_x * sin(-hip_pitch);
   double hip_pitch_to_target_x = hip_roll_to_target_z * sin(-hip_pitch) + hip_roll_to_target_x * cos(-hip_pitch);
 
@@ -698,6 +690,7 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
   shin_pitch = (std::isfinite(shin_pitch)) ? shin_pitch : 0.0;
   ankle_roll = (std::isfinite(ankle_roll)) ? ankle_roll : 0.0;
   ankle_yaw = (std::isfinite(ankle_yaw)) ? ankle_yaw : 0.0;
+
   double ankle_yaw_joint = joint_tree_[getLinkIndex("ankle_l_yaw")].joint_axis_.z() *
                            (ankle_yaw - eigen_math::rpyFromRotation(
                                             joint_tree_[getLinkIndex("ankle_l_yaw")].offset_orientation_)
@@ -708,9 +701,8 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
                                               .x());
   double shin_pitch_joint =
       joint_tree_[getLinkIndex("shin_l_front_passive")].joint_axis_.y() *
-      (shin_pitch - eigen_math::rpyFromRotation(
-                        joint_tree_[getLinkIndex("shin_l_front_passive")].offset_orientation_)
-                        .y());
+      (shin_pitch * joint_tree_[getLinkIndex("shin_l_front_passive")].joint_mimic_multiplier_
+       - eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("shin_l_front_passive")].offset_orientation_).y());
   double thigh_pitch_joint = joint_tree_[getLinkIndex("thigh_l_active")].joint_axis_.y() *
                              (thigh_pitch - eigen_math::rpyFromRotation(
                                                 joint_tree_[getLinkIndex("thigh_l_active")].offset_orientation_)
@@ -741,11 +733,7 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
   ankle_yaw_joint =
       std::max(std::min(ankle_yaw_joint, joint_tree_[getLinkIndex("ankle_l_yaw")].joint_limit_upper_),
                joint_tree_[getLinkIndex("ankle_l_yaw")].joint_limit_lower_);
-  double shin_pitch_joint =
-      shin_pitch_joint / joint_tree_[getLinkIndex("shin_l_front_passive")].joint_mimic_multiplier_;
-  shin_pitch_joint =
-      std::max(std::min(shin_pitch_joint, joint_tree_[getLinkIndex("shin_l_active")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("shin_l_active")].joint_limit_lower_);
+
   joints_out.resize(6);
   joints_out[0] = hip_roll_joint;
   joints_out[1] = hip_pitch_joint;
@@ -757,65 +745,79 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
 }
 
 bool KurokoKinematics::solveForwardKinematicsForRightLeg(const std::vector<double> joints_in,
-                                                         std::vector<double>& target_pose_out)
+                                                        std::vector<double>& target_pose_out)
 {
   double x, y, z, roll, pitch, yaw;
   // Define link lengths for the right leg
   double base_to_hip_roll_z = joint_tree_[getLinkIndex("hip_r_roll")].offset_position_.z();
-  double hip_roll_to_pitch_y = joint_tree_[getLinkIndex("hip_r_pitch")].offset_position_.y() + joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.y();
+  double hip_roll_to_pitch_y = joint_tree_[getLinkIndex("hip_r_pitch")].offset_position_.y()
+   + joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.y();
   double hip_pitch_to_thigh_z = joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.z();
   double thigh_length = fabs(joint_tree_[getLinkIndex("knee_r_passive")].offset_position_.z());
   double shin_length = fabs(joint_tree_[getLinkIndex("ankle_r_pitch_passive")].offset_position_.z());
-  double ankle_pitch_to_roll_z =
-      joint_tree_[getLinkIndex("ankle_r_roll")].offset_position_.z();
+  double ankle_pitch_to_roll_z = joint_tree_[getLinkIndex("ankle_r_roll")].offset_position_.z();
   double ankle_roll_to_yaw_z = joint_tree_[getLinkIndex("ankle_r_yaw")].offset_position_.z() +
                                       joint_tree_[getLinkIndex("leg_r_end")].offset_position_.z();
 
   // Extract joint angles from input vector
-  double hip_roll_joint = joints_in[0];
-  double hip_pitch_joint = joints_in[1];
-  double thigh_pitch_joint = joints_in[2];
-  double shin_pitch_joint = joints_in[3];
-  double ankle_roll_joint = joints_in[4];
-  double ankle_yaw_joint = joints_in[5];
+  double hip_roll_joint_in = joints_in[0];
+  double hip_pitch_joint_in = joints_in[1];
+  double thigh_pitch_joint_in = joints_in[2];
+  double shin_pitch_joint_in = joints_in[3];
+  double ankle_roll_joint_in = joints_in[4];
+  double ankle_yaw_joint_in = joints_in[5];
 
   // Convert active shin joint to passive shin pitch
-  double shin_pitch_joint =
-      shin_pitch_joint * joint_tree_[getLinkIndex("shin_r_front_passive")].joint_mimic_multiplier_;
   double hip_roll =
-      (hip_roll_joint / joint_tree_[getLinkIndex("hip_r_roll")].joint_axis_.x()) +
+      (hip_roll_joint_in * joint_tree_[getLinkIndex("hip_r_roll")].joint_axis_.x()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("hip_r_roll")].offset_orientation_)
           .x();
   double hip_pitch =
-      (hip_pitch_joint / joint_tree_[getLinkIndex("hip_r_pitch")].joint_axis_.y()) +
+      (hip_pitch_joint_in * joint_tree_[getLinkIndex("hip_r_pitch")].joint_axis_.y()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("hip_r_pitch")].offset_orientation_)
           .y();
   double thigh_pitch =
-      (thigh_pitch_joint / joint_tree_[getLinkIndex("thigh_r_active")].joint_axis_.y()) +
+      (thigh_pitch_joint_in * joint_tree_[getLinkIndex("thigh_r_active")].joint_axis_.y()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("thigh_r_active")].offset_orientation_)
           .y();
   double shin_pitch =
-      (shin_pitch_joint / joint_tree_[getLinkIndex("shin_r_front_passive")].joint_axis_.y()) +
+      (shin_pitch_joint_in * joint_tree_[getLinkIndex("shin_r_front_passive")].joint_axis_.y()
+       * joint_tree_[getLinkIndex("shin_r_front_passive")].joint_mimic_multiplier_) +
       eigen_math::rpyFromRotation(
           joint_tree_[getLinkIndex("shin_r_front_passive")].offset_orientation_)
           .y();
   double ankle_roll =
-      (ankle_roll_joint / joint_tree_[getLinkIndex("ankle_r_roll")].joint_axis_.x()) +
+      (ankle_roll_joint_in * joint_tree_[getLinkIndex("ankle_r_roll")].joint_axis_.x()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("ankle_r_roll")].offset_orientation_)
           .x();
   double ankle_yaw =
-      (ankle_yaw_joint / joint_tree_[getLinkIndex("ankle_r_yaw")].joint_axis_.z()) +
+      (ankle_yaw_joint_in * joint_tree_[getLinkIndex("ankle_r_yaw")].joint_axis_.z()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("ankle_r_yaw")].offset_orientation_)
           .z();
 
   // Compute toe orientation
-  roll = hip_roll + ankle_roll;
-  pitch = hip_pitch;
-  yaw = ankle_yaw;
+  // Orientation: hip_roll -> hip_pitch -> ankle_roll -> ankle_yaw
+  const Eigen::AngleAxisd rot_hip_roll(hip_roll, Eigen::Vector3d::UnitX());
+  const Eigen::AngleAxisd rot_hip_pitch(hip_pitch, Eigen::Vector3d::UnitY());
+  const Eigen::AngleAxisd rot_ankle_roll(ankle_roll, Eigen::Vector3d::UnitX());
+  const Eigen::AngleAxisd rot_ankle_yaw(ankle_yaw, Eigen::Vector3d::UnitZ());
+
+  const Eigen::Matrix3d rotation =
+    (rot_hip_roll *
+     rot_hip_pitch *
+     rot_ankle_roll *
+     rot_ankle_yaw).toRotationMatrix();
+
+  roll  = std::atan2(rotation(2,1), rotation(2,2));
+  pitch = std::atan2(
+            -rotation(2,0),
+            std::sqrt(rotation(2,1) * rotation(2,1) +
+                      rotation(2,2) * rotation(2,2)));
+  yaw   = std::atan2(rotation(1,0), rotation(0,0));
 
   // Compute foot position relative to hip pitch link
   double hip_end_x = 0;
-  double hip_end_z = base_to_hip_roll_z+hip_pitch_to_thigh_z;
+  double hip_end_z = hip_pitch_to_thigh_z;
 
   double thigh_end_x = hip_end_x - thigh_length * sin(thigh_pitch);
   double thigh_end_z = hip_end_z - thigh_length * cos(thigh_pitch);
@@ -826,16 +828,16 @@ bool KurokoKinematics::solveForwardKinematicsForRightLeg(const std::vector<doubl
   double toe_end_x = shin_end_x;
   double toe_end_z = shin_end_z + ankle_pitch_to_roll_z + ankle_roll_to_yaw_z * cos(ankle_roll);
 
-  double toe_end_x_pitched = toe_end_x * cos(hip_pitch) - toe_end_z * sin(hip_pitch);
+  double toe_end_x_pitched = toe_end_x * cos(hip_pitch) + toe_end_z * sin(hip_pitch);
   double toe_end_y_pitched = hip_roll_to_pitch_y - ankle_roll_to_yaw_z * sin(ankle_roll);
-  double toe_end_z_pitched = toe_end_x * sin(hip_pitch) + toe_end_z * cos(hip_pitch);
+  double toe_end_z_pitched = - toe_end_x * sin(hip_pitch) + toe_end_z * cos(hip_pitch);
 
   double toe_end_y_rolled = toe_end_y_pitched * cos(hip_roll) - toe_end_z_pitched * sin(hip_roll);
   double toe_end_z_rolled = toe_end_y_pitched * sin(hip_roll) + toe_end_z_pitched * cos(hip_roll);
 
   // Account for other offsets
   x = toe_end_x_pitched;
-  z = toe_end_z_rolled;
+  z = base_to_hip_roll_z + toe_end_z_rolled;
   y = toe_end_y_rolled;
 
   target_pose_out.resize(6);
@@ -853,62 +855,78 @@ bool KurokoKinematics::solveForwardKinematicsForLeftLeg(const std::vector<double
                                                         std::vector<double>& target_pose_out)
 {
   double x, y, z, roll, pitch, yaw;
-  // Define link lengths for the left leg
+  // Define link lengths for the right leg
   double base_to_hip_roll_z = joint_tree_[getLinkIndex("hip_l_roll")].offset_position_.z();
-  double hip_roll_to_pitch_y = joint_tree_[getLinkIndex("hip_l_pitch")].offset_position_.y() + joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.y();
+  double hip_roll_to_pitch_y =
+   joint_tree_[getLinkIndex("hip_l_pitch")].offset_position_.y()
+   + joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.y();
   double hip_pitch_to_thigh_z = joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.z();
   double thigh_length = fabs(joint_tree_[getLinkIndex("knee_l_passive")].offset_position_.z());
   double shin_length = fabs(joint_tree_[getLinkIndex("ankle_l_pitch_passive")].offset_position_.z());
-  double ankle_pitch_to_roll_z =
-      joint_tree_[getLinkIndex("ankle_l_roll")].offset_position_.z();
-  double ankle_roll_to_yaw_z = joint_tree_[getLinkIndex("ankle_l_yaw")].offset_position_.z() +
-                                      joint_tree_[getLinkIndex("leg_l_end")].offset_position_.z();
+  double ankle_pitch_to_roll_z = joint_tree_[getLinkIndex("ankle_l_roll")].offset_position_.z();
+  double ankle_roll_to_yaw_z =
+   joint_tree_[getLinkIndex("ankle_l_yaw")].offset_position_.z()
+   + joint_tree_[getLinkIndex("leg_l_end")].offset_position_.z();
 
   // Extract joint angles from input vector
-  double hip_roll_joint = joints_in[0];
-  double hip_pitch_joint = joints_in[1];
-  double thigh_pitch_joint = joints_in[2];
-  double shin_pitch_joint = joints_in[3];
-  double ankle_roll_joint = joints_in[4];
-  double ankle_yaw_joint = joints_in[5];
+  double hip_roll_joint_in = joints_in[0];
+  double hip_pitch_joint_in = joints_in[1];
+  double thigh_pitch_joint_in = joints_in[2];
+  double shin_pitch_joint_in = joints_in[3];
+  double ankle_roll_joint_in = joints_in[4];
+  double ankle_yaw_joint_in = joints_in[5];
 
   // Convert active shin joint to passive shin pitch
-  double shin_pitch_joint =
-      shin_pitch_joint * joint_tree_[getLinkIndex("shin_l_front_passive")].joint_mimic_multiplier_;
   double hip_roll =
-      (hip_roll_joint / joint_tree_[getLinkIndex("hip_l_roll")].joint_axis_.x()) +
+      (hip_roll_joint_in * joint_tree_[getLinkIndex("hip_l_roll")].joint_axis_.x()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("hip_l_roll")].offset_orientation_)
           .x();
   double hip_pitch =
-      (hip_pitch_joint / joint_tree_[getLinkIndex("hip_l_pitch")].joint_axis_.y()) +
+      (hip_pitch_joint_in * joint_tree_[getLinkIndex("hip_l_pitch")].joint_axis_.y()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("hip_l_pitch")].offset_orientation_)
           .y();
   double thigh_pitch =
-      (thigh_pitch_joint / joint_tree_[getLinkIndex("thigh_l_active")].joint_axis_.y()) +
+      (thigh_pitch_joint_in * joint_tree_[getLinkIndex("thigh_l_active")].joint_axis_.y()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("thigh_l_active")].offset_orientation_)
           .y();
   double shin_pitch =
-      (shin_pitch_joint / joint_tree_[getLinkIndex("shin_l_front_passive")].joint_axis_.y()) +
+      (shin_pitch_joint_in * joint_tree_[getLinkIndex("shin_l_front_passive")].joint_axis_.y()
+       * joint_tree_[getLinkIndex("shin_l_front_passive")].joint_mimic_multiplier_) +
       eigen_math::rpyFromRotation(
           joint_tree_[getLinkIndex("shin_l_front_passive")].offset_orientation_)
           .y();
   double ankle_roll =
-      (ankle_roll_joint / joint_tree_[getLinkIndex("ankle_l_roll")].joint_axis_.x()) +
+      (ankle_roll_joint_in * joint_tree_[getLinkIndex("ankle_l_roll")].joint_axis_.x()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("ankle_l_roll")].offset_orientation_)
           .x();
   double ankle_yaw =
-      (ankle_yaw_joint / joint_tree_[getLinkIndex("ankle_l_yaw")].joint_axis_.z()) +
+      (ankle_yaw_joint_in * joint_tree_[getLinkIndex("ankle_l_yaw")].joint_axis_.z()) +
       eigen_math::rpyFromRotation(joint_tree_[getLinkIndex("ankle_l_yaw")].offset_orientation_)
           .z();
 
   // Compute toe orientation
-  roll = hip_roll + ankle_roll;
-  pitch = hip_pitch;
-  yaw = ankle_yaw;
+  // Orientation: hip_roll -> hip_pitch -> ankle_roll -> ankle_yaw
+  const Eigen::AngleAxisd rot_hip_roll(hip_roll, Eigen::Vector3d::UnitX());
+  const Eigen::AngleAxisd rot_hip_pitch(hip_pitch, Eigen::Vector3d::UnitY());
+  const Eigen::AngleAxisd rot_ankle_roll(ankle_roll, Eigen::Vector3d::UnitX());
+  const Eigen::AngleAxisd rot_ankle_yaw(ankle_yaw, Eigen::Vector3d::UnitZ());
+
+  const Eigen::Matrix3d rotation =
+    (rot_hip_roll *
+     rot_hip_pitch *
+     rot_ankle_roll *
+     rot_ankle_yaw).toRotationMatrix();
+
+  roll  = std::atan2(rotation(2,1), rotation(2,2));
+  pitch = std::atan2(
+            -rotation(2,0),
+            std::sqrt(rotation(2,1) * rotation(2,1) +
+                      rotation(2,2) * rotation(2,2)));
+  yaw   = std::atan2(rotation(1,0), rotation(0,0));
 
   // Compute foot position relative to hip pitch link
   double hip_end_x = 0;
-  double hip_end_z = base_to_hip_roll_z + hip_pitch_to_thigh_z;
+  double hip_end_z = hip_pitch_to_thigh_z;
 
   double thigh_end_x = hip_end_x - thigh_length * sin(thigh_pitch);
   double thigh_end_z = hip_end_z - thigh_length * cos(thigh_pitch);
@@ -919,16 +937,16 @@ bool KurokoKinematics::solveForwardKinematicsForLeftLeg(const std::vector<double
   double toe_end_x = shin_end_x;
   double toe_end_z = shin_end_z + ankle_pitch_to_roll_z + ankle_roll_to_yaw_z * cos(ankle_roll);
 
-  double toe_end_x_pitched = toe_end_x * cos(hip_pitch) - toe_end_z * sin(hip_pitch);
+  double toe_end_x_pitched = toe_end_x * cos(hip_pitch) + toe_end_z * sin(hip_pitch);
   double toe_end_y_pitched = hip_roll_to_pitch_y - ankle_roll_to_yaw_z * sin(ankle_roll);
-  double toe_end_z_pitched = toe_end_x * sin(hip_pitch) + toe_end_z * cos(hip_pitch);
+  double toe_end_z_pitched = - toe_end_x * sin(hip_pitch) + toe_end_z * cos(hip_pitch);
 
   double toe_end_y_rolled = toe_end_y_pitched * cos(hip_roll) - toe_end_z_pitched * sin(hip_roll);
   double toe_end_z_rolled = toe_end_y_pitched * sin(hip_roll) + toe_end_z_pitched * cos(hip_roll);
 
   // Account for other offsets
   x = toe_end_x_pitched;
-  z = toe_end_z_rolled;
+  z = base_to_hip_roll_z + toe_end_z_rolled;
   y = toe_end_y_rolled;
 
   target_pose_out.resize(6);
@@ -938,6 +956,7 @@ bool KurokoKinematics::solveForwardKinematicsForLeftLeg(const std::vector<double
   target_pose_out[3] = roll;
   target_pose_out[4] = pitch;
   target_pose_out[5] = yaw;
+
   return true;
 }
 

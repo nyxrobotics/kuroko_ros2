@@ -156,7 +156,7 @@
       <child link="thigh_r_middle_passive_link"/>
       <origin xyz="-0.0185 -0.02925 -0.0305" rpy="0 -0.785398163 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="0" lower="-0.4974" upper="1.8588" velocity="1000"/>
+      <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000"/>
       <dynamics damping="0" friction="0"/>
       <mimic joint="thigh_r_active" multiplier="1" offset="0"/>
     </joint>
@@ -229,7 +229,7 @@
       <child link="knee_r_passive_link"/>
       <origin xyz="0 0 0" rpy="0 -0.785398164 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="0" lower="-3.141592654" upper="3.141592654" velocity="1000.0"/>
+      <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000.0"/>
       <dynamics damping="0.0" friction="0.0"/>
       <mimic joint="shin_r_active" multiplier="-1" offset="0"/>
     </joint>
@@ -311,7 +311,7 @@
       <child link="ankle_r_rear_passive_link"/>
       <origin xyz="0 0 -0.1" rpy="0 -0.785398163 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="0" lower="-0.4974" upper="1.8588" velocity="1000.0"/>
+      <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000.0"/>
       <dynamics damping="0.0" friction="0.0"/>
       <mimic joint="shin_r_active" multiplier="-1" offset="0"/>
     </joint>

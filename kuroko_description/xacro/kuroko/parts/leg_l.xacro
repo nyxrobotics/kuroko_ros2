@@ -83,8 +83,8 @@
       <parent link="hip_l_pitch_link"/>
       <child link="thigh_l_active_link"/>
       <origin xyz="0.015 0.02925 -0.0305" rpy="0 -0.785398163 0"/>
-      <axis xyz="0 -1 0"/>
-      <limit effort="8.9" lower="-1.8588" upper="0.4974" velocity="6.9"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="8.9" lower="-0.4974" upper="1.8588" velocity="6.9"/>
       <dynamics damping="1.29" friction="0.0"/>
     </joint>
     <link name="thigh_l_active_link">
@@ -111,7 +111,7 @@
         <axis xyz="0 1 0"/>
         <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000"/>
         <dynamics damping="0.0" friction="0.0"/>
-        <mimic joint="thigh_l_active" multiplier="1" offset="0"/>
+        <mimic joint="thigh_l_active" multiplier="-1" offset="0"/>
       </joint>
       <link name="shin_l_front_mimic_link"/>
       <joint name="shin_l_front_passive" type="revolute">
@@ -121,7 +121,7 @@
         <axis xyz="0 1 0"/>
         <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000"/>
         <dynamics damping="0.0" friction="0.0"/>
-        <mimic joint="shin_l_active" multiplier="-1" offset="0"/>
+        <mimic joint="shin_l_active" multiplier="1" offset="0"/>
       </joint>
     </xacro:unless>
     <xacro:if value="$(arg gazebo)">
@@ -156,9 +156,9 @@
       <child link="thigh_l_middle_passive_link"/>
       <origin xyz="-0.0185 0.02925 -0.0305" rpy="0 -0.785398163 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="0" lower="-0.4974" upper="1.8588" velocity="1000"/>
+      <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000"/>
       <dynamics damping="0" friction="0"/>
-      <mimic joint="thigh_l_active" multiplier="-1" offset="0"/>
+      <mimic joint="thigh_l_active" multiplier="1" offset="0"/>
     </joint>
     <link name="thigh_l_middle_passive_link">
       <xacro:unless value="$(arg box_visual)">
@@ -184,7 +184,7 @@
         <axis xyz="0 1 0"/>
         <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000"/>
         <dynamics damping="0.0" friction="0.0"/>
-        <mimic joint="thigh_l_active" multiplier="1" offset="0"/>
+        <mimic joint="thigh_l_active" multiplier="-1" offset="0"/>
       </joint>
       <link name="shin_l_rear_mimic_link"/>
       <joint name="shin_l_rear_passive" type="revolute">
@@ -194,7 +194,7 @@
         <axis xyz="0 1 0"/>
         <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000"/>
         <dynamics damping="0.0" friction="0.0"/>
-        <mimic joint="shin_l_active" multiplier="-1" offset="0"/>
+        <mimic joint="shin_l_active" multiplier="1" offset="0"/>
       </joint>
     </xacro:unless>
     <xacro:if value="$(arg gazebo)">
@@ -229,9 +229,9 @@
       <child link="knee_l_passive_link"/>
       <origin xyz="0 0 0" rpy="0 -0.785398164 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="0" lower="-3.141592654" upper="3.141592654" velocity="1000.0"/>
+      <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000.0"/>
       <dynamics damping="0.0" friction="0.0"/>
-      <mimic joint="shin_l_active" multiplier="1" offset="0"/>
+      <mimic joint="shin_l_active" multiplier="-1" offset="0"/>
     </joint>
     <link name="knee_l_passive_link">
       <xacro:unless value="$(arg box_visual)">
@@ -262,7 +262,7 @@
         <axis xyz="0 1 0"/>
         <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000"/>
         <dynamics damping="0.0" friction="0.0"/>
-        <mimic joint="thigh_l_active" multiplier="-1" offset="0"/>
+        <mimic joint="thigh_l_active" multiplier="1" offset="0"/>
       </joint>
       <link name="thigh_l_rear_mimic_link"/>
       <joint name="thigh_l_rear_passive" type="revolute">
@@ -272,7 +272,7 @@
         <axis xyz="0 1 0"/>
         <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000"/>
         <dynamics damping="0.0" friction="0.0"/>
-        <mimic joint="shin_l_active" multiplier="1" offset="0"/>
+        <mimic joint="shin_l_active" multiplier="-1" offset="0"/>
       </joint>
     </xacro:unless>
     <xacro:if value="$(arg gazebo)">
@@ -311,9 +311,9 @@
       <child link="ankle_l_rear_passive_link"/>
       <origin xyz="0 0 -0.1" rpy="0 -0.785398163 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="0" lower="-0.4974" upper="1.8588" velocity="1000.0"/>
+      <limit effort="0" lower="-3.1416" upper="3.1416" velocity="1000.0"/>
       <dynamics damping="0.0" friction="0.0"/>
-      <mimic joint="shin_l_active" multiplier="1" offset="0"/>
+      <mimic joint="shin_l_active" multiplier="-1" offset="0"/>
     </joint>
     <link name="ankle_l_rear_passive_link">
       <xacro:unless value="$(arg box_visual)">
