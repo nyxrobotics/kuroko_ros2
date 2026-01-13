@@ -118,9 +118,11 @@ public:
     fk_left_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
       "/fk/left_foot_pose", rclcpp::SystemDefaultsQoS());
 
-    // IMPORTANT: renamed as requested
-    ik_joint_states_pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
-      "/ik/joint_states", rclcpp::SystemDefaultsQoS());
+    // Publish IK results per leg (separate topics)
+    ik_right_joint_states_pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
+      "/ik/right_joint_states", rclcpp::SystemDefaultsQoS());
+    ik_left_joint_states_pub_ = this->create_publisher<sensor_msgs::msg::JointState>(
+      "/ik/left_joint_states", rclcpp::SystemDefaultsQoS());
 
     sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
       "/joint_states",
@@ -256,7 +258,15 @@ private:
     for (size_t i = 0; i < 6; ++i) {
       js.position[i] = q_out[i];
     }
-    ik_joint_states_pub_->publish(js);
+
+    // Split topics by leg:
+    //  - right: /ik/right_joint_states
+    //  - left : /ik/left_joint_states
+    if (cfg.label == "right") {
+      ik_right_joint_states_pub_->publish(js);
+    } else {
+      ik_left_joint_states_pub_->publish(js);
+    }
   }
 
 private:
@@ -265,7 +275,10 @@ private:
 
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr fk_right_pose_pub_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr fk_left_pose_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr ik_joint_states_pub_;
+
+  // Separate IK topics for right/left
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr ik_right_joint_states_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr ik_left_joint_states_pub_;
 
   std::string base_frame_{"base_link"};
   bool publish_fk_pose_{true};
