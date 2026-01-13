@@ -19,384 +19,380 @@ KurokoKinematics::KurokoKinematics()
 {
   joint_tree_.resize(kJointCount);
 
-    // Base link
-    joint_tree_[0].name_ = "base";
-    joint_tree_[0].parent_ = -1;
-    joint_tree_[0].child_ = 1;
-    joint_tree_[0].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[0].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[0].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[0].joint_limit_lower_ = 0.0;
-    joint_tree_[0].joint_limit_upper_ = 0.0;
+  // Base link
+  joint_tree_[0].name_ = "base";
+  joint_tree_[0].parent_ = -1;
+  joint_tree_[0].child_ = 1;
+  joint_tree_[0].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  joint_tree_[0].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[0].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  joint_tree_[0].joint_limit_lower_ = 0.0;
+  joint_tree_[0].joint_limit_upper_ = 0.0;
 
-    // Waist link
-    joint_tree_[1].name_ = "waist";
-    joint_tree_[1].parent_ = 0;
-    joint_tree_[1].child_ = 2;
-    joint_tree_[1].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[1].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[1].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[1].joint_limit_lower_ = 0.0;
-    joint_tree_[1].joint_limit_upper_ = 0.0;
+  // Waist link
+  joint_tree_[1].name_ = "waist";
+  joint_tree_[1].parent_ = 0;
+  joint_tree_[1].child_ = 2;
+  joint_tree_[1].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  joint_tree_[1].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[1].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  joint_tree_[1].joint_limit_lower_ = 0.0;
+  joint_tree_[1].joint_limit_upper_ = 0.0;
 
-    // Chest link
-    joint_tree_[2].name_ = "chest";
-    joint_tree_[2].parent_ = 1;
-    joint_tree_[2].child_ = 3;
-    joint_tree_[2].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[2].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[2].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 1.0);
-    joint_tree_[2].joint_limit_lower_ = -3.1;
-    joint_tree_[2].joint_limit_upper_ = 3.1;
+  // Chest link
+  joint_tree_[2].name_ = "chest";
+  joint_tree_[2].parent_ = 1;
+  joint_tree_[2].child_ = 3;
+  joint_tree_[2].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  joint_tree_[2].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[2].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 1.0);
+  joint_tree_[2].joint_limit_lower_ = -3.1;
+  joint_tree_[2].joint_limit_upper_ = 3.1;
 
-    // Right Arm
-    joint_tree_[3].name_ = "shoulder_r_pitch";
-    joint_tree_[3].parent_ = 2;
-    joint_tree_[3].child_ = 4;
-    joint_tree_[3].offset_position_ = eigen_math::transitionXYZ(0.0, -0.1275, 0.01275);
-    joint_tree_[3].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[3].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[3].joint_limit_lower_ = -3.1;
-    joint_tree_[3].joint_limit_upper_ = 3.1;
+  // Right Arm
+  joint_tree_[3].name_ = "shoulder_r_pitch";
+  joint_tree_[3].parent_ = 2;
+  joint_tree_[3].child_ = 4;
+  joint_tree_[3].offset_position_ = eigen_math::transitionXYZ(0.0, -0.1275, 0.01275);
+  joint_tree_[3].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[3].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[3].joint_limit_lower_ = -3.1;
+  joint_tree_[3].joint_limit_upper_ = 3.1;
 
-    joint_tree_[4].name_ = "shoulder_r_roll";
-    joint_tree_[4].parent_ = 3;
-    joint_tree_[4].child_ = 5;
-    joint_tree_[4].offset_position_ = eigen_math::transitionXYZ(0.0, -0.1275, 0.01275);
-    joint_tree_[4].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[4].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
-    joint_tree_[4].joint_limit_lower_ = -2.0071;
-    joint_tree_[4].joint_limit_upper_ = 1.0472;
+  joint_tree_[4].name_ = "shoulder_r_roll";
+  joint_tree_[4].parent_ = 3;
+  joint_tree_[4].child_ = 5;
+  joint_tree_[4].offset_position_ = eigen_math::transitionXYZ(0.0, -0.1275, 0.01275);
+  joint_tree_[4].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[4].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+  joint_tree_[4].joint_limit_lower_ = -2.0071;
+  joint_tree_[4].joint_limit_upper_ = 1.0472;
 
-    // Gripper
-    joint_tree_[5].name_ = "elbow_r_front";
-    joint_tree_[5].parent_ = 4;
-    joint_tree_[5].child_ = -1;
-    joint_tree_[5].offset_position_ = eigen_math::transitionXYZ(0.0, 0.008, -0.052);
-    joint_tree_[5].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[5].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[5].joint_limit_lower_ = -2.6180;
-    joint_tree_[5].joint_limit_upper_ = 2.6180;
+  // Gripper
+  joint_tree_[5].name_ = "elbow_r_front";
+  joint_tree_[5].parent_ = 4;
+  joint_tree_[5].child_ = -1;
+  joint_tree_[5].offset_position_ = eigen_math::transitionXYZ(0.0, 0.008, -0.052);
+  joint_tree_[5].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[5].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[5].joint_limit_lower_ = -2.6180;
+  joint_tree_[5].joint_limit_upper_ = 2.6180;
 
-    joint_tree_[6].name_ = "elbow_r_rear";
-    joint_tree_[6].parent_ = 4;
-    joint_tree_[6].child_ = -1;
-    joint_tree_[6].offset_position_ = eigen_math::transitionXYZ(0.0, 0.008, -0.052);
-    joint_tree_[6].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[6].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[6].joint_limit_lower_ = -2.6180;
-    joint_tree_[6].joint_limit_upper_ = 2.6180;
+  joint_tree_[6].name_ = "elbow_r_rear";
+  joint_tree_[6].parent_ = 4;
+  joint_tree_[6].child_ = -1;
+  joint_tree_[6].offset_position_ = eigen_math::transitionXYZ(0.0, 0.008, -0.052);
+  joint_tree_[6].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[6].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[6].joint_limit_lower_ = -2.6180;
+  joint_tree_[6].joint_limit_upper_ = 2.6180;
 
-    // Left Arm
-    joint_tree_[7].name_ = "shoulder_l_pitch";
-    joint_tree_[7].parent_ = 2;
-    joint_tree_[7].child_ = 8;
-    joint_tree_[7].offset_position_ = eigen_math::transitionXYZ(0.0, 0.1275, 0.01275);
-    joint_tree_[7].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[7].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[7].joint_limit_lower_ = -3.1;
-    joint_tree_[7].joint_limit_upper_ = 3.1;
+  // Left Arm
+  joint_tree_[7].name_ = "shoulder_l_pitch";
+  joint_tree_[7].parent_ = 2;
+  joint_tree_[7].child_ = 8;
+  joint_tree_[7].offset_position_ = eigen_math::transitionXYZ(0.0, 0.1275, 0.01275);
+  joint_tree_[7].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[7].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[7].joint_limit_lower_ = -3.1;
+  joint_tree_[7].joint_limit_upper_ = 3.1;
 
-    joint_tree_[8].name_ = "shoulder_l_roll";
-    joint_tree_[8].parent_ = 7;
-    joint_tree_[8].child_ = 9;
-    joint_tree_[8].offset_position_ = eigen_math::transitionXYZ(0.0, 0.038, 0.0);
-    joint_tree_[8].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[8].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
-    joint_tree_[8].joint_limit_lower_ = -1.0472;
-    joint_tree_[8].joint_limit_upper_ = 2.0071;
+  joint_tree_[8].name_ = "shoulder_l_roll";
+  joint_tree_[8].parent_ = 7;
+  joint_tree_[8].child_ = 9;
+  joint_tree_[8].offset_position_ = eigen_math::transitionXYZ(0.0, 0.038, 0.0);
+  joint_tree_[8].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[8].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+  joint_tree_[8].joint_limit_lower_ = -1.0472;
+  joint_tree_[8].joint_limit_upper_ = 2.0071;
 
-    // Gripper
-    joint_tree_[9].name_ = "elbow_l_front";
-    joint_tree_[9].parent_ = 8;
-    joint_tree_[9].child_ = -1;
-    joint_tree_[9].offset_position_ = eigen_math::transitionXYZ(0.0, -0.008, -0.052);
-    joint_tree_[9].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[9].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[9].joint_limit_lower_ = -2.6180;
-    joint_tree_[9].joint_limit_upper_ = 2.6180;
+  // Gripper
+  joint_tree_[9].name_ = "elbow_l_front";
+  joint_tree_[9].parent_ = 8;
+  joint_tree_[9].child_ = -1;
+  joint_tree_[9].offset_position_ = eigen_math::transitionXYZ(0.0, -0.008, -0.052);
+  joint_tree_[9].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[9].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[9].joint_limit_lower_ = -2.6180;
+  joint_tree_[9].joint_limit_upper_ = 2.6180;
 
-    joint_tree_[10].name_ = "elbow_l_rear";
-    joint_tree_[10].parent_ = 8;
-    joint_tree_[10].child_ = -1;
-    joint_tree_[10].offset_position_ = eigen_math::transitionXYZ(0.0, -0.008, -0.052);
-    joint_tree_[10].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[10].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[10].joint_limit_lower_ = -2.6180;
-    joint_tree_[10].joint_limit_upper_ = 2.6180;
+  joint_tree_[10].name_ = "elbow_l_rear";
+  joint_tree_[10].parent_ = 8;
+  joint_tree_[10].child_ = -1;
+  joint_tree_[10].offset_position_ = eigen_math::transitionXYZ(0.0, -0.008, -0.052);
+  joint_tree_[10].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[10].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[10].joint_limit_lower_ = -2.6180;
+  joint_tree_[10].joint_limit_upper_ = 2.6180;
 
-    // Right Leg
-    joint_tree_[11].name_ = "hip_r_roll";
-    joint_tree_[11].parent_ = 1;    // waist
-    joint_tree_[11].child_ = 12;    // hip_r_pitch
-    joint_tree_[11].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.08425);
-    joint_tree_[11].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[11].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
-    joint_tree_[11].joint_limit_lower_ = -0.5550;
-    joint_tree_[11].joint_limit_upper_ = 1.8640;
+  // Right Leg
+  joint_tree_[11].name_ = "hip_r_roll";
+  joint_tree_[11].parent_ = 1;    // waist
+  joint_tree_[11].child_ = 12;    // hip_r_pitch
+  joint_tree_[11].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.08425);
+  joint_tree_[11].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[11].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+  joint_tree_[11].joint_limit_lower_ = -0.5550;
+  joint_tree_[11].joint_limit_upper_ = 1.8640;
 
-    // Right hip pitch
-    joint_tree_[12].name_ = "hip_r_pitch";
-    joint_tree_[12].parent_ = 11;  // hip_r_roll
-    joint_tree_[12].child_ = 13;  // thigh_r_active
-    joint_tree_[12].offset_position_ = eigen_math::transitionXYZ(0.0, -0.027, 0.0);
-    joint_tree_[12].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[12].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[12].joint_limit_lower_ = -3.1;
-    joint_tree_[12].joint_limit_upper_ = 3.1;
+  // Right hip pitch
+  joint_tree_[12].name_ = "hip_r_pitch";
+  joint_tree_[12].parent_ = 11;  // hip_r_roll
+  joint_tree_[12].child_ = 13;  // thigh_r_active
+  joint_tree_[12].offset_position_ = eigen_math::transitionXYZ(0.0, -0.027, 0.0);
+  joint_tree_[12].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[12].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[12].joint_limit_lower_ = -3.1;
+  joint_tree_[12].joint_limit_upper_ = 3.1;
 
-    // Right thigh front active
-    joint_tree_[13].name_ = "thigh_r_active";
-    joint_tree_[13].parent_ = 12;   // hip_r_pitch
-    joint_tree_[13].child_ = 14;    // knee_r_passive
-    joint_tree_[13].offset_position_ = eigen_math::transitionXYZ(0.015, -0.02925, -0.0305);
-    joint_tree_[13].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
-    joint_tree_[13].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[13].joint_limit_lower_ = -0.4974;
-    joint_tree_[13].joint_limit_upper_ = 1.8588;
+  // Right thigh front active
+  joint_tree_[13].name_ = "thigh_r_active";
+  joint_tree_[13].parent_ = 12;   // hip_r_pitch
+  joint_tree_[13].child_ = 14;    // knee_r_passive
+  joint_tree_[13].offset_position_ = eigen_math::transitionXYZ(0.015, -0.02925, -0.0305);
+  joint_tree_[13].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
+  joint_tree_[13].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[13].joint_limit_lower_ = -0.4974;
+  joint_tree_[13].joint_limit_upper_ = 1.8588;
 
-    // Right knee passive
-    joint_tree_[14].name_ = "knee_r_passive";
-    joint_tree_[14].parent_ = 13;  // thigh_r_active
-    joint_tree_[14].child_ = 15;  // shin_r_front_passive
-    joint_tree_[14].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
-    joint_tree_[14].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
-    joint_tree_[14].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[14].joint_mimic_ = "thigh_r_active";
-    joint_tree_[14].joint_mimic_multiplier_ = -1.0;
+  // Right knee passive
+  joint_tree_[14].name_ = "knee_r_passive";
+  joint_tree_[14].parent_ = 13;  // thigh_r_active
+  joint_tree_[14].child_ = 15;  // shin_r_front_passive
+  joint_tree_[14].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
+  joint_tree_[14].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
+  joint_tree_[14].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[14].joint_mimic_ = "thigh_r_active";
+  joint_tree_[14].joint_mimic_multiplier_ = -1.0;
 
-    // Right shin front passive
-    joint_tree_[15].name_ = "shin_r_front_passive";
-    joint_tree_[15].parent_ = 14;   // knee_r_passive
-    joint_tree_[15].child_ = 16;    // ankle_r_roll
-    joint_tree_[15].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[15].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
-    joint_tree_[15].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[15].joint_mimic_ = "shin_r_active";
-    joint_tree_[15].joint_mimic_multiplier_ = 1.0;
+  // Right shin front passive
+  joint_tree_[15].name_ = "shin_r_front_passive";
+  joint_tree_[15].parent_ = 14;   // knee_r_passive
+  joint_tree_[15].child_ = 16;    // ankle_r_roll
+  joint_tree_[15].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  joint_tree_[15].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
+  joint_tree_[15].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[15].joint_mimic_ = "shin_r_active";
+  joint_tree_[15].joint_mimic_multiplier_ = 1.0;
 
-    // Right ankle pitch passive
-    joint_tree_[16].name_ = "ankle_r_pitch_passive";
-    joint_tree_[16].parent_ = 15;  // shin_r_front_passive
-    joint_tree_[16].child_ = 17;  // ankle_r_roll
-    joint_tree_[16].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
-    joint_tree_[16].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
-    joint_tree_[16].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[16].joint_mimic_ = "shin_r_active";
-    joint_tree_[16].joint_mimic_multiplier_ = -1.0;
+  // Right ankle pitch passive
+  joint_tree_[16].name_ = "ankle_r_pitch_passive";
+  joint_tree_[16].parent_ = 15;  // shin_r_front_passive
+  joint_tree_[16].child_ = 17;  // ankle_r_roll
+  joint_tree_[16].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
+  joint_tree_[16].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
+  joint_tree_[16].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[16].joint_mimic_ = "shin_r_active";
+  joint_tree_[16].joint_mimic_multiplier_ = -1.0;
 
-    // Right ankle roll
-    joint_tree_[17].name_ = "ankle_r_roll";
-    joint_tree_[17].parent_ = 16;  // ankle_r_pitch_passive
-    joint_tree_[17].child_ = 18;  // ankle_r_yaw
-    joint_tree_[17].offset_position_ = eigen_math::transitionXYZ(-0.015, 0, -0.027);
-    joint_tree_[17].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[17].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
-    joint_tree_[17].joint_limit_lower_ = -0.3704;
-    joint_tree_[17].joint_limit_upper_ = 1.5708;
+  // Right ankle roll
+  joint_tree_[17].name_ = "ankle_r_roll";
+  joint_tree_[17].parent_ = 16;  // ankle_r_pitch_passive
+  joint_tree_[17].child_ = 18;  // ankle_r_yaw
+  joint_tree_[17].offset_position_ = eigen_math::transitionXYZ(-0.015, 0, -0.027);
+  joint_tree_[17].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[17].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+  joint_tree_[17].joint_limit_lower_ = -0.3704;
+  joint_tree_[17].joint_limit_upper_ = 1.5708;
 
-    // Right ankle yaw
-    joint_tree_[18].name_ = "ankle_r_yaw";
-    joint_tree_[18].parent_ = 17;  // ankle_r_roll
-    joint_tree_[18].child_ = 19;  // leg_r_end
-    joint_tree_[18].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.03825);
-    joint_tree_[18].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[18].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 1.0);
-    joint_tree_[18].joint_limit_lower_ = -3.1;
-    joint_tree_[18].joint_limit_upper_ = 3.1;
+  // Right ankle yaw
+  joint_tree_[18].name_ = "ankle_r_yaw";
+  joint_tree_[18].parent_ = 17;  // ankle_r_roll
+  joint_tree_[18].child_ = 19;  // leg_r_end
+  joint_tree_[18].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.03825);
+  joint_tree_[18].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[18].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 1.0);
+  joint_tree_[18].joint_limit_lower_ = -3.1;
+  joint_tree_[18].joint_limit_upper_ = 3.1;
 
-    // Right leg end
-    joint_tree_[19].name_ = "leg_r_end";
-    joint_tree_[19].parent_ = 18;  // ankle_r_yaw
-    joint_tree_[19].child_ = -1;
-    joint_tree_[19].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.004);
-    joint_tree_[19].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[19].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  // Right leg end
+  joint_tree_[19].name_ = "leg_r_end";
+  joint_tree_[19].parent_ = 18;  // ankle_r_yaw
+  joint_tree_[19].child_ = -1;
+  joint_tree_[19].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.004);
+  joint_tree_[19].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[19].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
 
-    joint_tree_[20].name_ = "shin_r_active";
-    joint_tree_[20].parent_ = 12;   // hip_r_pitch
-    joint_tree_[20].child_ = 21;    // thigh_r_rear_passive_mimic
-    joint_tree_[20].offset_position_ = eigen_math::transitionXYZ(-0.0185, -0.02925, -0.0305);
-    joint_tree_[20].offset_orientation_ = eigen_math::rotationFromRPY(0, 1.047197551, 0);
-    joint_tree_[20].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[20].joint_limit_lower_ = -1.8588;
-    joint_tree_[20].joint_limit_upper_ = 0.4974;
+  joint_tree_[20].name_ = "shin_r_active";
+  joint_tree_[20].parent_ = 12;   // hip_r_pitch
+  joint_tree_[20].child_ = 21;    // thigh_r_rear_passive_mimic
+  joint_tree_[20].offset_position_ = eigen_math::transitionXYZ(-0.0185, -0.02925, -0.0305);
+  joint_tree_[20].offset_orientation_ = eigen_math::rotationFromRPY(0, 1.047197551, 0);
+  joint_tree_[20].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[20].joint_limit_lower_ = -1.8588;
+  joint_tree_[20].joint_limit_upper_ = 0.4974;
 
-    joint_tree_[21].name_ = "thigh_r_rear_passive_mimic";
-    joint_tree_[21].parent_ = 20;  // shin_r_active
-    joint_tree_[21].child_ = 22;  // thigh_r_rear_passive
-    joint_tree_[21].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.03);
-    joint_tree_[21].offset_orientation_ = eigen_math::rotationFromRPY(0, -1.832597551, 0);
-    joint_tree_[21].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[21].joint_mimic_ = "shin_r_active";
-    joint_tree_[21].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[21].name_ = "thigh_r_rear_passive_mimic";
+  joint_tree_[21].parent_ = 20;  // shin_r_active
+  joint_tree_[21].child_ = 22;  // thigh_r_rear_passive
+  joint_tree_[21].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.03);
+  joint_tree_[21].offset_orientation_ = eigen_math::rotationFromRPY(0, -1.832597551, 0);
+  joint_tree_[21].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[21].joint_mimic_ = "shin_r_active";
+  joint_tree_[21].joint_mimic_multiplier_ = 1.0;
 
-    joint_tree_[22].name_ = "thigh_r_rear_passive";
-    joint_tree_[22].parent_ = 21;  // thigh_r_rear_passive_mimic
-    joint_tree_[22].child_ = -1;
-    joint_tree_[22].offset_position_ = eigen_math::transitionXYZ(0, 0, 0);
-    joint_tree_[22].offset_orientation_ = eigen_math::rotationFromRPY(0, 0, 0);
-    joint_tree_[22].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[22].joint_mimic_ = "thigh_r_active";
-    joint_tree_[22].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[22].name_ = "thigh_r_rear_passive";
+  joint_tree_[22].parent_ = 21;  // thigh_r_rear_passive_mimic
+  joint_tree_[22].child_ = -1;
+  joint_tree_[22].offset_position_ = eigen_math::transitionXYZ(0, 0, 0);
+  joint_tree_[22].offset_orientation_ = eigen_math::rotationFromRPY(0, 0, 0);
+  joint_tree_[22].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[22].joint_mimic_ = "thigh_r_active";
+  joint_tree_[22].joint_mimic_multiplier_ = 1.0;
 
-    joint_tree_[23].name_ = "thigh_r_middle_passive";
-    joint_tree_[23].parent_ = 12;  // hip_r_pitch
-    joint_tree_[23].child_ = -1;
-    joint_tree_[23].offset_position_ = eigen_math::transitionXYZ(-0.0185, -0.02925, -0.0305);
-    joint_tree_[23].offset_orientation_ = eigen_math::rotationFromRPY(0, -0.785398163, 0);
-    joint_tree_[23].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[23].joint_mimic_ = "thigh_r_active";
-    joint_tree_[23].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[23].name_ = "thigh_r_middle_passive";
+  joint_tree_[23].parent_ = 12;  // hip_r_pitch
+  joint_tree_[23].child_ = -1;
+  joint_tree_[23].offset_position_ = eigen_math::transitionXYZ(-0.0185, -0.02925, -0.0305);
+  joint_tree_[23].offset_orientation_ = eigen_math::rotationFromRPY(0, -0.785398163, 0);
+  joint_tree_[23].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[23].joint_mimic_ = "thigh_r_active";
+  joint_tree_[23].joint_mimic_multiplier_ = 1.0;
 
-    joint_tree_[24].name_ = "shin_r_rear_passive";
-    joint_tree_[24].parent_ = 14;  // knee_r_passive
-    joint_tree_[24].child_ = -1;
-    joint_tree_[24].offset_position_ = eigen_math::transitionXYZ(-0.0335, 0, 0);
-    joint_tree_[24].offset_orientation_ = eigen_math::rotationFromRPY(0, 0.785398163, 0);
-    joint_tree_[24].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[24].joint_mimic_ = "shin_r_active";
-    joint_tree_[24].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[24].name_ = "shin_r_rear_passive";
+  joint_tree_[24].parent_ = 14;  // knee_r_passive
+  joint_tree_[24].child_ = -1;
+  joint_tree_[24].offset_position_ = eigen_math::transitionXYZ(-0.0335, 0, 0);
+  joint_tree_[24].offset_orientation_ = eigen_math::rotationFromRPY(0, 0.785398163, 0);
+  joint_tree_[24].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[24].joint_mimic_ = "shin_r_active";
+  joint_tree_[24].joint_mimic_multiplier_ = 1.0;
 
-    // Left Leg
-    joint_tree_[25].name_ = "hip_l_roll";
-    joint_tree_[25].parent_ = 1;  // waist
-    joint_tree_[25].child_ = 26;  // hip_l_pitch
-    joint_tree_[25].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.08425);
-    joint_tree_[25].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[25].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
-    joint_tree_[25].joint_limit_lower_ = -1.8640;
-    joint_tree_[25].joint_limit_upper_ = 0.5550;
+  // Left Leg
+  joint_tree_[25].name_ = "hip_l_roll";
+  joint_tree_[25].parent_ = 1;  // waist
+  joint_tree_[25].child_ = 26;  // hip_l_pitch
+  joint_tree_[25].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.08425);
+  joint_tree_[25].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[25].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+  joint_tree_[25].joint_limit_lower_ = -1.8640;
+  joint_tree_[25].joint_limit_upper_ = 0.5550;
 
-    joint_tree_[26].name_ = "hip_l_pitch";
-    joint_tree_[26].parent_ = 25;  // hip_l_roll
-    joint_tree_[26].child_ = 27;  // thigh_l_active
-    joint_tree_[26].offset_position_ = eigen_math::transitionXYZ(0.0, 0.027, 0.0);
-    joint_tree_[26].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[26].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[26].joint_limit_lower_ = -3.1;
-    joint_tree_[26].joint_limit_upper_ = 3.1;
+  joint_tree_[26].name_ = "hip_l_pitch";
+  joint_tree_[26].parent_ = 25;  // hip_l_roll
+  joint_tree_[26].child_ = 27;  // thigh_l_active
+  joint_tree_[26].offset_position_ = eigen_math::transitionXYZ(0.0, 0.027, 0.0);
+  joint_tree_[26].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[26].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[26].joint_limit_lower_ = -3.1;
+  joint_tree_[26].joint_limit_upper_ = 3.1;
 
-    joint_tree_[27].name_ = "thigh_l_active";
-    joint_tree_[27].parent_ = 26;   // hip_l_pitch
-    joint_tree_[27].child_ = 28;    // knee_l_passive
-    joint_tree_[27].offset_position_ = eigen_math::transitionXYZ(0.015, 0.02925, -0.0305);
-    joint_tree_[27].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
-    joint_tree_[27].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[27].joint_limit_lower_ = -0.4974;
-    joint_tree_[27].joint_limit_upper_ = 1.8588;
+  joint_tree_[27].name_ = "thigh_l_active";
+  joint_tree_[27].parent_ = 26;   // hip_l_pitch
+  joint_tree_[27].child_ = 28;    // knee_l_passive
+  joint_tree_[27].offset_position_ = eigen_math::transitionXYZ(0.015, 0.02925, -0.0305);
+  joint_tree_[27].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
+  joint_tree_[27].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[27].joint_limit_lower_ = -0.4974;
+  joint_tree_[27].joint_limit_upper_ = 1.8588;
 
-    joint_tree_[28].name_ = "knee_l_passive";
-    joint_tree_[28].parent_ = 27;  // thigh_l_active
-    joint_tree_[28].child_ = 29;  // shin_l_front_passive
-    joint_tree_[28].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
-    joint_tree_[28].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
-    joint_tree_[28].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[28].joint_mimic_ = "thigh_l_active";
-    joint_tree_[28].joint_mimic_multiplier_ = -1.0;
+  joint_tree_[28].name_ = "knee_l_passive";
+  joint_tree_[28].parent_ = 27;  // thigh_l_active
+  joint_tree_[28].child_ = 29;  // shin_l_front_passive
+  joint_tree_[28].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
+  joint_tree_[28].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
+  joint_tree_[28].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[28].joint_mimic_ = "thigh_l_active";
+  joint_tree_[28].joint_mimic_multiplier_ = -1.0;
 
-    joint_tree_[29].name_ = "shin_l_front_passive";
-    joint_tree_[29].parent_ = 28;   // knee_l_passive
-    joint_tree_[29].child_ = 30;    // ankle_l_pitch_passive
-    joint_tree_[29].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[29].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
-    joint_tree_[29].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[29].joint_mimic_ = "shin_l_active";
-    joint_tree_[29].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[29].name_ = "shin_l_front_passive";
+  joint_tree_[29].parent_ = 28;   // knee_l_passive
+  joint_tree_[29].child_ = 30;    // ankle_l_pitch_passive
+  joint_tree_[29].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  joint_tree_[29].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.785398163, 0.0);
+  joint_tree_[29].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[29].joint_mimic_ = "shin_l_active";
+  joint_tree_[29].joint_mimic_multiplier_ = 1.0;
 
-    joint_tree_[30].name_ = "ankle_l_pitch_passive";
-    joint_tree_[30].parent_ = 29;  // shin_l_front_passive
-    joint_tree_[30].child_ = 31;  // ankle_l_roll
-    joint_tree_[30].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
-    joint_tree_[30].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
-    joint_tree_[30].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[30].joint_mimic_ = "shin_l_active";
-    joint_tree_[30].joint_mimic_multiplier_ = -1.0;
+  joint_tree_[30].name_ = "ankle_l_pitch_passive";
+  joint_tree_[30].parent_ = 29;  // shin_l_front_passive
+  joint_tree_[30].child_ = 31;  // ankle_l_roll
+  joint_tree_[30].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.1);
+  joint_tree_[30].offset_orientation_ = eigen_math::rotationFromRPY(0.0, -0.785398163, 0.0);
+  joint_tree_[30].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[30].joint_mimic_ = "shin_l_active";
+  joint_tree_[30].joint_mimic_multiplier_ = -1.0;
 
-    joint_tree_[31].name_ = "ankle_l_roll";
-    joint_tree_[31].parent_ = 30;  // ankle_l_pitch_passive
-    joint_tree_[31].child_ = 32;  // ankle_l_yaw
-    joint_tree_[31].offset_position_ = eigen_math::transitionXYZ(-0.015, 0, -0.027);
-    joint_tree_[31].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[31].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
-    joint_tree_[31].joint_limit_lower_ = -1.5708;
-    joint_tree_[31].joint_limit_upper_ = 0.3704;
+  joint_tree_[31].name_ = "ankle_l_roll";
+  joint_tree_[31].parent_ = 30;  // ankle_l_pitch_passive
+  joint_tree_[31].child_ = 32;  // ankle_l_yaw
+  joint_tree_[31].offset_position_ = eigen_math::transitionXYZ(-0.015, 0, -0.027);
+  joint_tree_[31].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[31].joint_axis_ = eigen_math::transitionXYZ(1.0, 0.0, 0.0);
+  joint_tree_[31].joint_limit_lower_ = -1.5708;
+  joint_tree_[31].joint_limit_upper_ = 0.3704;
 
-    joint_tree_[32].name_ = "ankle_l_yaw";
-    joint_tree_[32].parent_ = 31;  // ankle_l_roll
-    joint_tree_[32].child_ = 33;  // leg_l_end
-    joint_tree_[32].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.03825);
-    joint_tree_[32].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[32].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 1.0);
-    joint_tree_[32].joint_limit_lower_ = -3.1;
-    joint_tree_[32].joint_limit_upper_ = 3.1;
+  joint_tree_[32].name_ = "ankle_l_yaw";
+  joint_tree_[32].parent_ = 31;  // ankle_l_roll
+  joint_tree_[32].child_ = 33;  // leg_l_end
+  joint_tree_[32].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.03825);
+  joint_tree_[32].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[32].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 1.0);
+  joint_tree_[32].joint_limit_lower_ = -3.1;
+  joint_tree_[32].joint_limit_upper_ = 3.1;
 
-    joint_tree_[33].name_ = "leg_l_end";
-    joint_tree_[33].parent_ = 32;  // ankle_l_yaw
-    joint_tree_[33].child_ = -1;
-    joint_tree_[33].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.004);
-    joint_tree_[33].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
-    joint_tree_[33].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
-    joint_tree_[33].joint_limit_lower_ = -100;
-    joint_tree_[33].joint_limit_upper_ = 100;
+  joint_tree_[33].name_ = "leg_l_end";
+  joint_tree_[33].parent_ = 32;  // ankle_l_yaw
+  joint_tree_[33].child_ = -1;
+  joint_tree_[33].offset_position_ = eigen_math::transitionXYZ(0.0, 0.0, -0.004);
+  joint_tree_[33].offset_orientation_ = eigen_math::rotationFromRPY(0.0, 0.0, 0.0);
+  joint_tree_[33].joint_axis_ = eigen_math::transitionXYZ(0.0, 0.0, 0.0);
+  joint_tree_[33].joint_limit_lower_ = -100;
+  joint_tree_[33].joint_limit_upper_ = 100;
 
-    joint_tree_[34].name_ = "shin_l_active";
-    joint_tree_[34].parent_ = 26;   // hip_l_pitch
-    joint_tree_[34].child_ = 35;    // thigh_l_rear_passive_mimic
-    joint_tree_[34].offset_position_ = eigen_math::transitionXYZ(-0.0185, 0.02925, -0.0305);
-    joint_tree_[34].offset_orientation_ = eigen_math::rotationFromRPY(0, 1.047197551, 0);
-    joint_tree_[34].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[34].joint_limit_lower_ = -1.8588;
-    joint_tree_[34].joint_limit_upper_ = 0.4974;
+  joint_tree_[34].name_ = "shin_l_active";
+  joint_tree_[34].parent_ = 26;   // hip_l_pitch
+  joint_tree_[34].child_ = 35;    // thigh_l_rear_passive_mimic
+  joint_tree_[34].offset_position_ = eigen_math::transitionXYZ(-0.0185, 0.02925, -0.0305);
+  joint_tree_[34].offset_orientation_ = eigen_math::rotationFromRPY(0, 1.047197551, 0);
+  joint_tree_[34].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[34].joint_limit_lower_ = -1.8588;
+  joint_tree_[34].joint_limit_upper_ = 0.4974;
 
-    joint_tree_[35].name_ = "thigh_l_rear_passive_mimic";
-    joint_tree_[35].parent_ = 34;  // shin_l_active
-    joint_tree_[35].child_ = 36;  // thigh_l_rear_passive
-    joint_tree_[35].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.03);
-    joint_tree_[35].offset_orientation_ = eigen_math::rotationFromRPY(0, -1.832597551, 0);
-    joint_tree_[35].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[35].joint_limit_lower_ = -3.1;
-    joint_tree_[35].joint_limit_upper_ = 3.1;
-    joint_tree_[35].joint_mimic_ = "shin_l_active";
-    joint_tree_[35].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[35].name_ = "thigh_l_rear_passive_mimic";
+  joint_tree_[35].parent_ = 34;  // shin_l_active
+  joint_tree_[35].child_ = 36;  // thigh_l_rear_passive
+  joint_tree_[35].offset_position_ = eigen_math::transitionXYZ(0, 0, -0.03);
+  joint_tree_[35].offset_orientation_ = eigen_math::rotationFromRPY(0, -1.832597551, 0);
+  joint_tree_[35].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[35].joint_limit_lower_ = -3.1;
+  joint_tree_[35].joint_limit_upper_ = 3.1;
+  joint_tree_[35].joint_mimic_ = "shin_l_active";
+  joint_tree_[35].joint_mimic_multiplier_ = 1.0;
 
-    joint_tree_[36].name_ = "thigh_l_rear_passive";
-    joint_tree_[36].parent_ = 35;  // thigh_l_rear_passive_mimic
-    joint_tree_[36].child_ = -1;
-    joint_tree_[36].offset_position_ = eigen_math::transitionXYZ(0, 0, 0);
-    joint_tree_[36].offset_orientation_ = eigen_math::rotationFromRPY(0, 0, 0);
-    joint_tree_[36].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[36].joint_limit_lower_ = -3.1;
-    joint_tree_[36].joint_limit_upper_ = 3.1;
-    joint_tree_[36].joint_mimic_ = "thigh_l_active";
-    joint_tree_[36].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[36].name_ = "thigh_l_rear_passive";
+  joint_tree_[36].parent_ = 35;  // thigh_l_rear_passive_mimic
+  joint_tree_[36].child_ = -1;
+  joint_tree_[36].offset_position_ = eigen_math::transitionXYZ(0, 0, 0);
+  joint_tree_[36].offset_orientation_ = eigen_math::rotationFromRPY(0, 0, 0);
+  joint_tree_[36].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[36].joint_limit_lower_ = -3.1;
+  joint_tree_[36].joint_limit_upper_ = 3.1;
+  joint_tree_[36].joint_mimic_ = "thigh_l_active";
+  joint_tree_[36].joint_mimic_multiplier_ = 1.0;
 
-    joint_tree_[37].name_ = "thigh_l_middle_passive";
-    joint_tree_[37].parent_ = 26;  // hip_l_pitch
-    joint_tree_[37].child_ = -1;
-    joint_tree_[37].offset_position_ = eigen_math::transitionXYZ(-0.0185, 0.02925, -0.0305);
-    joint_tree_[37].offset_orientation_ = eigen_math::rotationFromRPY(0, -0.785398163, 0);
-    joint_tree_[37].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[37].joint_limit_lower_ = -3.1;
-    joint_tree_[37].joint_limit_upper_ = 3.1;
-    joint_tree_[37].joint_mimic_ = "thigh_l_active";
-    joint_tree_[37].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[37].name_ = "thigh_l_middle_passive";
+  joint_tree_[37].parent_ = 26;  // hip_l_pitch
+  joint_tree_[37].child_ = -1;
+  joint_tree_[37].offset_position_ = eigen_math::transitionXYZ(-0.0185, 0.02925, -0.0305);
+  joint_tree_[37].offset_orientation_ = eigen_math::rotationFromRPY(0, -0.785398163, 0);
+  joint_tree_[37].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[37].joint_limit_lower_ = -3.1;
+  joint_tree_[37].joint_limit_upper_ = 3.1;
+  joint_tree_[37].joint_mimic_ = "thigh_l_active";
+  joint_tree_[37].joint_mimic_multiplier_ = 1.0;
 
-    joint_tree_[38].name_ = "shin_l_rear_passive";
-    joint_tree_[38].parent_ = 29;  // knee_l_passive
-    joint_tree_[38].child_ = -1;
-    joint_tree_[38].offset_position_ = eigen_math::transitionXYZ(-0.0335, 0, 0);
-    joint_tree_[38].offset_orientation_ = eigen_math::rotationFromRPY(0, 0.785398163, 0);
-    joint_tree_[38].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
-    joint_tree_[38].joint_limit_lower_ = -1.8588;
-    joint_tree_[38].joint_limit_upper_ = 0.4974;
-    joint_tree_[38].joint_mimic_ = "shin_l_active";
-    joint_tree_[38].joint_mimic_multiplier_ = 1.0;
+  joint_tree_[38].name_ = "shin_l_rear_passive";
+  joint_tree_[38].parent_ = 29;  // knee_l_passive
+  joint_tree_[38].child_ = -1;
+  joint_tree_[38].offset_position_ = eigen_math::transitionXYZ(-0.0335, 0, 0);
+  joint_tree_[38].offset_orientation_ = eigen_math::rotationFromRPY(0, 0.785398163, 0);
+  joint_tree_[38].joint_axis_ = eigen_math::transitionXYZ(0.0, 1.0, 0.0);
+  joint_tree_[38].joint_limit_lower_ = -1.8588;
+  joint_tree_[38].joint_limit_upper_ = 0.4974;
+  joint_tree_[38].joint_mimic_ = "shin_l_active";
+  joint_tree_[38].joint_mimic_multiplier_ = 1.0;
 
-  // Horizontal length from sole center to waist center when standing upright
-  leg_side_offset_ = 2.0 * (std::fabs(joint_tree_[getLinkIndex("hip_r_roll")].offset_position_.y() +
-                                      joint_tree_[getLinkIndex("hip_r_pitch")].offset_position_.y() +
-                                      joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.y()));
   // Vertical length from sole center to waist center when standing upright
   leg_max_height_ = std::fabs(joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.z() +
                               joint_tree_[getLinkIndex("knee_r_passive")].offset_position_.z() +
@@ -414,6 +410,7 @@ KurokoKinematics::~KurokoKinematics() = default;
 bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& joints_out,
                                                         std::vector<double> target_pose_in)
 {
+  bool success = true;
   // Check inputs are valid values
   if (target_pose_in.size() < 6)
   {
@@ -428,60 +425,83 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
       return false;
     }
   }
-  // Calculating Inverse Kinematics for Left Leg
-  double x = target_pose_in[0];
-  double y = target_pose_in[1];
-  double z = target_pose_in[2];
-  double roll = target_pose_in[3];
-  double pitch = target_pose_in[4];
-  double yaw = target_pose_in[5];
+  double toe_roll = target_pose_in[3];
+  double toe_pitch = target_pose_in[4];
+  double toe_yaw = target_pose_in[5];
+  Eigen::Vector3d toe_xyz =  Eigen::Vector3d(target_pose_in[0], target_pose_in[1], target_pose_in[2] - joint_tree_[getLinkIndex("hip_r_roll")].offset_position_.z());
+  if (toe_xyz.z() > -1e-12)
+    toe_xyz.z() = -1e-12;
+  const Eigen::Matrix3d toe_rotation = eigen_math::rotationFromRPY(toe_roll, toe_pitch, toe_yaw);
 
-  // Define link lengths based on the robot's dimensions
-  double hip_roll_to_pitch_y =
+  // 1. Get hop_roll
+  // ankle_yaw origin position (in base frame)
+  double offset_ankle_roll_to_yaw_z =
+    joint_tree_[getLinkIndex("ankle_r_yaw")].offset_position_.z()
+    + joint_tree_[getLinkIndex("leg_r_end")].offset_position_.z();
+  Eigen::Vector3d ankle_xyz =
+    toe_xyz - toe_rotation * Eigen::Vector3d(0.0, 0.0, offset_ankle_roll_to_yaw_z);
+  double offset_hip_roll_to_pitch_y =
     joint_tree_[getLinkIndex("hip_r_pitch")].offset_position_.y()
     + joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.y();
-  double hip_pitch_to_thigh_z =
+  // Find the line in the yz plane that passes through the ankle and is tangent to the circle
+  // centered at the origin with radius offset_hip_roll_to_pitch_y.
+  double hip_roll = 0;
+  const double radius = fabs(offset_hip_roll_to_pitch_y);
+  // External point (ankle) in yz plane
+  const double ankle_y = ankle_xyz.y();
+  const double ankle_z = ankle_xyz.z();
+  double distance = std::sqrt(ankle_y * ankle_y + ankle_z * ankle_z);
+  if (distance < radius + 1e-12)
+  {
+    distance = radius + 1e-12;
+    success = false;
+  }
+  // Angle of vector from origin to ankle (measured from +z toward +y)
+  const double alpha = std::atan2(ankle_y, ankle_z);
+  const double beta  = std::acos(std::min(1.0, std::max(-1.0, radius / distance)));
+
+  // Two possible tangent angles
+  const double contact_angle = alpha + beta;
+  // Tangency points on the circle (y, z)
+  const Eigen::Vector2d contact_point(
+    radius * std::sin(contact_angle),
+    radius * std::cos(contact_angle));
+  hip_roll = -contact_angle - 0.5 * M_PI;
+  if (hip_roll > M_PI)
+    hip_roll -= 2.0 * M_PI;
+  else if (hip_roll < -M_PI)
+    hip_roll += 2.0 * M_PI;
+
+  // 3. Get ankle roll and hip pitch
+  Eigen::Matrix3d hip_roll_rotation_inv = eigen_math::rotationFromRPY(-hip_roll,0,0);
+  Eigen::Matrix3d hip2ankle_rotation = hip_roll_rotation_inv * toe_rotation;
+  Eigen::Vector3d hip2ankle_yrp =  eigen_math::yrpFromRotation(hip2ankle_rotation);
+  const double hip_pitch = hip2ankle_yrp.z();
+  const double ankle_roll = hip2ankle_yrp.y();
+  const double ankle_yaw = hip2ankle_yrp.x();
+
+  // Define link lengths based on the robot's dimensions
+  double offset_hip_pitch_to_thigh_z =
     joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.z();
   double thigh_length =
     fabs(joint_tree_[getLinkIndex("knee_r_passive")].offset_position_.z());
   double shin_length =
     fabs(joint_tree_[getLinkIndex("ankle_r_pitch_passive")].offset_position_.z());
-  double ankle_pitch_to_roll_z =
+  double offset_ankle_pitch_to_roll_z =
     joint_tree_[getLinkIndex("ankle_r_roll")].offset_position_.z();
-  double ankle_roll_to_yaw_z =
-    joint_tree_[getLinkIndex("ankle_r_yaw")].offset_position_.z()
-    + joint_tree_[getLinkIndex("leg_r_end")].offset_position_.z();
-
-  // Ankle yaw
-  double ankle_yaw = yaw;
-
-  // Hip pitch
-  double hip_pitch = pitch;
-
-  // Hip roll
-  // double waist_to_ankle_roll_x = x;
-  double waist_to_ankle_roll_y = y + ankle_roll_to_yaw_z * sin(roll);
-  double waist_to_ankle_roll_z = z - ankle_roll_to_yaw_z * cos(roll);
-  double waist_to_ankle_roll_yz_plane_distance =
-      sqrt(waist_to_ankle_roll_z * waist_to_ankle_roll_z + waist_to_ankle_roll_y * waist_to_ankle_roll_y);
-  double hip_roll = acos(hip_roll_to_pitch_y / waist_to_ankle_roll_yz_plane_distance) +
-                    atan2(waist_to_ankle_roll_y, -waist_to_ankle_roll_z) - 0.5 * M_PI;
-
-  // Ankle roll
-  double ankle_roll = roll - hip_roll;
 
   // Thigh upper and Shin lower joints
-  double hip_roll_to_target_x = x;
-  double hip_roll_to_target_z = z * cos(hip_roll) - y * sin(hip_roll);
+  double hip_roll_to_target_x = toe_xyz.x();
+  double hip_roll_to_target_z = toe_xyz.z() * cos(hip_roll) - toe_xyz.y() * sin(hip_roll);
   // double hip_roll_to_target_y = z * sin(hip_roll) + y * cos(hip_roll);
 
-  // double hip_pitch_to_target_y = hip_roll_to_target_y - hip_roll_to_pitch_y;
+  // double hip_pitch_to_target_y = hip_roll_to_target_y - offset_hip_roll_to_pitch_y;
   double hip_pitch_to_target_z = hip_roll_to_target_z * cos(-hip_pitch) - hip_roll_to_target_x * sin(-hip_pitch);
   double hip_pitch_to_target_x = hip_roll_to_target_z * sin(-hip_pitch) + hip_roll_to_target_x * cos(-hip_pitch);
 
   double thigh_upper_to_shin_lower_x = hip_pitch_to_target_x;
-  double thigh_upper_to_shin_lower_z = hip_pitch_to_target_z - hip_pitch_to_thigh_z -
-                                       ankle_pitch_to_roll_z - ankle_roll_to_yaw_z * cos(ankle_roll);
+  double thigh_upper_to_shin_lower_z = hip_pitch_to_target_z - offset_hip_pitch_to_thigh_z -
+                                       offset_ankle_pitch_to_roll_z - offset_ankle_roll_to_yaw_z * cos(ankle_roll);
 
   if (thigh_upper_to_shin_lower_z > -0.001)
   {
@@ -517,12 +537,8 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
   double shin_pitch = triangle_knee_line_angle + triangle_shin_angle;
   double thigh_pitch = -((M_PI - triangle_knee_angle) - shin_pitch);
   // Set the output joint angles
-  hip_roll = (std::isfinite(hip_roll)) ? hip_roll : 0.0;
-  hip_pitch = (std::isfinite(hip_pitch)) ? hip_pitch : 0.0;
   thigh_pitch = (std::isfinite(thigh_pitch)) ? thigh_pitch : 0.0;
   shin_pitch = (std::isfinite(shin_pitch)) ? shin_pitch : 0.0;
-  ankle_roll = (std::isfinite(ankle_roll)) ? ankle_roll : 0.0;
-  ankle_yaw = (std::isfinite(ankle_yaw)) ? ankle_yaw : 0.0;
 
   double ankle_yaw_joint = joint_tree_[getLinkIndex("ankle_r_yaw")].joint_axis_.z() *
                            (ankle_yaw - eigen_math::rpyFromRotation(
@@ -549,24 +565,6 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
                                           joint_tree_[getLinkIndex("hip_r_roll")].offset_orientation_)
                                           .x());
 
-  hip_roll_joint = std::max(std::min(hip_roll_joint, joint_tree_[getLinkIndex("hip_r_roll")].joint_limit_upper_),
-                            joint_tree_[getLinkIndex("hip_r_roll")].joint_limit_lower_);
-  hip_pitch_joint =
-      std::max(std::min(hip_pitch_joint, joint_tree_[getLinkIndex("hip_r_pitch")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("hip_r_pitch")].joint_limit_lower_);
-  thigh_pitch_joint =
-      std::max(std::min(thigh_pitch_joint, joint_tree_[getLinkIndex("thigh_r_active")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("thigh_r_active")].joint_limit_lower_);
-  shin_pitch_joint =
-      std::max(std::min(shin_pitch_joint, joint_tree_[getLinkIndex("shin_r_front_passive")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("shin_r_front_passive")].joint_limit_lower_);
-  ankle_roll_joint =
-      std::max(std::min(ankle_roll_joint, joint_tree_[getLinkIndex("ankle_r_roll")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("ankle_r_roll")].joint_limit_lower_);
-  ankle_yaw_joint =
-      std::max(std::min(ankle_yaw_joint, joint_tree_[getLinkIndex("ankle_r_yaw")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("ankle_r_yaw")].joint_limit_lower_);
-
   joints_out.resize(6);
   joints_out[0] = hip_roll_joint;
   joints_out[1] = hip_pitch_joint;
@@ -574,12 +572,13 @@ bool KurokoKinematics::solveInverseKinematicsForRightLeg(std::vector<double>& jo
   joints_out[3] = shin_pitch_joint;
   joints_out[4] = ankle_roll_joint;
   joints_out[5] = ankle_yaw_joint;
-  return true;
+  return success;
 }
 
 bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joints_out,
                                                         std::vector<double> target_pose_in)
 {
+  bool success = true;
   // Check inputs are valid values
   if (target_pose_in.size() < 6)
   {
@@ -594,61 +593,83 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
       return false;
     }
   }
+  double toe_roll = target_pose_in[3];
+  double toe_pitch = target_pose_in[4];
+  double toe_yaw = target_pose_in[5];
+  Eigen::Vector3d toe_xyz =  Eigen::Vector3d(target_pose_in[0], target_pose_in[1], target_pose_in[2] - joint_tree_[getLinkIndex("hip_l_roll")].offset_position_.z());
+  if (toe_xyz.z() > -1e-12)
+    toe_xyz.z() = -1e-12;
+  const Eigen::Matrix3d toe_rotation = eigen_math::rotationFromRPY(toe_roll, toe_pitch, toe_yaw);
 
-  // Calculating Inverse Kinematics for Left Leg
-  double x = target_pose_in[0];
-  double y = target_pose_in[1];
-  double z = target_pose_in[2];
-  double roll = target_pose_in[3];
-  double pitch = target_pose_in[4];
-  double yaw = target_pose_in[5];
-
-  // Define link lengths based on the robot's dimensions
-  double hip_roll_to_pitch_y =
+  // 1. Get hop_roll
+  // ankle_yaw origin position (in base frame)
+  double offset_ankle_roll_to_yaw_z =
+    joint_tree_[getLinkIndex("ankle_l_yaw")].offset_position_.z()
+    + joint_tree_[getLinkIndex("leg_l_end")].offset_position_.z();
+  Eigen::Vector3d ankle_xyz =
+    toe_xyz - toe_rotation * Eigen::Vector3d(0.0, 0.0, offset_ankle_roll_to_yaw_z);
+  double offset_hip_roll_to_pitch_y =
     joint_tree_[getLinkIndex("hip_l_pitch")].offset_position_.y()
     + joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.y();
-  double hip_pitch_to_thigh_z =
+  // Find the line in the yz plane that passes through the ankle and is tangent to the circle
+  // centered at the origin with radius offset_hip_roll_to_pitch_y.
+  double hip_roll = 0;
+  const double radius = fabs(offset_hip_roll_to_pitch_y);
+  // External point (ankle) in yz plane
+  const double ankle_y = ankle_xyz.y();
+  const double ankle_z = ankle_xyz.z();
+  double distance = std::sqrt(ankle_y * ankle_y + ankle_z * ankle_z);
+  if (distance < radius + 1e-12)
+  {
+    distance = radius + 1e-12;
+    success = false;
+  }
+  // Angle of vector from origin to ankle (measured from +z toward +y)
+  const double alpha = std::atan2(ankle_y, ankle_z);
+  const double beta  = std::acos(std::min(1.0, std::max(-1.0, radius / distance)));
+
+  // Two possible tangent angles
+  const double contact_angle = alpha - beta;
+  // Tangency points on the circle (y, z)
+  const Eigen::Vector2d contact_point(
+    radius * std::sin(contact_angle),
+    radius * std::cos(contact_angle));
+  hip_roll = -contact_angle + 0.5 * M_PI;
+  if (hip_roll > M_PI)
+    hip_roll -= 2.0 * M_PI;
+  else if (hip_roll < -M_PI)
+    hip_roll += 2.0 * M_PI;
+
+  // 3. Get ankle roll and hip pitch
+  Eigen::Matrix3d hip_roll_rotation_inv = eigen_math::rotationFromRPY(-hip_roll,0,0);
+  Eigen::Matrix3d hip2ankle_rotation = hip_roll_rotation_inv * toe_rotation;
+  Eigen::Vector3d hip2ankle_yrp =  eigen_math::yrpFromRotation(hip2ankle_rotation);
+  const double hip_pitch = hip2ankle_yrp.z();
+  const double ankle_roll = hip2ankle_yrp.y();
+  const double ankle_yaw = hip2ankle_yrp.x();
+
+  // Define link lengths based on the robot's dimensions
+  double offset_hip_pitch_to_thigh_z =
     joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.z();
   double thigh_length =
     fabs(joint_tree_[getLinkIndex("knee_l_passive")].offset_position_.z());
   double shin_length =
     fabs(joint_tree_[getLinkIndex("ankle_l_pitch_passive")].offset_position_.z());
-  double ankle_pitch_to_roll_z =
+  double offset_ankle_pitch_to_roll_z =
     joint_tree_[getLinkIndex("ankle_l_roll")].offset_position_.z();
-  double ankle_roll_to_yaw_z =
-    joint_tree_[getLinkIndex("ankle_l_yaw")].offset_position_.z()
-    + joint_tree_[getLinkIndex("leg_l_end")].offset_position_.z();
-
-  // Ankle yaw
-  double ankle_yaw = yaw;
-
-  // Hip pitch
-  double hip_pitch = pitch;
-
-  // Hip roll
-  // double waist_to_ankle_roll_x = x;
-  double waist_to_ankle_roll_y = y + ankle_roll_to_yaw_z * sin(roll);
-  double waist_to_ankle_roll_z = z - ankle_roll_to_yaw_z * cos(roll);
-  double waist_to_ankle_roll_yz_plane_distance =
-      sqrt(waist_to_ankle_roll_z * waist_to_ankle_roll_z + waist_to_ankle_roll_y * waist_to_ankle_roll_y);
-  double hip_roll = acos(hip_roll_to_pitch_y / waist_to_ankle_roll_yz_plane_distance) +
-                    atan2(waist_to_ankle_roll_y, -waist_to_ankle_roll_z) - 0.5 * M_PI;
-
-  // Ankle roll
-  double ankle_roll = roll - hip_roll;
 
   // Thigh upper and Shin lower joints
-  double hip_roll_to_target_x = x;
-  double hip_roll_to_target_z = z * cos(hip_roll) - y * sin(hip_roll);
+  double hip_roll_to_target_x = toe_xyz.x();
+  double hip_roll_to_target_z = toe_xyz.z() * cos(hip_roll) - toe_xyz.y() * sin(hip_roll);
   // double hip_roll_to_target_y = z * sin(hip_roll) + y * cos(hip_roll);
 
-  // double hip_pitch_to_target_y = hip_roll_to_target_y - hip_roll_to_pitch_y;
+  // double hip_pitch_to_target_y = hip_roll_to_target_y - offset_hip_roll_to_pitch_y;
   double hip_pitch_to_target_z = hip_roll_to_target_z * cos(-hip_pitch) - hip_roll_to_target_x * sin(-hip_pitch);
   double hip_pitch_to_target_x = hip_roll_to_target_z * sin(-hip_pitch) + hip_roll_to_target_x * cos(-hip_pitch);
 
   double thigh_upper_to_shin_lower_x = hip_pitch_to_target_x;
-  double thigh_upper_to_shin_lower_z = hip_pitch_to_target_z - hip_pitch_to_thigh_z -
-                                       ankle_pitch_to_roll_z - ankle_roll_to_yaw_z * cos(ankle_roll);
+  double thigh_upper_to_shin_lower_z = hip_pitch_to_target_z - offset_hip_pitch_to_thigh_z -
+                                       offset_ankle_pitch_to_roll_z - offset_ankle_roll_to_yaw_z * cos(ankle_roll);
 
   if (thigh_upper_to_shin_lower_z > -0.001)
   {
@@ -684,12 +705,8 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
   double shin_pitch = triangle_knee_line_angle + triangle_shin_angle;
   double thigh_pitch = -((M_PI - triangle_knee_angle) - shin_pitch);
   // Set the output joint angles
-  hip_roll = (std::isfinite(hip_roll)) ? hip_roll : 0.0;
-  hip_pitch = (std::isfinite(hip_pitch)) ? hip_pitch : 0.0;
   thigh_pitch = (std::isfinite(thigh_pitch)) ? thigh_pitch : 0.0;
   shin_pitch = (std::isfinite(shin_pitch)) ? shin_pitch : 0.0;
-  ankle_roll = (std::isfinite(ankle_roll)) ? ankle_roll : 0.0;
-  ankle_yaw = (std::isfinite(ankle_yaw)) ? ankle_yaw : 0.0;
 
   double ankle_yaw_joint = joint_tree_[getLinkIndex("ankle_l_yaw")].joint_axis_.z() *
                            (ankle_yaw - eigen_math::rpyFromRotation(
@@ -716,24 +733,6 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
                                           joint_tree_[getLinkIndex("hip_l_roll")].offset_orientation_)
                                           .x());
 
-  hip_roll_joint = std::max(std::min(hip_roll_joint, joint_tree_[getLinkIndex("hip_l_roll")].joint_limit_upper_),
-                            joint_tree_[getLinkIndex("hip_l_roll")].joint_limit_lower_);
-  hip_pitch_joint =
-      std::max(std::min(hip_pitch_joint, joint_tree_[getLinkIndex("hip_l_pitch")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("hip_l_pitch")].joint_limit_lower_);
-  thigh_pitch_joint =
-      std::max(std::min(thigh_pitch_joint, joint_tree_[getLinkIndex("thigh_l_active")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("thigh_l_active")].joint_limit_lower_);
-  shin_pitch_joint =
-      std::max(std::min(shin_pitch_joint, joint_tree_[getLinkIndex("shin_l_front_passive")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("shin_l_front_passive")].joint_limit_lower_);
-  ankle_roll_joint =
-      std::max(std::min(ankle_roll_joint, joint_tree_[getLinkIndex("ankle_l_roll")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("ankle_l_roll")].joint_limit_lower_);
-  ankle_yaw_joint =
-      std::max(std::min(ankle_yaw_joint, joint_tree_[getLinkIndex("ankle_l_yaw")].joint_limit_upper_),
-               joint_tree_[getLinkIndex("ankle_l_yaw")].joint_limit_lower_);
-
   joints_out.resize(6);
   joints_out[0] = hip_roll_joint;
   joints_out[1] = hip_pitch_joint;
@@ -741,7 +740,7 @@ bool KurokoKinematics::solveInverseKinematicsForLeftLeg(std::vector<double>& joi
   joints_out[3] = shin_pitch_joint;
   joints_out[4] = ankle_roll_joint;
   joints_out[5] = ankle_yaw_joint;
-  return true;
+  return success;
 }
 
 bool KurokoKinematics::solveForwardKinematicsForRightLeg(const std::vector<double> joints_in,
@@ -750,13 +749,13 @@ bool KurokoKinematics::solveForwardKinematicsForRightLeg(const std::vector<doubl
   double x, y, z, roll, pitch, yaw;
   // Define link lengths for the right leg
   double base_to_hip_roll_z = joint_tree_[getLinkIndex("hip_r_roll")].offset_position_.z();
-  double hip_roll_to_pitch_y = joint_tree_[getLinkIndex("hip_r_pitch")].offset_position_.y()
+  double offset_hip_roll_to_pitch_y = joint_tree_[getLinkIndex("hip_r_pitch")].offset_position_.y()
    + joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.y();
-  double hip_pitch_to_thigh_z = joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.z();
+  double offset_hip_pitch_to_thigh_z = joint_tree_[getLinkIndex("thigh_r_active")].offset_position_.z();
   double thigh_length = fabs(joint_tree_[getLinkIndex("knee_r_passive")].offset_position_.z());
   double shin_length = fabs(joint_tree_[getLinkIndex("ankle_r_pitch_passive")].offset_position_.z());
-  double ankle_pitch_to_roll_z = joint_tree_[getLinkIndex("ankle_r_roll")].offset_position_.z();
-  double ankle_roll_to_yaw_z = joint_tree_[getLinkIndex("ankle_r_yaw")].offset_position_.z() +
+  double offset_ankle_pitch_to_roll_z = joint_tree_[getLinkIndex("ankle_r_roll")].offset_position_.z();
+  double offset_ankle_roll_to_yaw_z = joint_tree_[getLinkIndex("ankle_r_yaw")].offset_position_.z() +
                                       joint_tree_[getLinkIndex("leg_r_end")].offset_position_.z();
 
   // Extract joint angles from input vector
@@ -817,7 +816,7 @@ bool KurokoKinematics::solveForwardKinematicsForRightLeg(const std::vector<doubl
 
   // Compute foot position relative to hip pitch link
   double hip_end_x = 0;
-  double hip_end_z = hip_pitch_to_thigh_z;
+  double hip_end_z = offset_hip_pitch_to_thigh_z;
 
   double thigh_end_x = hip_end_x - thigh_length * sin(thigh_pitch);
   double thigh_end_z = hip_end_z - thigh_length * cos(thigh_pitch);
@@ -826,10 +825,10 @@ bool KurokoKinematics::solveForwardKinematicsForRightLeg(const std::vector<doubl
   double shin_end_z = thigh_end_z - shin_length * cos(shin_pitch);
 
   double toe_end_x = shin_end_x;
-  double toe_end_z = shin_end_z + ankle_pitch_to_roll_z + ankle_roll_to_yaw_z * cos(ankle_roll);
+  double toe_end_z = shin_end_z + offset_ankle_pitch_to_roll_z + offset_ankle_roll_to_yaw_z * cos(ankle_roll);
 
   double toe_end_x_pitched = toe_end_x * cos(hip_pitch) + toe_end_z * sin(hip_pitch);
-  double toe_end_y_pitched = hip_roll_to_pitch_y - ankle_roll_to_yaw_z * sin(ankle_roll);
+  double toe_end_y_pitched = offset_hip_roll_to_pitch_y - offset_ankle_roll_to_yaw_z * sin(ankle_roll);
   double toe_end_z_pitched = - toe_end_x * sin(hip_pitch) + toe_end_z * cos(hip_pitch);
 
   double toe_end_y_rolled = toe_end_y_pitched * cos(hip_roll) - toe_end_z_pitched * sin(hip_roll);
@@ -857,14 +856,14 @@ bool KurokoKinematics::solveForwardKinematicsForLeftLeg(const std::vector<double
   double x, y, z, roll, pitch, yaw;
   // Define link lengths for the right leg
   double base_to_hip_roll_z = joint_tree_[getLinkIndex("hip_l_roll")].offset_position_.z();
-  double hip_roll_to_pitch_y =
+  double offset_hip_roll_to_pitch_y =
    joint_tree_[getLinkIndex("hip_l_pitch")].offset_position_.y()
    + joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.y();
-  double hip_pitch_to_thigh_z = joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.z();
+  double offset_hip_pitch_to_thigh_z = joint_tree_[getLinkIndex("thigh_l_active")].offset_position_.z();
   double thigh_length = fabs(joint_tree_[getLinkIndex("knee_l_passive")].offset_position_.z());
   double shin_length = fabs(joint_tree_[getLinkIndex("ankle_l_pitch_passive")].offset_position_.z());
-  double ankle_pitch_to_roll_z = joint_tree_[getLinkIndex("ankle_l_roll")].offset_position_.z();
-  double ankle_roll_to_yaw_z =
+  double offset_ankle_pitch_to_roll_z = joint_tree_[getLinkIndex("ankle_l_roll")].offset_position_.z();
+  double offset_ankle_roll_to_yaw_z =
    joint_tree_[getLinkIndex("ankle_l_yaw")].offset_position_.z()
    + joint_tree_[getLinkIndex("leg_l_end")].offset_position_.z();
 
@@ -926,7 +925,7 @@ bool KurokoKinematics::solveForwardKinematicsForLeftLeg(const std::vector<double
 
   // Compute foot position relative to hip pitch link
   double hip_end_x = 0;
-  double hip_end_z = hip_pitch_to_thigh_z;
+  double hip_end_z = offset_hip_pitch_to_thigh_z;
 
   double thigh_end_x = hip_end_x - thigh_length * sin(thigh_pitch);
   double thigh_end_z = hip_end_z - thigh_length * cos(thigh_pitch);
@@ -935,10 +934,10 @@ bool KurokoKinematics::solveForwardKinematicsForLeftLeg(const std::vector<double
   double shin_end_z = thigh_end_z - shin_length * cos(shin_pitch);
 
   double toe_end_x = shin_end_x;
-  double toe_end_z = shin_end_z + ankle_pitch_to_roll_z + ankle_roll_to_yaw_z * cos(ankle_roll);
+  double toe_end_z = shin_end_z + offset_ankle_pitch_to_roll_z + offset_ankle_roll_to_yaw_z * cos(ankle_roll);
 
   double toe_end_x_pitched = toe_end_x * cos(hip_pitch) + toe_end_z * sin(hip_pitch);
-  double toe_end_y_pitched = hip_roll_to_pitch_y - ankle_roll_to_yaw_z * sin(ankle_roll);
+  double toe_end_y_pitched = offset_hip_roll_to_pitch_y - offset_ankle_roll_to_yaw_z * sin(ankle_roll);
   double toe_end_z_pitched = - toe_end_x * sin(hip_pitch) + toe_end_z * cos(hip_pitch);
 
   double toe_end_y_rolled = toe_end_y_pitched * cos(hip_roll) - toe_end_z_pitched * sin(hip_roll);

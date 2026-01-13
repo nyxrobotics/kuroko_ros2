@@ -23,6 +23,15 @@ inline Eigen::Matrix3d rotationFromRPY(const double roll, const double pitch, co
   return (rz * ry * rx).toRotationMatrix();
 }
 
+inline Eigen::Matrix3d rotationFromYRP(const double yaw, const double roll, const double pitch)
+{
+  const Eigen::AngleAxisd rx(roll, Eigen::Vector3d::UnitX());
+  const Eigen::AngleAxisd ry(pitch, Eigen::Vector3d::UnitY());
+  const Eigen::AngleAxisd rz(yaw, Eigen::Vector3d::UnitZ());
+  // R =  Ry(pitch) * Rx(roll) * Rz(yaw)
+  return (ry * rx * rz).toRotationMatrix();
+}
+
 inline Eigen::Vector3d rpyFromRotation(const Eigen::Matrix3d& R)
 {
   // Assumes R = Rz(yaw) * Ry(pitch) * Rx(roll)
@@ -45,6 +54,38 @@ inline Eigen::Vector3d rpyFromRotation(const Eigen::Matrix3d& R)
 
   return Eigen::Vector3d(roll, pitch, yaw);
 }
+
+inline Eigen::Vector3d yrpFromRotation(const Eigen::Matrix3d& R)
+{
+  // Assumes R = Ry(pitch) * Rx(roll) * Rz(yaw)
+
+  // roll (around X)
+  const double roll = std::asin(-R(1, 2));
+  const double cr = std::cos(roll);
+
+  double pitch = 0.0;
+  double yaw = 0.0;
+
+  if (std::abs(cr) < 1e-12)
+  {
+    // Gimbal lock: roll ≈ ±90 deg
+    // pitch and yaw are coupled
+    pitch = std::atan2(-R(2, 0), R(0, 0));
+    yaw = 0.0;
+  }
+  else
+  {
+    // pitch (around Y)
+    pitch = std::atan2(R(0, 2), R(2, 2));
+
+    // yaw (around Z)
+    yaw = std::atan2(R(1, 0), R(1, 1));
+  }
+
+  // Return (yaw, roll, pitch) to match function name
+  return Eigen::Vector3d(yaw, roll, pitch);
+}
+
 
 inline Eigen::Matrix4d transformXYZRPY(
   const double x, const double y, const double z, const double roll, const double pitch, const double yaw)
