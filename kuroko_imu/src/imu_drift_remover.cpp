@@ -22,6 +22,7 @@ ImuDriftRemover::ImuDriftRemover(const rclcpp::NodeOptions & options)
   bias_time_constant_sec_ = declare_parameter<double>("bias_time_constant_sec", bias_time_constant_sec_);
 
   publish_debug_ = declare_parameter<bool>("publish_debug", publish_debug_);
+  print_internal_state_ = declare_parameter<bool>("print_internal_state", print_internal_state_);
 
   pub_imu_out_ = create_publisher<sensor_msgs::msg::Imu>(output_topic_, rclcpp::SensorDataQoS());
 
@@ -180,7 +181,18 @@ void ImuDriftRemover::onImu(const sensor_msgs::msg::Imu::SharedPtr msg)
   }
 
   publishImuCorrected(*msg);
-
+  if (print_internal_state_) {
+    RCLCPP_INFO(
+      get_logger(),
+      "[imu_drift_remover] joint_vel_norm: %.6f (th %.6f) | gyro_norm: %.6f (th %.6f) | accel_diff: %.6f (th %.6f) | stat_now: %d | stat_t: %.2f/%.2f | bias: [%.5f %.5f %.5f]",
+      joint_vel_norm_, joint_vel_norm_thresh_,
+      gyro_norm, gyro_norm_thresh_,
+      accel_diff_norm, accel_diff_norm_thresh_,
+      stationary_now,
+      stationary_accum_sec_, stable_time_sec_,
+      bias_gx_, bias_gy_, bias_gz_
+    );
+  }
   if (publish_debug_) {
     std_msgs::msg::Bool s;
     s.data = stationary_confirmed;

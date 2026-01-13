@@ -40,6 +40,7 @@ private:
   double stable_time_sec_{1.5};             // seconds
   double bias_time_constant_sec_{10.0};     // seconds
   bool publish_debug_{false};
+  bool print_internal_state_{false};
 
   // ROS I/O
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr sub_joint_;

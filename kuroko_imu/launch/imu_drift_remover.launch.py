@@ -21,6 +21,7 @@ def generate_launch_description():
                 "bias_time_constant_sec": 10.0,
 
                 "publish_debug": False,
+                "print_internal_state": False,
             }]
         )
     ])
