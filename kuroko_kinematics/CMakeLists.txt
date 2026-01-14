@@ -24,20 +24,15 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 # =========================
-# Include directories
-# =========================
-include_directories(
-  include
-  ${EIGEN3_INCLUDE_DIRS}
-)
-
-# =========================
 # Core kinematics library
 # =========================
 add_library(${PROJECT_NAME}
   src/kuroko_kinematics.cpp
   src/joint_data.cpp
 )
+
+# Stable namespaced target for downstream packages.
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -69,12 +64,21 @@ ament_target_dependencies(fk_ik_consistency_checker
 # =========================
 # Install
 # =========================
+
+# Export ONLY the library target
 install(
   TARGETS
     ${PROJECT_NAME}
-    fk_ik_consistency_checker
+  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+# Install the checker executable WITHOUT exporting it
+install(
+  TARGETS
+    fk_ik_consistency_checker
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -100,5 +104,6 @@ endif()
 # =========================
 ament_export_include_directories(include)
 ament_export_dependencies(Eigen3)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_package()
