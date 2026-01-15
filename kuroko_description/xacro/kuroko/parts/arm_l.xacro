@@ -54,7 +54,7 @@
       <parent link="shoulder_l_roll_link"/>
       <child link="elbow_l_front_link"/>
       <origin xyz="0 -0.023 -0.036" rpy="0 0 0"/>
-      <axis xyz="0 -1 0"/>
+      <axis xyz="0 1 0"/>
       <limit effort="3.1" lower="-2.6180" upper="2.6180" velocity="6.5"/>
       <dynamics damping="0.477" friction="0.0"/>
     </joint>

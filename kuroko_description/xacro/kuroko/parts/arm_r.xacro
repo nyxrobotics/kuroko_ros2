@@ -6,7 +6,7 @@
       <parent link="chest_link"/>
       <child link="shoulder_r_pitch_link"/>
       <origin xyz="0 -0.128 0.01275" rpy="0 0 0"/>
-      <axis xyz="0 -1 0"/>
+      <axis xyz="0 1 0"/>
       <limit effort="3.1" lower="-3.14" upper="3.14" velocity="6.5"/>
       <dynamics damping="0.477" friction="0.0"/>
     </joint>
@@ -80,7 +80,7 @@
       <parent link="shoulder_r_roll_link"/>
       <child link="elbow_r_rear_link"/>
       <origin xyz="0 0.024 -0.036" rpy="0 0 0"/>
-      <axis xyz="0 -1 0"/>
+      <axis xyz="0 1 0"/>
       <limit effort="3.1" lower="-2.6180" upper="2.6180" velocity="6.5"/>
       <dynamics damping="0.477" friction="0.0"/>
     </joint>
