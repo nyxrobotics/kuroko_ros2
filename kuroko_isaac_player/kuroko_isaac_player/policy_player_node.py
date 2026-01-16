@@ -158,6 +158,10 @@ class IsaacPolicyPlayer(Node):
         #   "estimate" -> always estimate from dq (ignore topic velocity)
         self.declare_parameter("joint_velocity_source", "auto")
 
+        # NEW: startup move (current pose -> default pose) before enabling policy
+        self.declare_parameter("startup_move_to_default", False)
+        self.declare_parameter("startup_move_duration_sec", 1.0)
+
         pkg_share = Path(get_package_share_directory("kuroko_isaac_player"))
         desc_share = Path(get_package_share_directory("kuroko_description"))
 
@@ -265,6 +269,15 @@ class IsaacPolicyPlayer(Node):
         self._printed_joint_states_order = False
         self._printed_first_infer = False
 
+        # NEW: startup move state
+        self._startup_move_enabled = bool(self.get_parameter("startup_move_to_default").value)
+        self._startup_move_duration = float(self.get_parameter("startup_move_duration_sec").value)
+        self._startup_move_active = False
+        self._startup_move_t0: Optional[float] = None
+        self._startup_move_q0_ctrl: Optional[np.ndarray] = None
+        self._startup_move_qt_ctrl: Optional[np.ndarray] = None
+        self._startup_move_logged = False
+
         # ROS interfaces
         self.create_subscription(Twist, "/cmd_vel", self._on_cmd, 10)
         self.create_subscription(Imu, "/kuroko/sensors/imu/data", self._on_imu, 10)
@@ -336,6 +349,37 @@ class IsaacPolicyPlayer(Node):
         return idx
 
     # -------------------------
+    # Startup move helpers
+    # -------------------------
+    def _compute_controller_cmd_from_joint_states(self, msg: JointState) -> np.ndarray:
+        """
+        Build controller-order array from joint_states positions.
+        Missing joints -> keep default pose for that joint (safer than 0).
+        """
+        name_to_i = {jn: i for i, jn in enumerate(msg.name)}
+        # default pose in controller order
+        dmap = {jn: float(self.default_joint_pos[i]) for i, jn in enumerate(self.policy_joint_names)}
+        out = np.zeros((len(self.controller_joint_names),), dtype=np.float64)
+        for ci, jn in enumerate(self.controller_joint_names):
+            if jn in name_to_i and msg.position and len(msg.position) == len(msg.name):
+                out[ci] = float(msg.position[name_to_i[jn]])
+            else:
+                out[ci] = float(dmap.get(jn, 0.0))
+        return out
+
+    def _compute_controller_cmd_from_default_pose(self) -> np.ndarray:
+        dmap = {jn: float(self.default_joint_pos[i]) for i, jn in enumerate(self.policy_joint_names)}
+        out = np.zeros((len(self.controller_joint_names),), dtype=np.float64)
+        for ci, jn in enumerate(self.controller_joint_names):
+            out[ci] = float(dmap.get(jn, 0.0))
+        return out
+
+    def _publish_controller_cmd(self, cmd_ctrl: np.ndarray) -> None:
+        msg = Float64MultiArray()
+        msg.data = np.asarray(cmd_ctrl, dtype=np.float64).reshape(-1).tolist()
+        self.pub.publish(msg)
+
+    # -------------------------
     # Callbacks
     # -------------------------
     def _on_cmd(self, msg: Twist) -> None:
@@ -368,6 +412,30 @@ class IsaacPolicyPlayer(Node):
         self._joint_state_name = list(msg.name)
         self._joint_state_pos = np.array(msg.position, dtype=np.float32) if msg.position else None
         self._joint_state_vel = np.array(msg.velocity, dtype=np.float32) if msg.velocity else None
+
+        # NEW: initialize startup move (once) when first joint_states arrives
+        if self._startup_move_enabled and (not self._startup_move_active) and (self._startup_move_t0 is None):
+            self._startup_move_t0 = time.time()
+            self._startup_move_q0_ctrl = self._compute_controller_cmd_from_joint_states(msg)
+            self._startup_move_qt_ctrl = self._compute_controller_cmd_from_default_pose()
+            self._startup_move_active = True
+
+            # Reset buffers to avoid jumps after the move
+            self._dq_est.reset()
+            self.obs_builder.reset_last_action()
+            with self._lock:
+                self._latest_action = None  # wait for fresh inference after move
+                self._latest_obs = None
+
+            # Restart ramp timing after move completes
+            self._start_wall = time.time()
+
+            if self._startup_print and (not self._startup_move_logged):
+                self._startup_move_logged = True
+                self.get_logger().info(
+                    f"Startup move enabled: interpolating current pose -> default pose over "
+                    f"{self._startup_move_duration:.3f} s"
+                )
 
     # -------------------------
     # JointState -> policy order
@@ -408,6 +476,29 @@ class IsaacPolicyPlayer(Node):
     # -------------------------
     def _on_timer(self) -> None:
         self._tick += 1
+
+        # NEW: if startup move is active, publish interpolated command and skip policy output
+        if self._startup_move_active:
+            if self._startup_move_q0_ctrl is None or self._startup_move_qt_ctrl is None or self._startup_move_t0 is None:
+                return
+
+            dur = max(float(self._startup_move_duration), 1e-3)
+            now = time.time()
+            alpha = float(np.clip((now - self._startup_move_t0) / dur, 0.0, 1.0))
+            cmd_ctrl = (1.0 - alpha) * self._startup_move_q0_ctrl + alpha * self._startup_move_qt_ctrl
+            self._publish_controller_cmd(cmd_ctrl)
+
+            if alpha >= 1.0:
+                # Move completed: enable policy starting next tick
+                self._startup_move_active = False
+                self._start_wall = time.time()
+                self._prev_q_des_policy = None
+                self._prev_pub_t = None
+                self._dq_est.reset()
+                self.obs_builder.reset_last_action()
+                if self._startup_print:
+                    self.get_logger().info("Startup move completed. Policy control enabled.")
+            return
 
         require_all = bool(self.get_parameter("require_all_topics").value)
         if require_all and not (self._got_cmd and self._got_imu and self._got_joint):
@@ -626,9 +717,7 @@ class IsaacPolicyPlayer(Node):
             vel_used=vel_used,
         )
 
-        msg = Float64MultiArray()
-        msg.data = cmd_ctrl.tolist()
-        self.pub.publish(msg)
+        self._publish_controller_cmd(cmd_ctrl)
 
 
 def main(args=None) -> None:

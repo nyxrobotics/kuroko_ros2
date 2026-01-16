@@ -27,3 +27,4 @@ isaac_policy_player:
 
     joint_calibration: ""
     joint_velocity_source: "estimate"
+    startup_move_to_default: true
