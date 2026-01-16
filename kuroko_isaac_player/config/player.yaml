@@ -1,0 +1,25 @@
+isaac_policy_player:
+  ros__parameters:
+    use_sim_time: true
+
+    cmd_vel_topic: "/cmd_vel"
+    joint_states_topic: "/joint_states"
+    imu_topic: "/kuroko/sensors/imu/data"
+    command_topic: "/joint_group_position_controller/commands"
+
+    publish_rate_hz: 200.0
+
+    dq_estimation_enabled: true
+    dq_lowpass_alpha: 0.2
+    joint_state_stale_sec: 0.05
+
+    inference_thread: true
+
+    trained_data_dir: "trained_data/kuroko_walk"
+    model_file: "model_13400.pt"
+    env_yaml_file: "params/env.yaml"
+
+    kuroko_description_package: "kuroko_description"
+    controller_yaml_relpath: "config/gz_position_controller.yaml"
+
+    joint_calibration: ""
