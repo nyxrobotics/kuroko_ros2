@@ -3,74 +3,56 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Sequence, Tuple
+from typing import List
 
 import numpy as np
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu
 
 
-def _quat_to_rotmat_xyzw(q: Tuple[float, float, float, float]) -> np.ndarray:
-    # q = (x, y, z, w)
-    x, y, z, w = q
-    xx, yy, zz = x * x, y * y, z * z
-    xy, xz, yz = x * y, x * z, y * z
-    wx, wy, wz = w * x, w * y, w * z
-    return np.array(
-        [
-            [1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy)],
-            [2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx)],
-            [2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy)],
-        ],
-        dtype=np.float32,
-    )
-
-
 @dataclass
 class ObservationBuilder:
     """
-    Build observation vector following env.yaml active observation terms order.
+    Build observation vector that matches Isaac Lab env.yaml (observations.policy.*).
 
-    terms_in_order must already be filtered by env.yaml:
-      - null terms removed
-      - pure boolean terms removed
-      - keep dict terms only
+    This builder currently supports the active terms found in your env.yaml:
+      - base_ang_vel           (Imu.angular_velocity xyz)
+      - velocity_commands      (Twist linear.x, linear.y, angular.z)
+      - joint_pos              (joint_pos_rel = q - default_q)
+      - joint_vel              (joint_vel_rel = dq)
+      - actions                (last_action)
+      - base_lin_acc_sens      (Imu.linear_acceleration xyz)
+
+    Ordering MUST follow terms_in_order from env.yaml (filtered to dict terms).
     """
 
     policy_joint_names: List[str]
     terms_in_order: List[str]
-    default_joint_pos: Sequence[float]
+    default_joint_pos: List[float]
 
-    last_action: np.ndarray = field(default_factory=lambda: np.zeros((0,), dtype=np.float32))
+    _n: int = field(init=False)
+    _q_default: np.ndarray = field(init=False)
+    last_action: np.ndarray = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self._n = len(self.policy_joint_names)
 
-        if self.default_joint_pos is None:
-            self._q_default = np.zeros((self._n,), dtype=np.float32)
-        else:
-            if len(self.default_joint_pos) != self._n:
-                raise ValueError(
-                    f"default_joint_pos length {len(self.default_joint_pos)} != number of policy joints {self._n}"
-                )
-            self._q_default = np.array([float(x) for x in self.default_joint_pos], dtype=np.float32)
+        qd = np.asarray(self.default_joint_pos, dtype=np.float32).reshape(-1)
+        if qd.shape[0] != self._n:
+            raise ValueError(
+                f"default_joint_pos length mismatch: expected {self._n}, got {qd.shape[0]}"
+            )
+        self._q_default = qd.copy()
 
-        if self.last_action.size == 0:
-            self.last_action = np.zeros((self._n,), dtype=np.float32)
-        elif self.last_action.shape != (self._n,):
-            raise ValueError(f"last_action shape must be ({self._n},), got {self.last_action.shape}")
+        # last_action initialized to zeros so the first tick can run
+        self.last_action = np.zeros((self._n,), dtype=np.float32)
 
-        self._obs_dim = 0
-        for t in self.terms_in_order:
-            self._obs_dim += self._term_dim(t)
-
+    # -------------------------
+    # Public helpers
+    # -------------------------
     @property
     def obs_dim(self) -> int:
-        return self._obs_dim
-
-    @property
-    def filtered_terms(self) -> List[str]:
-        return list(self.terms_in_order)
+        return int(sum(self._term_dim(t) for t in self.terms_in_order))
 
     def reset_last_action(self) -> None:
         self.last_action[:] = 0.0
@@ -90,13 +72,6 @@ class ObservationBuilder:
             raise ValueError(f"action shape must be ({self._n},), got {a.shape}")
         self.last_action[:] = a
 
-    def _term_dim(self, term: str) -> int:
-        if term in ("base_ang_vel", "projected_gravity", "velocity_commands", "base_lin_acc_sens"):
-            return 3
-        if term in ("joint_pos", "joint_vel", "actions"):
-            return self._n
-        raise ValueError(f"Unsupported observation term: {term}")
-
     def debug_dump_observation_layout(self, logger) -> None:
         logger.info("==== Observation Layout Dump ====")
 
@@ -106,70 +81,107 @@ class ObservationBuilder:
 
             if term == "base_ang_vel":
                 src = "/kuroko/sensors/imu/data.angular_velocity (x,y,z)"
-            elif term == "projected_gravity":
-                src = "/kuroko/sensors/imu/data.orientation -> projected_gravity (x,y,z)"
             elif term == "velocity_commands":
                 src = "/cmd_vel (linear.x, linear.y, angular.z)"
             elif term == "joint_pos":
-                src = f"/joint_states.position (policy_joint_names order, N={self._n})"
+                src = f"/joint_states.position -> joint_pos_rel (q - default_q), N={self._n}"
             elif term == "joint_vel":
-                src = f"/joint_states.velocity OR estimated dq (policy_joint_names order, N={self._n})"
+                src = f"/joint_states.velocity or estimated dq -> joint_vel_rel, N={self._n}"
             elif term == "actions":
-                src = f"last_action (policy output, N={self._n})"
+                src = f"last_action (policy output), N={self._n}"
             elif term == "base_lin_acc_sens":
                 src = "/kuroko/sensors/imu/data.linear_acceleration (x,y,z)"
             else:
                 src = "UNKNOWN"
 
-            logger.info(f"[{idx:3d}:{idx + dim:3d}] {term:20s} dim={dim:2d} <- {src}")
+            logger.info(f"[{idx:3d}:{idx+dim:3d}] {term:20s} dim={dim:2d} <- {src}")
             idx += dim
 
         logger.info(f"Total observation dim = {idx}")
         logger.info("=================================")
 
+    # -------------------------
+    # Core build
+    # -------------------------
     def build(self, cmd: Twist, q: np.ndarray, dq: np.ndarray, imu: Imu) -> np.ndarray:
-        parts: List[np.ndarray] = []
+        """
+        Build observation vector (float32) in the exact order of terms_in_order.
 
-        # projected_gravity (only used if term exists)
-        ox, oy, oz, ow = (
-            float(imu.orientation.x),
-            float(imu.orientation.y),
-            float(imu.orientation.z),
-            float(imu.orientation.w),
-        )
-        R = _quat_to_rotmat_xyzw((ox, oy, oz, ow))
-        g_world = np.array([0.0, 0.0, -1.0], dtype=np.float32)
-        proj_g = R.T @ g_world  # (3,)
+        q, dq must already be aligned to policy_joint_names order.
+        """
+        q = np.asarray(q, dtype=np.float32).reshape(-1)
+        dq = np.asarray(dq, dtype=np.float32).reshape(-1)
+
+        if q.shape != (self._n,):
+            raise ValueError(f"q shape must be ({self._n},), got {q.shape}")
+        if dq.shape != (self._n,):
+            raise ValueError(f"dq shape must be ({self._n},), got {dq.shape}")
+
+        parts: list[np.ndarray] = []
 
         for term in self.terms_in_order:
             if term == "base_ang_vel":
-                w = imu.angular_velocity
-                parts.append(np.array([w.x, w.y, w.z], dtype=np.float32))
-
-            elif term == "projected_gravity":
-                parts.append(proj_g.astype(np.float32))
+                parts.append(
+                    np.array(
+                        [
+                            float(imu.angular_velocity.x),
+                            float(imu.angular_velocity.y),
+                            float(imu.angular_velocity.z),
+                        ],
+                        dtype=np.float32,
+                    )
+                )
 
             elif term == "velocity_commands":
-                parts.append(np.array([cmd.linear.x, cmd.linear.y, cmd.angular.z], dtype=np.float32))
+                parts.append(
+                    np.array(
+                        [
+                            float(cmd.linear.x),
+                            float(cmd.linear.y),
+                            float(cmd.angular.z),
+                        ],
+                        dtype=np.float32,
+                    )
+                )
 
             elif term == "joint_pos":
-                parts.append(q.astype(np.float32) - self._q_default)
+                # Isaac Lab: joint_pos_rel
+                parts.append((q - self._q_default).astype(np.float32))
 
             elif term == "joint_vel":
+                # Isaac Lab: joint_vel_rel (default vel is 0)
                 parts.append(dq.astype(np.float32))
 
             elif term == "actions":
                 parts.append(self.last_action.astype(np.float32))
 
             elif term == "base_lin_acc_sens":
-                a = imu.linear_acceleration
-                parts.append(np.array([a.x, a.y, a.z], dtype=np.float32))
+                parts.append(
+                    np.array(
+                        [
+                            float(imu.linear_acceleration.x),
+                            float(imu.linear_acceleration.y),
+                            float(imu.linear_acceleration.z),
+                        ],
+                        dtype=np.float32,
+                    )
+                )
 
             else:
-                raise ValueError(f"Unsupported observation term: {term}")
+                raise KeyError(f"Unsupported observation term: {term}")
 
         if not parts:
-            return np.zeros((1, 0), dtype=np.float32)
+            raise ValueError("No observation parts built (terms_in_order is empty).")
 
         obs = np.concatenate(parts, axis=0).astype(np.float32)
-        return obs.reshape(1, -1)
+        return obs
+
+    # -------------------------
+    # Term dim
+    # -------------------------
+    def _term_dim(self, term: str) -> int:
+        if term in ("base_ang_vel", "velocity_commands", "base_lin_acc_sens"):
+            return 3
+        if term in ("joint_pos", "joint_vel", "actions"):
+            return self._n
+        raise KeyError(f"Unknown term for dim: {term}")
