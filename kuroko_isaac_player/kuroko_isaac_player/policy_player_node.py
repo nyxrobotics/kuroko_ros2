@@ -1,5 +1,4 @@
 # kuroko_isaac_player/policy_player_node.py
-
 from __future__ import annotations
 
 import threading
@@ -28,21 +27,6 @@ def _find_latest_pt(policy_dir: Path) -> Path:
 
 
 def _load_controller_joint_names(controller_yaml_path: Path) -> list[str]:
-    """
-    Parse ros2_control yaml (gz_position_controller.yaml) to get controller joint order.
-
-    Supports BOTH common layouts:
-
-    A) controller_manager:
-         ros__parameters:
-           joint_group_position_controller:
-             ros__parameters:
-               joints: [...]
-
-    B) joint_group_position_controller:
-         ros__parameters:
-           joints: [...]
-    """
     import yaml
 
     with open(controller_yaml_path, "r") as f:
@@ -51,42 +35,34 @@ def _load_controller_joint_names(controller_yaml_path: Path) -> list[str]:
     if not isinstance(data, dict):
         raise TypeError(f"controller yaml root must be dict: {controller_yaml_path}")
 
-    # ---- Layout B (top-level) ----
-    try:
-        jgp = data.get("joint_group_position_controller", None)
-        if isinstance(jgp, dict):
-            ros_params = jgp.get("ros__parameters", None)
-            if isinstance(ros_params, dict):
-                joints = ros_params.get("joints", None)
-                if isinstance(joints, list) and all(isinstance(x, str) for x in joints):
-                    return joints
-    except Exception:
-        pass
-
-    # ---- Layout A (under controller_manager) ----
-    try:
-        cur: Any = data
-        for k in ["controller_manager", "ros__parameters", "joint_group_position_controller", "ros__parameters"]:
-            if isinstance(cur, dict) and k in cur:
-                cur = cur[k]
-            else:
-                cur = None
-                break
-
-        if isinstance(cur, dict):
-            joints = cur.get("joints", None)
+    # Layout B: top-level joint_group_position_controller
+    jgp = data.get("joint_group_position_controller", None)
+    if isinstance(jgp, dict):
+        ros_params = jgp.get("ros__parameters", None)
+        if isinstance(ros_params, dict):
+            joints = ros_params.get("joints", None)
             if isinstance(joints, list) and all(isinstance(x, str) for x in joints):
                 return joints
-    except Exception:
-        pass
 
-    # ---- Fallback: recursive search for the best "joints: [str...]" ----
+    # Layout A: controller_manager subtree
+    cur: Any = data
+    for k in ["controller_manager", "ros__parameters", "joint_group_position_controller", "ros__parameters"]:
+        if isinstance(cur, dict) and k in cur:
+            cur = cur[k]
+        else:
+            cur = None
+            break
+    if isinstance(cur, dict):
+        joints = cur.get("joints", None)
+        if isinstance(joints, list) and all(isinstance(x, str) for x in joints):
+            return joints
+
+    # Fallback recursive search
     best: list[str] = []
 
     def walk(obj: Any) -> None:
         nonlocal best
         if isinstance(obj, dict):
-            # If this dict directly contains a joints list, consider it
             j = obj.get("joints", None)
             if isinstance(j, list) and all(isinstance(x, str) for x in j):
                 if len(j) > len(best):
@@ -108,21 +84,17 @@ class IsaacPolicyPlayer(Node):
     def __init__(self) -> None:
         super().__init__("isaac_policy_player")
 
-        # Explicit paths
         self.declare_parameter("model_path", "")
         self.declare_parameter("env_yaml_path", "")
         self.declare_parameter("controller_yaml_path", "")
 
-        # Policy directory style (optional)
         self.declare_parameter("policy_name", "kuroko_walk")
         self.declare_parameter("policy_dir", "")
-        self.declare_parameter("policy_path", "")  # alias of model_path
+        self.declare_parameter("policy_path", "")
 
-        # Runtime
         self.declare_parameter("publish_hz", 200.0)
         self.declare_parameter("use_inference_thread", True)
 
-        # Resolve asset paths robustly
         pkg_share = Path(get_package_share_directory("kuroko_isaac_player"))
         desc_share = Path(get_package_share_directory("kuroko_description"))
 
@@ -154,40 +126,43 @@ class IsaacPolicyPlayer(Node):
         self.get_logger().info(f"env_yaml_path: {env_yaml_path}")
         self.get_logger().info(f"controller_yaml_path: {controller_yaml_path}")
 
-        if not model_path.exists():
-            raise FileNotFoundError(f"model_path not found: {model_path}")
-        if not env_yaml_path.exists():
-            raise FileNotFoundError(f"env_yaml_path not found: {env_yaml_path}")
-        if not controller_yaml_path.exists():
-            raise FileNotFoundError(f"controller_yaml_path not found: {controller_yaml_path}")
-
-        # Load env spec / policy
         env_spec = load_env_spec(str(env_yaml_path))
         self.policy_joint_names = env_spec.policy_joint_names
         self.obs_terms = env_spec.observation_terms_in_order
-        self.default_joint_pos = env_spec.default_joint_pos
+        self.default_joint_pos = np.array(env_spec.default_joint_pos, dtype=np.float32)
+
+        # ---- action config from env.yaml (CRITICAL) ----
+        ajp = env_spec.raw.get("actions", {}).get("joint_pos", {})
+        self.action_scale = float(ajp.get("scale", 1.0))
+        self.action_offset = float(ajp.get("offset", 0.0))
+        self.use_default_offset = bool(ajp.get("use_default_offset", True))
+        self.action_clip = ajp.get("clip", None)
+
+        self.get_logger().info(
+            f"Action config: scale={self.action_scale}, offset={self.action_offset}, "
+            f"use_default_offset={self.use_default_offset}, clip={self.action_clip}"
+        )
 
         self.get_logger().info(f"Observation terms order: {self.obs_terms}")
 
         self.policy = load_policy_callable(str(model_path), logger=self.get_logger())
 
-        # Observation builder
         self.obs_builder = ObservationBuilder(
             policy_joint_names=self.policy_joint_names,
             terms_in_order=self.obs_terms,
-            default_joint_pos=self.default_joint_pos,
+            default_joint_pos=self.default_joint_pos.tolist(),
         )
 
         self.get_logger().info(f"Observation dim: {self.obs_builder.obs_dim}")
         self.obs_builder.debug_dump_observation_layout(self.get_logger())
 
-        # Controller joint order + mapping
         self.controller_joint_names = _load_controller_joint_names(controller_yaml_path)
         self.policy_to_controller_index = self._build_policy_to_controller_index()
 
+        # ---- Debug dumps (orders + init pose) ----
         self._debug_print_joint_orders_and_mapping()
+        self._debug_print_default_pose()
 
-        # Sub/Pub
         self._latest_cmd = Twist()
         self._latest_imu = Imu()
 
@@ -204,7 +179,6 @@ class IsaacPolicyPlayer(Node):
 
         self.pub = self.create_publisher(Float64MultiArray, "/joint_group_position_controller/commands", 10)
 
-        # Inference threading
         self._use_inference_thread = bool(self.get_parameter("use_inference_thread").value)
         self._latest_obs: Optional[np.ndarray] = None
         self._latest_action: Optional[np.ndarray] = None
@@ -220,7 +194,9 @@ class IsaacPolicyPlayer(Node):
         self.get_logger().info(f"Publishing commands at {hz} Hz")
         self.create_timer(1.0 / hz, self._on_timer)
 
+    # -------------------------
     # Debug prints
+    # -------------------------
     def _debug_print_joint_orders_and_mapping(self) -> None:
         self.get_logger().info("==== Policy Joint Order (env.yaml) ====")
         for i, jn in enumerate(self.policy_joint_names):
@@ -235,7 +211,27 @@ class IsaacPolicyPlayer(Node):
             ci = self.policy_to_controller_index[pi]
             self.get_logger().info(f"policy[{pi:2d}] -> joint '{jn}' -> controller[{ci:2d}]")
 
+    def _debug_print_default_pose(self) -> None:
+        self.get_logger().info("==== Default Joint Pose (from env.yaml scene.robot.init_state.joint_pos) ====")
+
+        # Policy order
+        self.get_logger().info("---- Policy order ----")
+        for i, jn in enumerate(self.policy_joint_names):
+            self.get_logger().info(f"[{i:2d}] {jn:20s} = {float(self.default_joint_pos[i]): .6f}")
+
+        # Controller order
+        self.get_logger().info("---- Controller order ----")
+        # Build map policy joint -> default value
+        dmap = {jn: float(self.default_joint_pos[i]) for i, jn in enumerate(self.policy_joint_names)}
+        for ci, jn in enumerate(self.controller_joint_names):
+            v = dmap.get(jn, 0.0)
+            self.get_logger().info(f"[{ci:2d}] {jn:20s} = {v: .6f}")
+
+        self.get_logger().info("==============================================================")
+
+    # -------------------------
     # Mapping
+    # -------------------------
     def _build_policy_to_controller_index(self) -> list[int]:
         name_to_idx = {jn: i for i, jn in enumerate(self.controller_joint_names)}
         idx: list[int] = []
@@ -250,7 +246,9 @@ class IsaacPolicyPlayer(Node):
             self.get_logger().error(f"Missing joints in controller list: {missing}")
         return idx
 
+    # -------------------------
     # Callbacks
+    # -------------------------
     def _on_cmd(self, msg: Twist) -> None:
         self._latest_cmd = msg
 
@@ -268,7 +266,9 @@ class IsaacPolicyPlayer(Node):
         self._joint_state_pos = np.array(msg.position, dtype=np.float32) if msg.position else None
         self._joint_state_vel = np.array(msg.velocity, dtype=np.float32) if msg.velocity else None
 
+    # -------------------------
     # JointState -> policy order
+    # -------------------------
     def _collect_policy_order_q_dq(self) -> Tuple[np.ndarray, np.ndarray]:
         if self._joint_state_name is None or self._joint_state_pos is None:
             raise RuntimeError("No /joint_states received yet")
@@ -284,13 +284,14 @@ class IsaacPolicyPlayer(Node):
             if si is None:
                 continue
             q[pi] = float(self._joint_state_pos[si])
-
             if self._joint_state_vel is not None and len(self._joint_state_vel) == len(self._joint_state_name):
                 dq[pi] = float(self._joint_state_vel[si])
 
         return q, dq
 
+    # -------------------------
     # Timer tick
+    # -------------------------
     def _on_timer(self) -> None:
         cmd = self._latest_cmd
         imu = self._latest_imu
@@ -312,7 +313,9 @@ class IsaacPolicyPlayer(Node):
 
         self._publish_action_as_controller_command(action)
 
+    # -------------------------
     # Inference
+    # -------------------------
     def _run_inference_once(self) -> None:
         with self._lock:
             obs = None if self._latest_obs is None else self._latest_obs.copy()
@@ -342,13 +345,27 @@ class IsaacPolicyPlayer(Node):
         while not self._stop and rclpy.ok():
             self._run_inference_once()
 
-    # Publish
+    # -------------------------
+    # Action -> target + publish
+    # -------------------------
+    def _action_to_target_q(self, action_policy_order: np.ndarray) -> np.ndarray:
+        a = action_policy_order.astype(np.float32)
+        tgt = (self.action_scale * a) + self.action_offset
+        if self.use_default_offset:
+            tgt = tgt + self.default_joint_pos
+        if isinstance(self.action_clip, (list, tuple)) and len(self.action_clip) == 2:
+            lo, hi = float(self.action_clip[0]), float(self.action_clip[1])
+            tgt = np.clip(tgt, lo, hi)
+        return tgt
+
     def _publish_action_as_controller_command(self, action_policy_order: np.ndarray) -> None:
+        q_des_policy = self._action_to_target_q(action_policy_order)
+
         cmd = np.zeros((len(self.controller_joint_names),), dtype=np.float64)
         for pi, ci in enumerate(self.policy_to_controller_index):
             if ci < 0:
                 continue
-            cmd[ci] = float(action_policy_order[pi])
+            cmd[ci] = float(q_des_policy[pi])
 
         msg = Float64MultiArray()
         msg.data = cmd.tolist()
