@@ -1,5 +1,8 @@
 isaac_policy_player:
   ros__parameters:
+    debug_print: false
+    debug_print_joint_values: false
+    debug_print_every: 0
     use_sim_time: true
 
     cmd_vel_topic: "/cmd_vel"

@@ -139,16 +139,18 @@ class IsaacPolicyPlayer(Node):
         self.declare_parameter("publish_hz", 200.0)
         self.declare_parameter("use_inference_thread", True)
 
-        # Debug / safety params
+        # Logging controls
+        self.declare_parameter("startup_print", True)          # NEW: control startup dumps
         self.declare_parameter("debug_print", True)
-        self.declare_parameter("debug_print_every", 50)  # timer ticks
+        self.declare_parameter("debug_print_every", 50)        # timer ticks
         self.declare_parameter("debug_print_joint_values", True)
 
-        self.declare_parameter("startup_ramp_sec", 2.0)          # action gain ramps 0->1
-        self.declare_parameter("action_clip_abs", 1.0)           # clip action before scaling
-        self.declare_parameter("target_rate_limit", 6.0)         # rad/s limit on target change
-        self.declare_parameter("dq_cutoff_hz", 30.0)             # dq estimator LPF cutoff
-        self.declare_parameter("require_all_topics", True)       # wait until cmd+imu+joint before publishing
+        # Safety / estimation
+        self.declare_parameter("startup_ramp_sec", 2.0)        # action gain ramps 0->1
+        self.declare_parameter("action_clip_abs", 1.0)         # clip action before scaling
+        self.declare_parameter("target_rate_limit", 6.0)       # rad/s limit on target change
+        self.declare_parameter("dq_cutoff_hz", 30.0)           # dq estimator LPF cutoff
+        self.declare_parameter("require_all_topics", True)     # wait until cmd+imu+joint before publishing
 
         pkg_share = Path(get_package_share_directory("kuroko_isaac_player"))
         desc_share = Path(get_package_share_directory("kuroko_description"))
@@ -197,7 +199,6 @@ class IsaacPolicyPlayer(Node):
             f"Action config: scale={self.action_scale}, offset={self.action_offset}, "
             f"use_default_offset={self.use_default_offset}, clip={self.action_clip}"
         )
-
         self.get_logger().info(f"Observation terms order: {self.obs_terms}")
 
         # Load policy
@@ -209,17 +210,18 @@ class IsaacPolicyPlayer(Node):
             terms_in_order=self.obs_terms,
             default_joint_pos=self.default_joint_pos.tolist(),
         )
-
         self.get_logger().info(f"Observation dim: {self.obs_builder.obs_dim}")
-        self.obs_builder.debug_dump_observation_layout(self.get_logger())
 
         # Controller order + mapping
         self.controller_joint_names = _load_controller_joint_names(controller_yaml_path)
         self.policy_to_controller_index = self._build_policy_to_controller_index()
 
-        # Debug dumps
-        self._debug_print_joint_orders_and_mapping()
-        self._debug_print_default_pose()
+        # Startup prints (guarded)
+        self._startup_print = bool(self.get_parameter("startup_print").value)
+        if self._startup_print:
+            self.obs_builder.debug_dump_observation_layout(self.get_logger())
+            self._debug_print_joint_orders_and_mapping()
+            self._debug_print_default_pose()
 
         # Topic caches
         self._latest_cmd = Twist()
@@ -337,7 +339,9 @@ class IsaacPolicyPlayer(Node):
 
     def _on_joint_states(self, msg: JointState) -> None:
         self._got_joint = True
-        if not self._printed_joint_states_order:
+
+        # Startup prints for joint_states order can be noisy too: guard with startup_print.
+        if self._startup_print and not self._printed_joint_states_order:
             self._printed_joint_states_order = True
             self.get_logger().info("==== /joint_states Order ====")
             for i, jn in enumerate(msg.name):
@@ -405,7 +409,6 @@ class IsaacPolicyPlayer(Node):
 
         q, dq_msg, vel_ok = self._collect_policy_order_q_dq()
 
-        # dq fallback estimate if missing
         now = time.time()
         if vel_ok:
             dq = dq_msg
@@ -426,7 +429,6 @@ class IsaacPolicyPlayer(Node):
         if action is None:
             return
 
-        # publish with safety shaping
         self._publish_action_as_controller_command(action, q, dq, obs)
 
     # -------------------------
@@ -450,7 +452,7 @@ class IsaacPolicyPlayer(Node):
             with self._lock:
                 self._latest_action = action
 
-            if not self._printed_first_infer:
+            if self._startup_print and (not self._printed_first_infer):
                 self._printed_first_infer = True
                 self.get_logger().info("==== First inference completed ====")
 
@@ -471,26 +473,18 @@ class IsaacPolicyPlayer(Node):
         return float(np.clip(t / self._ramp_sec, 0.0, 1.0))
 
     def _action_to_target_q(self, action_policy_order: np.ndarray, gain: float) -> np.ndarray:
-        """
-        Isaac Lab joint position action:
-          target_q = default_q + offset + scale * action
-        plus startup ramp + optional clips.
-        """
         a = np.asarray(action_policy_order, dtype=np.float32).reshape(-1)
 
-        # clip action magnitude for safety
         clip_abs = float(self.get_parameter("action_clip_abs").value)
         if clip_abs > 0:
             a = np.clip(a, -clip_abs, clip_abs)
 
-        # ramp in
         a = gain * a
 
         tgt = (self.action_scale * a) + self.action_offset
         if self.use_default_offset:
             tgt = tgt + self.default_joint_pos
 
-        # env.yaml clip (only if simple [min,max])
         if isinstance(self.action_clip, (list, tuple)) and len(self.action_clip) == 2:
             lo, hi = float(self.action_clip[0]), float(self.action_clip[1])
             tgt = np.clip(tgt, lo, hi)
@@ -498,9 +492,6 @@ class IsaacPolicyPlayer(Node):
         return tgt.astype(np.float32)
 
     def _rate_limit_target(self, q_des: np.ndarray, now: float) -> np.ndarray:
-        """
-        Limit target joint changes by rad/s.
-        """
         q_des = np.asarray(q_des, dtype=np.float32).reshape(-1)
 
         if self._prev_q_des_policy is None or self._prev_pub_t is None:
@@ -576,23 +567,15 @@ class IsaacPolicyPlayer(Node):
         now = time.time()
         gain = self._startup_gain()
 
-        # Build target in policy order (with ramp + clip)
         q_des_policy = self._action_to_target_q(action_policy_order, gain=gain)
-
-        # Rate-limit target changes
         q_des_policy = self._rate_limit_target(q_des_policy, now)
 
-        # Map to controller order
         cmd_ctrl = np.zeros((len(self.controller_joint_names),), dtype=np.float64)
         for pi, ci in enumerate(self.policy_to_controller_index):
             if ci < 0:
                 continue
             cmd_ctrl[ci] = float(q_des_policy[pi])
 
-        # Debug dump
-        # We can infer vel_ok from /joint_states velocity presence at first callback;
-        # here we re-check quickly for this tick by using dq estimator state:
-        # (not perfect, but good enough for visibility)
         vel_ok = False
         if self._joint_state_vel is not None and self._joint_state_name is not None:
             vel_ok = len(self._joint_state_vel) == len(self._joint_state_name) and len(self._joint_state_vel) > 0
