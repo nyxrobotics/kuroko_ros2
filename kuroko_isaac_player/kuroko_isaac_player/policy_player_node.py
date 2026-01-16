@@ -140,17 +140,23 @@ class IsaacPolicyPlayer(Node):
         self.declare_parameter("use_inference_thread", True)
 
         # Logging controls
-        self.declare_parameter("startup_print", True)          # NEW: control startup dumps
+        self.declare_parameter("startup_print", True)
         self.declare_parameter("debug_print", True)
-        self.declare_parameter("debug_print_every", 50)        # timer ticks
+        self.declare_parameter("debug_print_every", 50)
         self.declare_parameter("debug_print_joint_values", True)
 
         # Safety / estimation
-        self.declare_parameter("startup_ramp_sec", 2.0)        # action gain ramps 0->1
-        self.declare_parameter("action_clip_abs", 1.0)         # clip action before scaling
-        self.declare_parameter("target_rate_limit", 6.0)       # rad/s limit on target change
-        self.declare_parameter("dq_cutoff_hz", 30.0)           # dq estimator LPF cutoff
-        self.declare_parameter("require_all_topics", True)     # wait until cmd+imu+joint before publishing
+        self.declare_parameter("startup_ramp_sec", 2.0)
+        self.declare_parameter("action_clip_abs", 1.0)
+        self.declare_parameter("target_rate_limit", 6.0)
+        self.declare_parameter("dq_cutoff_hz", 30.0)
+        self.declare_parameter("require_all_topics", True)
+
+        # NEW: choose velocity source
+        #   "auto"     -> use /joint_states.velocity if valid else estimate
+        #   "topic"    -> always use /joint_states.velocity (if missing -> zeros + warn once)
+        #   "estimate" -> always estimate from dq (ignore topic velocity)
+        self.declare_parameter("joint_velocity_source", "auto")
 
         pkg_share = Path(get_package_share_directory("kuroko_isaac_player"))
         desc_share = Path(get_package_share_directory("kuroko_description"))
@@ -248,6 +254,9 @@ class IsaacPolicyPlayer(Node):
         self._debug_every = int(self.get_parameter("debug_print_every").value)
         self._debug_joint_values = bool(self.get_parameter("debug_print_joint_values").value)
         self._tick = 0
+
+        # Velocity-source warning (only warn once for topic-missing)
+        self._warned_vel_missing = False
 
         # Startup ramp
         self._start_wall = time.time()
@@ -348,10 +357,10 @@ class IsaacPolicyPlayer(Node):
                 self.get_logger().info(f"[{i:2d}] {jn}")
 
             if msg.velocity is None or len(msg.velocity) == 0:
-                self.get_logger().warn("/joint_states.velocity is empty -> dq will be estimated from position diff.")
+                self.get_logger().warn("/joint_states.velocity is empty -> dq may be estimated depending on joint_velocity_source.")
             elif len(msg.velocity) != len(msg.name):
                 self.get_logger().warn(
-                    f"/joint_states.velocity length mismatch: {len(msg.velocity)} != {len(msg.name)} -> dq estimate fallback may be used."
+                    f"/joint_states.velocity length mismatch: {len(msg.velocity)} != {len(msg.name)} -> dq may be estimated depending on joint_velocity_source."
                 )
             else:
                 self.get_logger().info("/joint_states.velocity is present.")
@@ -410,10 +419,33 @@ class IsaacPolicyPlayer(Node):
         q, dq_msg, vel_ok = self._collect_policy_order_q_dq()
 
         now = time.time()
-        if vel_ok:
-            dq = dq_msg
-        else:
+        src = str(self.get_parameter("joint_velocity_source").value).strip().lower()
+        if src not in ("auto", "topic", "estimate"):
+            self.get_logger().warn(f"Invalid joint_velocity_source='{src}', fallback to 'auto'")
+            src = "auto"
+
+        if src == "estimate":
             dq = self._dq_est.update(q, now)
+            vel_used = False
+        elif src == "topic":
+            if vel_ok:
+                dq = dq_msg
+                vel_used = True
+            else:
+                dq = np.zeros_like(q, dtype=np.float32)
+                vel_used = False
+                if not self._warned_vel_missing:
+                    self._warned_vel_missing = True
+                    self.get_logger().warn(
+                        "joint_velocity_source='topic' but /joint_states.velocity is missing/invalid. Using zeros."
+                    )
+        else:  # auto
+            if vel_ok:
+                dq = dq_msg
+                vel_used = True
+            else:
+                dq = self._dq_est.update(q, now)
+                vel_used = False
 
         obs = self.obs_builder.build(cmd, q, dq, imu)
 
@@ -429,7 +461,7 @@ class IsaacPolicyPlayer(Node):
         if action is None:
             return
 
-        self._publish_action_as_controller_command(action, q, dq, obs)
+        self._publish_action_as_controller_command(action, q, dq, obs, vel_used)
 
     # -------------------------
     # Inference
@@ -527,7 +559,7 @@ class IsaacPolicyPlayer(Node):
         action: np.ndarray,
         q_des_policy: np.ndarray,
         cmd_ctrl: np.ndarray,
-        vel_ok: bool,
+        vel_used: bool,
     ) -> None:
         if not self._debug_print:
             return
@@ -537,7 +569,7 @@ class IsaacPolicyPlayer(Node):
             return
 
         self.get_logger().info("==== Runtime Debug Dump ====")
-        self.get_logger().info(f"tick={self._tick} startup_gain={gain:.3f} vel_ok={vel_ok}")
+        self.get_logger().info(f"tick={self._tick} startup_gain={gain:.3f} vel_used={vel_used}")
         self.get_logger().info(
             f"obs: dim={obs.size} min={float(obs.min()):.4f} max={float(obs.max()):.4f} mean={float(obs.mean()):.4f}"
         )
@@ -563,7 +595,14 @@ class IsaacPolicyPlayer(Node):
 
         self.get_logger().info("=================================")
 
-    def _publish_action_as_controller_command(self, action_policy_order: np.ndarray, q: np.ndarray, dq: np.ndarray, obs: np.ndarray) -> None:
+    def _publish_action_as_controller_command(
+        self,
+        action_policy_order: np.ndarray,
+        q: np.ndarray,
+        dq: np.ndarray,
+        obs: np.ndarray,
+        vel_used: bool,
+    ) -> None:
         now = time.time()
         gain = self._startup_gain()
 
@@ -576,10 +615,6 @@ class IsaacPolicyPlayer(Node):
                 continue
             cmd_ctrl[ci] = float(q_des_policy[pi])
 
-        vel_ok = False
-        if self._joint_state_vel is not None and self._joint_state_name is not None:
-            vel_ok = len(self._joint_state_vel) == len(self._joint_state_name) and len(self._joint_state_vel) > 0
-
         self._debug_dump_runtime(
             gain=gain,
             q=q,
@@ -588,7 +623,7 @@ class IsaacPolicyPlayer(Node):
             action=np.asarray(action_policy_order, dtype=np.float32).reshape(-1),
             q_des_policy=q_des_policy,
             cmd_ctrl=cmd_ctrl,
-            vel_ok=vel_ok,
+            vel_used=vel_used,
         )
 
         msg = Float64MultiArray()

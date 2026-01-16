@@ -26,3 +26,4 @@ isaac_policy_player:
     controller_yaml_relpath: "config/gz_position_controller.yaml"
 
     joint_calibration: ""
+    joint_velocity_source: "estimate"
