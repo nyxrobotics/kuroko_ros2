@@ -31,20 +31,10 @@ class ObservationBuilder:
     """
     Build observation vector following env.yaml active observation terms order.
 
-    terms_in_order must already be filtered using env.yaml observations specs:
+    terms_in_order must already be filtered by env.yaml:
       - null terms removed
       - pure boolean terms removed
-
-    Supported terms (for now):
-      - base_ang_vel (3)          -> IMU angular_velocity
-      - projected_gravity (3)     -> computed from IMU orientation
-      - velocity_commands (3)     -> cmd_vel (vx, vy, wz)
-      - joint_pos (N)             -> q - q_default
-      - joint_vel (N)             -> dq
-      - actions (N)               -> last_action
-      - base_lin_acc_sens (3)     -> IMU linear_acceleration
-
-    If your env.yaml marks additional terms as active (dict) we should implement them here.
+      - keep dict terms only
     """
 
     policy_joint_names: List[str]
@@ -80,9 +70,11 @@ class ObservationBuilder:
 
     @property
     def filtered_terms(self) -> List[str]:
-        # Kept for compatibility with existing node logs
         return list(self.terms_in_order)
-        
+
+    def reset_last_action(self) -> None:
+        self.last_action[:] = 0.0
+
     def set_last_action(self, action: np.ndarray) -> None:
         """
         Update last_action buffer.
@@ -98,9 +90,6 @@ class ObservationBuilder:
             raise ValueError(f"action shape must be ({self._n},), got {a.shape}")
         self.last_action[:] = a
 
-    def reset_last_action(self):
-        self.last_action[:] = 0.0
-
     def _term_dim(self, term: str) -> int:
         if term in ("base_ang_vel", "projected_gravity", "velocity_commands", "base_lin_acc_sens"):
             return 3
@@ -108,10 +97,40 @@ class ObservationBuilder:
             return self._n
         raise ValueError(f"Unsupported observation term: {term}")
 
+    def debug_dump_observation_layout(self, logger) -> None:
+        logger.info("==== Observation Layout Dump ====")
+
+        idx = 0
+        for term in self.terms_in_order:
+            dim = self._term_dim(term)
+
+            if term == "base_ang_vel":
+                src = "/kuroko/sensors/imu/data.angular_velocity (x,y,z)"
+            elif term == "projected_gravity":
+                src = "/kuroko/sensors/imu/data.orientation -> projected_gravity (x,y,z)"
+            elif term == "velocity_commands":
+                src = "/cmd_vel (linear.x, linear.y, angular.z)"
+            elif term == "joint_pos":
+                src = f"/joint_states.position (policy_joint_names order, N={self._n})"
+            elif term == "joint_vel":
+                src = f"/joint_states.velocity OR estimated dq (policy_joint_names order, N={self._n})"
+            elif term == "actions":
+                src = f"last_action (policy output, N={self._n})"
+            elif term == "base_lin_acc_sens":
+                src = "/kuroko/sensors/imu/data.linear_acceleration (x,y,z)"
+            else:
+                src = "UNKNOWN"
+
+            logger.info(f"[{idx:3d}:{idx + dim:3d}] {term:20s} dim={dim:2d} <- {src}")
+            idx += dim
+
+        logger.info(f"Total observation dim = {idx}")
+        logger.info("=================================")
+
     def build(self, cmd: Twist, q: np.ndarray, dq: np.ndarray, imu: Imu) -> np.ndarray:
         parts: List[np.ndarray] = []
 
-        # projected_gravity (in base frame)
+        # projected_gravity (only used if term exists)
         ox, oy, oz, ow = (
             float(imu.orientation.x),
             float(imu.orientation.y),
@@ -148,7 +167,9 @@ class ObservationBuilder:
 
             else:
                 raise ValueError(f"Unsupported observation term: {term}")
+
         if not parts:
             return np.zeros((1, 0), dtype=np.float32)
+
         obs = np.concatenate(parts, axis=0).astype(np.float32)
         return obs.reshape(1, -1)
