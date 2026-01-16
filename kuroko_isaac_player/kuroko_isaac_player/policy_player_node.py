@@ -119,8 +119,19 @@ class _DQEstimator:
         self._dq_filt = (1.0 - alpha) * self._dq_filt + alpha * dq_raw
 
         self._prev_q = q.copy()
-        self._prev_t = float(t)
+        self._prev_t = float(self._prev_t + dt)
         return self._dq_filt.copy()
+
+
+def _zero_twist() -> Twist:
+    msg = Twist()
+    msg.linear.x = 0.0
+    msg.linear.y = 0.0
+    msg.linear.z = 0.0
+    msg.angular.x = 0.0
+    msg.angular.y = 0.0
+    msg.angular.z = 0.0
+    return msg
 
 
 class IsaacPolicyPlayer(Node):
@@ -150,17 +161,20 @@ class IsaacPolicyPlayer(Node):
         self.declare_parameter("action_clip_abs", 1.0)
         self.declare_parameter("target_rate_limit", 6.0)
         self.declare_parameter("dq_cutoff_hz", 30.0)
-        self.declare_parameter("require_all_topics", True)
 
-        # NEW: choose velocity source
-        #   "auto"     -> use /joint_states.velocity if valid else estimate
-        #   "topic"    -> always use /joint_states.velocity (if missing -> zeros + warn once)
-        #   "estimate" -> always estimate from dq (ignore topic velocity)
-        self.declare_parameter("joint_velocity_source", "auto")
+        # /cmd_vel handling
+        self.declare_parameter("require_joint_and_imu", True)
+        self.declare_parameter("cmd_vel_timeout_sec", 1.0)
 
-        # NEW: startup move (current pose -> default pose) before enabling policy
+        # choose velocity source
+        self.declare_parameter("joint_velocity_source", "auto")  # "auto" | "topic" | "estimate"
+
+        # startup move
         self.declare_parameter("startup_move_to_default", False)
         self.declare_parameter("startup_move_duration_sec", 1.0)
+
+        # initialize last_action from measured pose
+        self.declare_parameter("init_last_action_from_joint_states", True)
 
         pkg_share = Path(get_package_share_directory("kuroko_isaac_player"))
         desc_share = Path(get_package_share_directory("kuroko_description"))
@@ -198,7 +212,6 @@ class IsaacPolicyPlayer(Node):
         self.obs_terms = env_spec.observation_terms_in_order
         self.default_joint_pos = np.array(env_spec.default_joint_pos, dtype=np.float32)
 
-        # ---- action config from env.yaml ----
         ajp = env_spec.raw.get("actions", {}).get("joint_pos", {})
         self.action_scale = float(ajp.get("scale", 1.0))
         self.action_offset = float(ajp.get("offset", 0.0))
@@ -207,7 +220,7 @@ class IsaacPolicyPlayer(Node):
 
         self.get_logger().info(
             f"Action config: scale={self.action_scale}, offset={self.action_offset}, "
-            f"use_default_offset={self.use_default_offset}, clip={self.action_clip}"
+            f"use_default_offset={self.use_default_offset}, clip=None"
         )
         self.get_logger().info(f"Observation terms order: {self.obs_terms}")
 
@@ -234,16 +247,21 @@ class IsaacPolicyPlayer(Node):
             self._debug_print_default_pose()
 
         # Topic caches
-        self._latest_cmd = Twist()
+        self._latest_cmd = _zero_twist()  # default 0
+        self._latest_cmd_time: Optional[float] = None  # None means never received
         self._latest_imu = Imu()
 
         self._joint_state_name: Optional[list[str]] = None
         self._joint_state_pos: Optional[np.ndarray] = None
         self._joint_state_vel: Optional[np.ndarray] = None
 
-        self._got_cmd = False
+        # topic "ready" flags
         self._got_imu = False
         self._got_joint = False
+
+        # last_action init control
+        self._init_last_action_from_joint_states = bool(self.get_parameter("init_last_action_from_joint_states").value)
+        self._did_init_last_action = False
 
         # dq estimator + publish limiting
         self._dq_est = _DQEstimator(
@@ -259,8 +277,8 @@ class IsaacPolicyPlayer(Node):
         self._debug_joint_values = bool(self.get_parameter("debug_print_joint_values").value)
         self._tick = 0
 
-        # Velocity-source warning (only warn once for topic-missing)
         self._warned_vel_missing = False
+        self._warned_cmd_timeout = False
 
         # Startup ramp
         self._start_wall = time.time()
@@ -269,7 +287,7 @@ class IsaacPolicyPlayer(Node):
         self._printed_joint_states_order = False
         self._printed_first_infer = False
 
-        # NEW: startup move state
+        # startup move state
         self._startup_move_enabled = bool(self.get_parameter("startup_move_to_default").value)
         self._startup_move_duration = float(self.get_parameter("startup_move_duration_sec").value)
         self._startup_move_active = False
@@ -277,6 +295,9 @@ class IsaacPolicyPlayer(Node):
         self._startup_move_q0_ctrl: Optional[np.ndarray] = None
         self._startup_move_qt_ctrl: Optional[np.ndarray] = None
         self._startup_move_logged = False
+
+        # NEW: policy enable gate (startup_move完了まで推論しない)
+        self._policy_enabled = not self._startup_move_enabled
 
         # ROS interfaces
         self.create_subscription(Twist, "/cmd_vel", self._on_cmd, 10)
@@ -352,12 +373,7 @@ class IsaacPolicyPlayer(Node):
     # Startup move helpers
     # -------------------------
     def _compute_controller_cmd_from_joint_states(self, msg: JointState) -> np.ndarray:
-        """
-        Build controller-order array from joint_states positions.
-        Missing joints -> keep default pose for that joint (safer than 0).
-        """
         name_to_i = {jn: i for i, jn in enumerate(msg.name)}
-        # default pose in controller order
         dmap = {jn: float(self.default_joint_pos[i]) for i, jn in enumerate(self.policy_joint_names)}
         out = np.zeros((len(self.controller_joint_names),), dtype=np.float64)
         for ci, jn in enumerate(self.controller_joint_names):
@@ -379,12 +395,45 @@ class IsaacPolicyPlayer(Node):
         msg.data = np.asarray(cmd_ctrl, dtype=np.float64).reshape(-1).tolist()
         self.pub.publish(msg)
 
+    def _controller_cmd_to_policy_q(self, cmd_ctrl: np.ndarray) -> np.ndarray:
+        """controller order -> policy order joint positions"""
+        cmd_ctrl = np.asarray(cmd_ctrl, dtype=np.float64).reshape(-1)
+        if cmd_ctrl.shape[0] != len(self.controller_joint_names):
+            raise ValueError("cmd_ctrl length mismatch")
+        name_to_val = {jn: float(cmd_ctrl[i]) for i, jn in enumerate(self.controller_joint_names)}
+        q_policy = np.zeros((len(self.policy_joint_names),), dtype=np.float32)
+        for pi, jn in enumerate(self.policy_joint_names):
+            q_policy[pi] = float(name_to_val.get(jn, 0.0))
+        return q_policy
+
+    # -------------------------
+    # last_action init helper
+    # -------------------------
+    def _measured_q_to_action(self, q_meas_policy: np.ndarray) -> np.ndarray:
+        """
+        Convert joint positions (policy joint order) into action space so that
+        q_des ≈ q_meas (inverse of action_to_target_q with gain=1).
+        """
+        q = np.asarray(q_meas_policy, dtype=np.float32).reshape(-1)
+        a_scale = float(self.action_scale) if abs(float(self.action_scale)) > 1e-8 else 1.0
+        a_off = float(self.action_offset)
+
+        base = self.default_joint_pos if self.use_default_offset else 0.0
+        a = (q - a_off - base) / a_scale
+
+        clip_abs = float(self.get_parameter("action_clip_abs").value)
+        if clip_abs > 0.0:
+            a = np.clip(a, -clip_abs, clip_abs)
+
+        return a.astype(np.float32)
+
     # -------------------------
     # Callbacks
     # -------------------------
     def _on_cmd(self, msg: Twist) -> None:
         self._latest_cmd = msg
-        self._got_cmd = True
+        self._latest_cmd_time = time.time()
+        self._warned_cmd_timeout = False
 
     def _on_imu(self, msg: Imu) -> None:
         self._latest_imu = msg
@@ -393,7 +442,6 @@ class IsaacPolicyPlayer(Node):
     def _on_joint_states(self, msg: JointState) -> None:
         self._got_joint = True
 
-        # Startup prints for joint_states order can be noisy too: guard with startup_print.
         if self._startup_print and not self._printed_joint_states_order:
             self._printed_joint_states_order = True
             self.get_logger().info("==== /joint_states Order ====")
@@ -401,10 +449,13 @@ class IsaacPolicyPlayer(Node):
                 self.get_logger().info(f"[{i:2d}] {jn}")
 
             if msg.velocity is None or len(msg.velocity) == 0:
-                self.get_logger().warn("/joint_states.velocity is empty -> dq may be estimated depending on joint_velocity_source.")
+                self.get_logger().warn(
+                    "/joint_states.velocity is empty -> dq may be estimated depending on joint_velocity_source."
+                )
             elif len(msg.velocity) != len(msg.name):
                 self.get_logger().warn(
-                    f"/joint_states.velocity length mismatch: {len(msg.velocity)} != {len(msg.name)} -> dq may be estimated depending on joint_velocity_source."
+                    f"/joint_states.velocity length mismatch: {len(msg.velocity)} != {len(msg.name)} "
+                    "-> dq may be estimated depending on joint_velocity_source."
                 )
             else:
                 self.get_logger().info("/joint_states.velocity is present.")
@@ -413,29 +464,48 @@ class IsaacPolicyPlayer(Node):
         self._joint_state_pos = np.array(msg.position, dtype=np.float32) if msg.position else None
         self._joint_state_vel = np.array(msg.velocity, dtype=np.float32) if msg.velocity else None
 
-        # NEW: initialize startup move (once) when first joint_states arrives
+        # Startup move trigger (optional) : move完了までポリシー無効
         if self._startup_move_enabled and (not self._startup_move_active) and (self._startup_move_t0 is None):
             self._startup_move_t0 = time.time()
             self._startup_move_q0_ctrl = self._compute_controller_cmd_from_joint_states(msg)
             self._startup_move_qt_ctrl = self._compute_controller_cmd_from_default_pose()
             self._startup_move_active = True
 
-            # Reset buffers to avoid jumps after the move
-            self._dq_est.reset()
-            self.obs_builder.reset_last_action()
-            with self._lock:
-                self._latest_action = None  # wait for fresh inference after move
-                self._latest_obs = None
+            # Policy is disabled until startup move completes.
+            self._policy_enabled = False
 
-            # Restart ramp timing after move completes
+            # reset estimators (dqだけ)
+            self._dq_est.reset()
+            self._prev_q_des_policy = None
+            self._prev_pub_t = None
             self._start_wall = time.time()
 
             if self._startup_print and (not self._startup_move_logged):
                 self._startup_move_logged = True
                 self.get_logger().info(
                     f"Startup move enabled: interpolating current pose -> default pose over "
-                    f"{self._startup_move_duration:.3f} s"
+                    f"{self._startup_move_duration:.3f} s (policy disabled until complete)"
                 )
+
+        # Initialize last_action from first measured joint positions (once) ONLY if not in startup_move_active
+        if (
+            self._init_last_action_from_joint_states
+            and (not self._did_init_last_action)
+            and (not self._startup_move_active)
+        ):
+            try:
+                q_policy, _, _ = self._collect_policy_order_q_dq()
+                a0 = self._measured_q_to_action(q_policy)
+
+                self.obs_builder.set_last_action(a0)
+                with self._lock:
+                    self._latest_action = a0.copy()
+
+                self._did_init_last_action = True
+                if self._startup_print:
+                    self.get_logger().info("Initialized last_action from first /joint_states (measured pose).")
+            except Exception as exc:  # noqa: BLE001
+                self.get_logger().warn(f"Failed to init last_action from joint_states: {exc}")
 
     # -------------------------
     # JointState -> policy order
@@ -472,12 +542,36 @@ class IsaacPolicyPlayer(Node):
         return q, dq_from_msg, vel_ok
 
     # -------------------------
+    # cmd_vel helper
+    # -------------------------
+    def _get_cmd_vel_for_obs(self) -> Twist:
+        """Return /cmd_vel, but if timed out or never received -> zeros."""
+        timeout = float(self.get_parameter("cmd_vel_timeout_sec").value)
+        if timeout <= 0.0:
+            timeout = 0.0
+
+        if self._latest_cmd_time is None:
+            return _zero_twist()
+
+        if timeout == 0.0:
+            return self._latest_cmd
+
+        now = time.time()
+        if (now - self._latest_cmd_time) > timeout:
+            if self._debug_print and (not self._warned_cmd_timeout):
+                self._warned_cmd_timeout = True
+                self.get_logger().warn(f"/cmd_vel timeout ({timeout:.3f}s) -> overriding cmd_vel to zero.")
+            return _zero_twist()
+
+        return self._latest_cmd
+
+    # -------------------------
     # Timer tick
     # -------------------------
     def _on_timer(self) -> None:
         self._tick += 1
 
-        # NEW: if startup move is active, publish interpolated command and skip policy output
+        # Startup move publishes interpolated commands and blocks policy
         if self._startup_move_active:
             if self._startup_move_q0_ctrl is None or self._startup_move_qt_ctrl is None or self._startup_move_t0 is None:
                 return
@@ -488,23 +582,44 @@ class IsaacPolicyPlayer(Node):
             cmd_ctrl = (1.0 - alpha) * self._startup_move_q0_ctrl + alpha * self._startup_move_qt_ctrl
             self._publish_controller_cmd(cmd_ctrl)
 
+            # IMPORTANT: While startup_move is active, set last_action from the command we just published.
+            # This makes the "previous action" observation consistent with the commanded pose.
+            try:
+                q_policy_cmd = self._controller_cmd_to_policy_q(cmd_ctrl)
+                a_cmd = self._measured_q_to_action(q_policy_cmd)
+                self.obs_builder.set_last_action(a_cmd)
+                with self._lock:
+                    self._latest_action = a_cmd.copy()
+                self._did_init_last_action = True
+            except Exception as exc:  # noqa: BLE001
+                if self._startup_print:
+                    self.get_logger().warn(f"Failed to update last_action from startup_move cmd: {exc}")
+
             if alpha >= 1.0:
-                # Move completed: enable policy starting next tick
                 self._startup_move_active = False
+
+                # Enable policy AFTER startup move completes.
+                self._policy_enabled = True
+
+                # Reset ramp timing (but DO NOT reset last_action; keep the one derived from last command)
                 self._start_wall = time.time()
                 self._prev_q_des_policy = None
                 self._prev_pub_t = None
                 self._dq_est.reset()
-                self.obs_builder.reset_last_action()
+
                 if self._startup_print:
                     self.get_logger().info("Startup move completed. Policy control enabled.")
             return
 
-        require_all = bool(self.get_parameter("require_all_topics").value)
-        if require_all and not (self._got_cmd and self._got_imu and self._got_joint):
+        require_joint_imu = bool(self.get_parameter("require_joint_and_imu").value)
+        if require_joint_imu and not (self._got_joint and self._got_imu):
             return
 
-        cmd = self._latest_cmd
+        # Gate: do not run policy until enabled
+        if not self._policy_enabled:
+            return
+
+        cmd = self._get_cmd_vel_for_obs()
         imu = self._latest_imu
 
         q, dq_msg, vel_ok = self._collect_policy_order_q_dq()
@@ -558,6 +673,10 @@ class IsaacPolicyPlayer(Node):
     # Inference
     # -------------------------
     def _run_inference_once(self) -> None:
+        # Gate: do not infer until enabled
+        if not self._policy_enabled:
+            return
+
         with self._lock:
             obs = None if self._latest_obs is None else self._latest_obs.copy()
 
@@ -584,6 +703,9 @@ class IsaacPolicyPlayer(Node):
 
     def _inference_loop(self) -> None:
         while not self._stop and rclpy.ok():
+            if not self._policy_enabled:
+                time.sleep(0.002)  # small backoff while startup_move_to_default is running
+                continue
             self._run_inference_once()
 
     # -------------------------
@@ -672,11 +794,10 @@ class IsaacPolicyPlayer(Node):
         )
 
         if self._debug_joint_values:
-            self.get_logger().info("---- Policy joints: q / q_rel / dq / action / q_des ----")
+            self.get_logger().info("---- Policy joints: q / dq / action / q_des ----")
             for i, jn in enumerate(self.policy_joint_names):
-                q_rel = float(q[i] - self.default_joint_pos[i])
                 self.get_logger().info(
-                    f"[{i:2d}] {jn:20s} q={float(q[i]): .4f} q_rel={q_rel: .4f} dq={float(dq[i]): .4f} "
+                    f"[{i:2d}] {jn:20s} q={float(q[i]): .4f} dq={float(dq[i]): .4f} "
                     f"a={float(action[i]): .4f} q_des={float(q_des_policy[i]): .4f}"
                 )
 
@@ -726,3 +847,5 @@ def main(args=None) -> None:
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+    return
+    
