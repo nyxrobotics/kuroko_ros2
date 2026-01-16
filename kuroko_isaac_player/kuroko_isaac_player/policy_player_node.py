@@ -113,10 +113,13 @@ class _DQEstimator:
 
         dq_raw = (q - self._prev_q) / dt
 
-        # 1st-order low-pass: alpha = dt / (dt + rc), rc = 1/(2*pi*fc)
-        rc = 1.0 / (2.0 * math.pi * max(self._cutoff_hz, 1e-3))
-        alpha = dt / (dt + rc)
-        self._dq_filt = (1.0 - alpha) * self._dq_filt + alpha * dq_raw
+        if self._cutoff_hz <= 0.0:
+            # Disable filtering
+            self._dq_filt = dq_raw
+        else:
+            rc = 1.0 / (2.0 * math.pi * self._cutoff_hz)
+            alpha = dt / (dt + rc)
+            self._dq_filt = (1.0 - alpha) * self._dq_filt + alpha * dq_raw
 
         self._prev_q = q.copy()
         self._prev_t = float(self._prev_t + dt)
@@ -848,4 +851,3 @@ def main(args=None) -> None:
     node.destroy_node()
     rclpy.shutdown()
     return
-    
