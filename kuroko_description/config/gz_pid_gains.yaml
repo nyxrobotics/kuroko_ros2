@@ -1,0 +1,90 @@
+# Per-joint PID gains for gz_ros2_pid_control
+# Units:
+#   kp: N*m/rad
+#   ki: N*m/(rad*s)
+#   kd: N*m*s/rad
+gains:
+  chest:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  shoulder_r_pitch:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  shoulder_r_roll:
+    p: 42.41
+    i: 0.0
+    d: 0.0
+  elbow_r_front:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  elbow_r_rear:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  shoulder_l_pitch:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  shoulder_l_roll:
+    p: 42.41
+    i: 0.0
+    d: 0.0
+  elbow_l_front:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  elbow_l_rear:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  hip_r_roll:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  hip_r_pitch:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  thigh_r_active:
+    p: 42.41
+    i: 0.0
+    d: 0.0
+  shin_r_active:
+    p: 42.41
+    i: 0.0
+    d: 0.0
+  ankle_r_roll:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  ankle_r_yaw:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  hip_l_roll:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  hip_l_pitch:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  thigh_l_active:
+    p: 42.41
+    i: 0.0
+    d: 0.0
+  shin_l_active:
+    p: 42.41
+    i: 0.0
+    d: 0.0
+  ankle_l_roll:
+    p: 16.62
+    i: 0.0
+    d: 0.0
+  ankle_l_yaw:
+    p: 16.62
+    i: 0.0
+    d: 0.0
