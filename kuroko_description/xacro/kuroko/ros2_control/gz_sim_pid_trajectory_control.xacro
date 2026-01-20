@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Gazebo Sim + ros2_control integration for PID-enabled JointTrajectoryController.
+
+    - Joints list is taken from ctrl_yaml:
+        joint_trajectory_controller.ros__parameters.joints
+    - Gazebo system plugin:
+        gz_ros2_control::GazeboSimROS2ControlPlugin
+    - Hardware plugin:
+        gz_ros2_pid_control/GazeboSimPIDSystem
+    - PID gains are configured per joint via ros2_control <param> tags:
+        kp / ki / kd
+      The gains can be loaded from pid_gains_yaml using p / i / d keys:
+        gains.<joint_name>.p / i / d
+  -->
+
+  <!-- Controller YAML used by gz_ros2_control::GazeboSimROS2ControlPlugin -->
+  <xacro:property name="ctrl_yaml"
+    value="$(find kuroko_description)/config/gz_trajectory_controller.yaml"/>
+
+  <!-- Optional PID gains YAML (p/i/d) -->
+  <xacro:property name="pid_gains_yaml"
+    value="$(find kuroko_description)/config/gz_pid_gains.yaml"/>
+
+  <!-- Load controller YAML -->
+  <xacro:property name="ctrl_cfg"
+    value="${xacro.load_yaml(ctrl_yaml)}"/>
+
+  <!-- Load PID gains YAML -->
+  <xacro:property name="pid_cfg"
+    value="${xacro.load_yaml(pid_gains_yaml)}"/>
+
+  <!-- Extract joints list from controller YAML -->
+  <xacro:property name="traj_joints"
+    value="${ctrl_cfg['joint_trajectory_controller']['ros__parameters']['joints']}"/>
+
+  <!-- Default gains (fallback) -->
+  <xacro:property name="pid_kp" value="0.0"/>
+  <xacro:property name="pid_ki" value="0.0"/>
+  <xacro:property name="pid_kd" value="0.0"/>
+
+  <!-- Default options (can be overridden by xacro args if you wrap this macro) -->
+  <xacro:property name="use_joint_damping_default" value="true"/>
+  <xacro:property name="release_speed_limit_default" value="false"/>
+
+  <!-- One ros2_control <joint> block for PID hardware -->
+  <xacro:macro name="gz_pid_joint_hardware_interface"
+    params="joint_name kp ki kd use_joint_damping release_speed_limit">
+    <joint name="${joint_name}">
+      <!-- JointTrajectoryController uses position commands -->
+      <command_interface name="position"/>
+
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+
+      <!-- PID gains (consumed by gz_ros2_pid_control) -->
+      <param name="kp">${kp}</param>
+      <param name="ki">${ki}</param>
+      <param name="kd">${kd}</param>
+
+      <!-- Behavior options (consumed by gz_ros2_pid_control) -->
+      <param name="use_joint_damping">${use_joint_damping}</param>
+      <param name="release_speed_limit">${release_speed_limit}</param>
+    </joint>
+  </xacro:macro>
+
+  <!-- Recursive loop (no xacro:for / xacro:foreach) -->
+  <xacro:macro name="gz_pid_joint_hardware_interface_loop" params="joints">
+    <xacro:if value="${len(joints) > 0}">
+      <xacro:property name="jn" value="${joints[0]}"/>
+
+      <!-- Read per-joint overrides from pid_gains_yaml (p/i/d) -->
+      <xacro:property name="jkp"
+        value="${pid_cfg.get('gains', dict()).get(jn, dict()).get('p', pid_kp)}"/>
+      <xacro:property name="jki"
+        value="${pid_cfg.get('gains', dict()).get(jn, dict()).get('i', pid_ki)}"/>
+      <xacro:property name="jkd"
+        value="${pid_cfg.get('gains', dict()).get(jn, dict()).get('d', pid_kd)}"/>
+
+      <xacro:gz_pid_joint_hardware_interface
+        joint_name="${jn}"
+        kp="${jkp}"
+        ki="${jki}"
+        kd="${jkd}"
+        use_joint_damping="${use_joint_damping_default}"
+        release_speed_limit="${release_speed_limit_default}"/>
+
+      <xacro:gz_pid_joint_hardware_interface_loop joints="${joints[1:]}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- ros2_control system definition -->
+  <xacro:macro name="set_hardware_interface">
+    <ros2_control name="GazeboSystem" type="system">
+      <hardware>
+        <plugin>gz_ros2_pid_control/GazeboSimPIDSystem</plugin>
+      </hardware>
+      <xacro:gz_pid_joint_hardware_interface_loop joints="${traj_joints}"/>
+    </ros2_control>
+  </xacro:macro>
+
+  <!-- Gazebo plugin that loads controller YAML -->
+  <xacro:macro name="set_controller_interface">
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${ctrl_yaml}</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Entry macro -->
+  <xacro:macro name="gz_sim_pid_trajectory_control">
+    <xacro:set_hardware_interface/>
+    <xacro:set_controller_interface/>
+  </xacro:macro>
+
+</robot>
