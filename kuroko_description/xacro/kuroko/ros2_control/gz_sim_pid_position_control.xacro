@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Gazebo Sim + ros2_control integration for PID position control (position/velocity/effort command modes).
+
+    This xacro assumes you have a controller YAML (ctrl_yaml) that lists the joints under:
+      joint_group_position_controller.ros__parameters.joints
+
+    The Gazebo system plugin is still provided by gz_ros2_control, while the hardware plugin is replaced
+    with gz_ros2_pid_control/GazeboSimPIDSystem.
+  -->
+
+  <!-- Controller YAML file used by gz_ros2_control::GazeboSimROS2ControlPlugin -->
+  <xacro:property name="ctrl_yaml"
+                  value="$(find kuroko_description)/config/gz_position_controller.yaml" />
+
+  <!-- Default PID parameters (can be overridden before calling the macro) -->
+  <xacro:property name="pid_kp" value="0.0" />
+  <xacro:property name="pid_ki" value="0.0" />
+  <xacro:property name="pid_kd" value="0.0" />
+
+  <!--
+    use_joint_damping:
+      true  -> Mode 1: overwrite Gazebo joint damping with (stall_torque / no_load_speed), and do not use
+               internal speed-dependent torque limit.
+      false -> Mode 2: do not overwrite Gazebo damping; use internal speed-dependent torque limits.
+  -->
+  <xacro:property name="use_joint_damping" value="false" />
+
+  <!--
+    release_speed_limit:
+      true  -> overwrite SDF max velocity limit to a very large value, so observed speed limiting mainly comes
+               from damping/back-EMF model (instead of a hard velocity clamp).
+      false -> keep SDF max velocity limit as-is.
+  -->
+  <xacro:property name="release_speed_limit" value="false" />
+
+  <!-- Load controller YAML -->
+  <xacro:property name="ctrl_cfg"
+                  value="${xacro.load_yaml(ctrl_yaml)}" />
+
+  <!-- Extract joints list from YAML -->
+  <xacro:property name="pos_joints"
+                  value="${ctrl_cfg['joint_group_position_controller']['ros__parameters']['joints']}" />
+
+  <!-- One ros2_control <joint> block -->
+  <xacro:macro name="gz_pid_joint_hardware_interface" params="joint_name">
+    <joint name="${joint_name}">
+      <!-- Commands -->
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+
+      <!-- States -->
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+
+      <!-- Per-joint parameters consumed by gz_ros2_pid_control -->
+      <param name="kp">${pid_kp}</param>
+      <param name="ki">${pid_ki}</param>
+      <param name="kd">${pid_kd}</param>
+      <param name="use_joint_damping">${use_joint_damping}</param>
+      <param name="release_speed_limit">${release_speed_limit}</param>
+    </joint>
+  </xacro:macro>
+
+  <!-- ros2_control hardware interface (uses the PID hardware plugin) -->
+  <xacro:macro name="set_hardware_interface">
+    <ros2_control name="GazeboSimSystem" type="system">
+      <hardware>
+        <plugin>gz_ros2_pid_control/GazeboSimPIDSystem</plugin>
+      </hardware>
+
+      <xacro:for each="jn" value="${pos_joints}">
+        <xacro:gz_pid_joint_hardware_interface joint_name="${jn}"/>
+      </xacro:for>
+    </ros2_control>
+  </xacro:macro>
+
+  <!-- Gazebo system plugin (controller manager bridge) -->
+  <xacro:macro name="set_controller_interface">
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${ctrl_yaml}</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Entry macro -->
+  <xacro:macro name="gz_sim_pid_position_control">
+    <xacro:set_hardware_interface/>
+    <xacro:set_controller_interface/>
+  </xacro:macro>
+
+</robot>
