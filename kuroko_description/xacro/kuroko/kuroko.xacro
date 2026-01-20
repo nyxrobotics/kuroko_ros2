@@ -26,12 +26,7 @@
   <xacro:include filename="${XACRO_DIR}/sensors/camera/enable_gz_rendering_plugin.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
 
-
-  <!-- <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_trajectory_control.xacro"/> -->
-  <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_position_control.xacro"/>
-
   <!-- DOTO:Loading Gazebo Controllers for joints -->
-
 
   <!-- MACRO:Setting up a Robot Model -->
   <xacro:macro name="kuroko_xacro" params="gazebo box_visual gazebo_hw_interface">
@@ -64,6 +59,29 @@
     <xacro:gz_sim_position_control/>
     <xacro:enable_gz_rendering_plugin/>
     <xacro:enable_gz_imu_plugin/>
+
+    <!-- Load joint plugins -->
+    <xacro:if value="$(arg use_position_control)">
+      <xacro:if value="$(arg use_pid)">
+        <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_pid_position_control.xacro"/>
+        <xacro:gz_sim_pid_position_control/>
+      </xacro:if>
+      <xacro:unless value="$(arg use_pid)">
+        <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_position_control.xacro"/>
+        <xacro:gz_sim_position_control/>
+      </xacro:unless>
+    </xacro:if>
+    <xacro:unless value="$(arg use_position_control)">
+      <xacro:if value="$(arg use_pid)">
+        <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_pid_trajectory_control.xacro"/>
+        <xacro:gz_sim_pid_trajectory_control/>
+      </xacro:if>
+      <xacro:unless value="$(arg use_pid)">
+        <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_trajectory_control.xacro"/>
+        <xacro:gz_sim_trajectory_control/>
+      </xacro:unless>
+    </xacro:unless>
+
   </xacro:macro>
 
   <!-- Load Macros -->
