@@ -2,10 +2,11 @@
 <robot name="kuroko" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:arg name="gazebo" default="false"/>
   <xacro:arg name="box_visual" default="false"/>
-  <xacro:arg name="gazebo_hw_interface" default="position"/>
-  
-  <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
-  <xacro:property name="MESH_DIR" value="package://kuroko_description/meshes" />
+  <xacro:arg name="use_pid" default="true"/>
+  <xacro:arg name="use_position_control" default="true"/>
+
+  <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro"/>
+  <xacro:property name="MESH_DIR" value="package://kuroko_description/meshes"/>
 
   <xacro:include filename="${XACRO_DIR}/physics/materials.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/box_physics.xacro"/>
@@ -29,7 +30,7 @@
   <!-- DOTO:Loading Gazebo Controllers for joints -->
 
   <!-- MACRO:Setting up a Robot Model -->
-  <xacro:macro name="kuroko_xacro" params="gazebo box_visual gazebo_hw_interface">
+  <xacro:macro name="kuroko_xacro" params="gazebo box_visual use_pid use_position_control">
     <link name="body_link"/>
     <joint name="root_joint" type="fixed">
       <parent link="body_link"/>
@@ -46,6 +47,8 @@
     <xacro:leg_r_gazebo/>
     <xacro:leg_l_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
     <xacro:leg_l_gazebo/>
+
+    <!-- Sensors -->
     <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
     </xacro:imu_n100mini>
@@ -55,8 +58,6 @@
     <xacro:tfluna parent="waist_link" name="tfluna" ros_topic="/kuroko/sensors/range">
       <origin xyz="0.07 0 -0.044" rpy="0 0 0"/>
     </xacro:tfluna>
-    <!-- <xacro:gz_sim_trajectory_control/> -->
-    <xacro:gz_sim_position_control/>
     <xacro:enable_gz_rendering_plugin/>
     <xacro:enable_gz_imu_plugin/>
 
@@ -86,6 +87,6 @@
 
   <!-- Load Macros -->
   <xacro:kuroko_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"
-    gazebo_hw_interface="$(arg gazebo_hw_interface)"/>
+    use_pid="$(arg use_pid)" use_position_control="$(arg use_position_control)"/>
 
 </robot>

@@ -6,15 +6,51 @@
   then spawns ros2_control controllers.
 
 Controller YAML lives in *kuroko_description*, so we resolve that via FindPackageShare.
+
+This launch wires xacro options:
+  - use_pid (bool)
+  - use_position_control (bool)
+
+Controller selection is driven only by use_position_control:
+  - true  -> position_controller.launch.py + gz_position_controller.yaml
+  - false -> trajectory_controller.launch.py + gz_trajectory_controller.yaml
 """
 
 from pathlib import Path
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
+
+
+def _controllers_include(context, launch_dir: Path):
+    use_position = LaunchConfiguration("use_position_control").perform(context).strip().lower()
+    yaml_arg = LaunchConfiguration("controllers_yaml").perform(context).strip()
+
+    kuroko_description_share = FindPackageShare("kuroko_description").perform(context)
+    default_yaml = (
+        Path(kuroko_description_share) / "config" / "gz_trajectory_controller.yaml"
+        if use_position == "false"
+        else Path(kuroko_description_share) / "config" / "gz_position_controller.yaml"
+    )
+    yaml_path = yaml_arg if yaml_arg != "" else str(default_yaml)
+
+    controller_launch = (
+        launch_dir / "trajectory_controller.launch.py" if use_position == "false" else launch_dir / "position_controller.launch.py"
+    )
+
+    return [
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(str(controller_launch)),
+            launch_arguments={
+                "controllers_yaml": yaml_path,
+                "controller_manager": LaunchConfiguration("controller_manager").perform(context),
+                "use_sim_time": LaunchConfiguration("use_sim_time").perform(context),
+            }.items(),
+        )
+    ]
 
 
 def _this_pkg_share() -> Path:
@@ -38,6 +74,9 @@ def generate_launch_description() -> LaunchDescription:
     controller_manager = LaunchConfiguration("controller_manager")
     use_sim_time = LaunchConfiguration("use_sim_time")
 
+    use_pid = LaunchConfiguration("use_pid")
+    use_position_control = LaunchConfiguration("use_position_control")
+
     # World (paused by default)
     spawn_world_inc = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(launch_dir / "spawn_world.launch.py")),
@@ -58,6 +97,8 @@ def generate_launch_description() -> LaunchDescription:
             "z": z,
             "yaw": yaw,
             "use_sim_time": use_sim_time,
+            "use_pid": use_pid,
+            "use_position_control": use_position_control,
         }.items(),
     )
 
@@ -69,18 +110,8 @@ def generate_launch_description() -> LaunchDescription:
         }.items(),
     )
 
-    # Controllers
+    # Controllers are included via OpaqueFunction so we can switch by use_position_control.
     controllers_yaml = LaunchConfiguration("controllers_yaml")
-    controllers_inc = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(str(launch_dir / "position_controller.launch.py")),
-        launch_arguments={
-            "controllers_yaml": controllers_yaml,
-            "controller_manager": controller_manager,
-            "use_sim_time": use_sim_time,
-        }.items(),
-    )
-
-    kuroko_description_share = FindPackageShare("kuroko_description")
 
     return LaunchDescription(
         [
@@ -100,9 +131,19 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("z", default_value="0.35"),
             DeclareLaunchArgument("yaw", default_value="3.14", description="Yaw (rad)."),
             DeclareLaunchArgument(
+                "use_pid",
+                default_value="true",
+                description="Forwarded to xacro: use_pid",
+            ),
+            DeclareLaunchArgument(
+                "use_position_control",
+                default_value="true",
+                description="Forwarded to xacro: true=position, false=trajectory",
+            ),
+            DeclareLaunchArgument(
                 "controllers_yaml",
-                default_value=[kuroko_description_share, "/config/gz_position_controller.yaml"],
-                description="Controller YAML (lives in kuroko_description/config).",
+                default_value="",
+                description="Override controller YAML (optional). If empty, chosen from use_position_control.",
             ),
             DeclareLaunchArgument(
                 "controller_manager",
@@ -113,6 +154,6 @@ def generate_launch_description() -> LaunchDescription:
             spawn_world_inc,
             spawn_kuroko_inc,
             gz_bridge_inc,
-            controllers_inc,
+            OpaqueFunction(function=lambda context: _controllers_include(context, launch_dir)),
         ]
     )
