@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>kuroko_sim_gz</name>
+  <name>kuroko_gz</name>
   <version>0.0.0</version>
   <description>Gazebo (gz-sim) launch and spawn utilities for Kuroko.</description>
 

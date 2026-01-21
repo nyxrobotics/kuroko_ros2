@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Top-level launch: Gazebo Sim world + Kuroko spawn + /clock bridge + ros2_control controllers.
 
-- Avoids hard-coding the *kuroko_sim_gz* package name by resolving this package's share directory via __file__.
+- Avoids hard-coding the *kuroko_gz* package name by resolving this package's share directory via __file__.
 - Starts Gazebo world (paused by default), spawns Kuroko, bridges /clock from Gazebo to ROS 2,
   then spawns ros2_control controllers.
 

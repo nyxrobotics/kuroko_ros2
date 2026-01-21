@@ -109,8 +109,8 @@ This package does not start Gazebo.
 Gazebo (gz-sim) integration, URDF-to-SDF conversion, and robot spawning are
 handled by the following packages:
 
-- `kuroko_sim_gz`
-- `kuroko_sim_bringup`
+- `kuroko_gz`
+- `kuroko_gz_bringup`
 
 Those packages are responsible for invoking Xacro with `gazebo:=true`
 and spawning the resulting model into the simulator.

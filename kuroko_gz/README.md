@@ -1,4 +1,4 @@
-# kuroko_sim_gz
+# kuroko_gz
 
 This package provides a Gazebo Sim (gz-sim) environment for **Kuroko**, integrated with
 **ros2_control** and **joint_trajectory_controller (effort interface)**, allowing you to
@@ -57,7 +57,7 @@ source ~/ros2_humble/install/setup.bash
 ### Start Gazebo + Kuroko + controllers + `/clock`
 
 ```bash
-ros2 launch kuroko_sim_gz kuroko_gz_sim.launch.py
+ros2 launch kuroko_gz kuroko_gz_sim.launch.py
 ```
 
 After launch:
@@ -135,4 +135,3 @@ If the joint moves in Gazebo, the controller is working correctly.
   ros2_control controller spawner
 
 ---
-

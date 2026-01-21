@@ -5,8 +5,8 @@ ROS 2 (Humble) packages for the Kuroko robot.
 ## Packages
 
 - **Simulation**
-  - `kuroko_sim_gz`: gz-sim (Gazebo) launch and spawn
-  - `kuroko_sim_bringup`: simulation bringup (stub)
+  - `kuroko_gz`: gz-sim (Gazebo) launch and spawn
+  - `kuroko_gz_bringup`: simulation bringup (stub)
 
 - **Common / Description**
   - `kuroko_description`: URDF/Xacro + RViz test launch

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(kuroko_sim_bringup)
+project(kuroko_gz_bringup)
 
 find_package(ament_cmake REQUIRED)
 

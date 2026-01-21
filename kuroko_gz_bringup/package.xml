@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>kuroko_sim_bringup</name>
+  <name>kuroko_gz_bringup</name>
   <version>0.0.0</version>
-  <description>kuroko_sim_bringup package</description>
+  <description>kuroko_gz_bringup package</description>
 
   <maintainer email="TODO@example.com">TODO</maintainer>
   <license>Apache-2.0</license>
