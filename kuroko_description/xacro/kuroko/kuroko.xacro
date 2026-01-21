@@ -27,8 +27,8 @@
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
 
 
-  <!-- <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_trajectory_control.xacro"/> -->
-  <xacro:include filename="${XACRO_DIR}/kuroko/ros2_control/gz_sim_position_control.xacro"/>
+  <!-- <xacro:include filename="${XACRO_DIR}/kuroko/gz/gz_sim_trajectory_control.xacro"/> -->
+  <xacro:include filename="${XACRO_DIR}/kuroko/gz/gz_sim_position_control.xacro"/>
 
   <!-- DOTO:Loading Gazebo Controllers for joints -->
 
