@@ -19,7 +19,7 @@ Controller selection is driven only by use_position_control:
 from pathlib import Path
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
@@ -153,7 +153,7 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("use_sim_time", default_value="true"),
             spawn_world_inc,
             spawn_kuroko_inc,
-            # gz_bridge_inc,
-            # OpaqueFunction(function=lambda context: _controllers_include(context, launch_dir)),
+            gz_bridge_inc,
+            OpaqueFunction(function=lambda context: _controllers_include(context, launch_dir)),
         ]
     )
