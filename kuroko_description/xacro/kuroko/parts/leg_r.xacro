@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="leg_r_xacro" params="gazebo:=false box_visual:=false robot_name:=kuroko split_chain:=true ">
+  <xacro:macro name="leg_r_xacro" params="gazebo:=false box_visual:=false robot_name:=kuroko split_chain:=true">
     <!-- Link conencts from body. Hip first. -->
     <joint name="hip_r_roll" type="revolute">
       <parent link="waist_link"/>
@@ -105,7 +105,6 @@
         <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.012"/>
       </link>
     </xacro:unless>
-    <!-- Split link and connect with DetachableJoint -->
     <xacro:if value="${split_chain}">
       <joint name="thigh_r_active" type="revolute">
         <parent link="hip_r_pitch_link"/>
@@ -131,22 +130,12 @@
         <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
         <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.006"/>
       </link>
-      <link name="thigh_r_active_lower_link">
-        <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.006"/>
-      </link>
-      <gazebo>
-        <plugin filename="libgz-sim-detachable-joint-system.so" name="gz::sim::systems::DetachableJoint">
-          <parent_link>thigh_r_active_upper_link</parent_link>
-          <child_model>${robot_name}</child_model>
-          <child_link>thigh_r_active_lower_link</child_link>
-        </plugin>
-      </gazebo>
     </xacro:if>
 
     <joint name="knee_r_rear_passive" type="revolute">
-      <parent link="shin_r_rear_passive_link"/>
+      <parent link="thigh_r_middle_passive_link"/>
       <child link="knee_r_passive_link"/>
-      <origin xyz="0 0 0" rpy="0 -0.785398164 0"/>
+      <origin xyz="0 0 -0.1" rpy="0 0.785398164 0"/>
       <axis xyz="0 1 0"/>
       <limit effort="0" lower="-0.4974" upper="1.8588" velocity="1000.0"/>
       <dynamics damping="0.0" friction="0.0"/>
@@ -168,17 +157,42 @@
       <xacro:box_collision xyz="0.01675 0 0" rpy="0 0 0" size="0.0475 0.0505 0.014"/>
       <xacro:box_inertial xyz="0.01675 0 0" rpy="0 0 0" size="0.0475 0.0505 0.014" mass="0.007"/>
     </link>
-    <xacro:if value="${gazebo}">
 
+    <joint name="knee_r_front_passive_loop" type="revolute">
+      <parent link="knee_r_passive_link"/>
+      <child link="thigh_r_active_lower_link"/>
+      <origin xyz="0.0335 0 0" rpy="0 -0.785398164 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="0" lower="-0.4974" upper="1.8588" velocity="1000.0"/>
+      <dynamics damping="0.0" friction="0.0"/>
+    </joint>
+    <link name="thigh_r_active_lower_link">
+      <xacro:box_inertial xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.006"/>
+    </link>
+
+    <gazebo>
+      <plugin filename="libgz-sim-detachable-joint-system.so" name="gz::sim::systems::DetachableJoint">
+        <parent_link>thigh_r_active_upper_link</parent_link>
+        <child_model>${robot_name}</child_model>
+        <child_link>thigh_r_active_lower_link</child_link>
+      </plugin>
+    </gazebo>
+    <!-- <xacro:if value="${gazebo}">
       <xacro:unless value="${split_chain}">
         <xacro:gazebo_passive_joint name="knee_r_front_passive_loop" xyz="0.0335 0 0"
           parent="knee_r_passive_link" child="thigh_r_active_lower_link" axis="0 1 0" lower="-1.8588" upper="0.4974"/>
       </xacro:unless>
       <xacro:if value="${split_chain}">
-        <xacro:gazebo_passive_joint name="knee_r_front_passive_loop" xyz="0.0335 0 0"
-          parent="knee_r_passive_link" child="thigh_r_active_upper_link" axis="0 1 0" lower="-1.8588" upper="0.4974"/>
+        <joint name="knee_r_front_passive_loop" type="revolute">
+          <parent link="knee_r_passive_link"/>
+          <child link="thigh_r_active_lower_link"/>
+          <origin xyz="0.0335 0 0" rpy="0 -0.785398164 0"/>
+          <axis xyz="0 1 0"/>
+          <limit effort="0" lower="-0.4974" upper="1.8588" velocity="1000.0"/>
+          <dynamics damping="0.0" friction="0.0"/>
+        </joint>
       </xacro:if>
-    </xacro:if>
+    </xacro:if> -->
 
 
   </xacro:macro>
