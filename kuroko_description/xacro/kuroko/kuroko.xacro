@@ -44,9 +44,9 @@
     <xacro:arm_l_xacro box_visual="$(arg box_visual)"/>
     <xacro:arm_l_gazebo/>
     <xacro:leg_r_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
-    <xacro:leg_r_gazebo/>
-    <xacro:leg_l_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
-    <xacro:leg_l_gazebo/>
+    <!-- <xacro:leg_r_gazebo/> -->
+    <!-- <xacro:leg_l_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/> -->
+    <!-- <xacro:leg_l_gazebo/> -->
 
     <!-- Sensors -->
     <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">

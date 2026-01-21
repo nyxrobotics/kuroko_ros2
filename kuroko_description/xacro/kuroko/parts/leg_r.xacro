@@ -79,30 +79,71 @@
         mass="0.008"/>
     </link>
 
-    <joint name="thigh_r_active" type="revolute">
-      <parent link="hip_r_pitch_link"/>
-      <child link="thigh_r_active_link"/>
-      <origin xyz="0.015 -0.02925 -0.0305" rpy="0 -0.785398163 0"/>
-      <axis xyz="0 1 0"/>
-      <limit effort="8.9" lower="-0.4974" upper="1.8588" velocity="6.9"/>
-      <dynamics damping="1.29" friction="0.0"/>
-    </joint>
-    <link name="thigh_r_active_link">
-      <xacro:unless value="$(arg box_visual)">
-        <visual>
-          <origin xyz="0 0 0" rpy="0 0 0"/>
-          <geometry>
-            <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_active.stl"/>
-          </geometry>
-          <material name="dark_gray"/>
-        </visual>
-      </xacro:unless>
-      <xacro:if value="$(arg box_visual)">
-        <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
-      </xacro:if>
-      <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
-      <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.012"/>
-    </link>
+    <xacro:unless value="$(arg gazebo)">
+      <joint name="thigh_r_active" type="revolute">
+        <parent link="hip_r_pitch_link"/>
+        <child link="thigh_r_active_link"/>
+        <origin xyz="0.015 -0.02925 -0.0305" rpy="0 -0.785398163 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="8.9" lower="-0.4974" upper="1.8588" velocity="6.9"/>
+        <dynamics damping="1.29" friction="0.0"/>
+      </joint>
+      <link name="thigh_r_active_link">
+        <xacro:unless value="$(arg box_visual)">
+          <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+              <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_active.stl"/>
+            </geometry>
+            <material name="dark_gray"/>
+          </visual>
+        </xacro:unless>
+        <xacro:if value="$(arg box_visual)">
+          <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
+        </xacro:if>
+        <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
+        <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.012"/>
+      </link>
+    </xacro:unless>
+    <!-- Split link and connect with DetachableJoint -->
+    <xacro:if value="$(arg gazebo)">
+      <joint name="thigh_r_active" type="revolute">
+        <parent link="hip_r_pitch_link"/>
+        <child link="thigh_r_active_upper_link"/>
+        <origin xyz="0.015 -0.02925 -0.0305" rpy="0 -0.785398163 0"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="8.9" lower="-0.4974" upper="1.8588" velocity="6.9"/>
+        <dynamics damping="1.29" friction="0.0"/>
+      </joint>
+      <link name="thigh_r_active_upper_link">
+        <xacro:unless value="$(arg box_visual)">
+          <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+              <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_active.stl"/>
+            </geometry>
+            <material name="dark_gray"/>
+          </visual>
+        </xacro:unless>
+        <xacro:if value="$(arg box_visual)">
+          <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
+        </xacro:if>
+        <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
+        <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.006"/>
+      </link>
+      <link name="thigh_r_active_lower_link">
+        <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.006"/>
+      </link>
+      <gazebo>
+        <plugin filename="libgz-sim-detachable-joint-system.so" name="gz::sim::systems::DetachableJoint">
+          <parent_link>thigh_r_active_upper_link</parent_link>
+          <child_model>${robot_name}</child_model>
+          <child_link>thigh_r_active_lower_link</child_link>
+        </plugin>
+      </gazebo>
+    </xacro:if>
+
+
     <xacro:unless value="$(arg gazebo)">
       <joint name="shin_r_front_mimic" type="revolute">
         <parent link="thigh_r_active_link"/>
@@ -126,30 +167,61 @@
     </xacro:unless>
     <xacro:if value="$(arg gazebo)">
       <joint name="shin_r_front_passive" type="revolute">
-        <parent link="thigh_r_active_link"/>
-        <child link="shin_r_front_passive_link"/>
+        <parent link="thigh_r_active_lower_link"/>
+        <child link="shin_r_front_passive_upper_link"/>
         <origin xyz="0 0 -0.1" rpy="0 1.570796327 0"/>
         <axis xyz="0 1 0"/>
         <limit effort="0" lower="-1.570796327" upper="0.9948" velocity="1000.0"/>
         <dynamics damping="0.0" friction="0.0"/>
       </joint>
     </xacro:if>
-    <link name="shin_r_front_passive_link">
-      <xacro:unless value="$(arg box_visual)">
-        <visual>
-          <origin xyz="0 0 0" rpy="0 0 0"/>
-          <geometry>
-            <mesh filename="${MESH_DIR}/kuroko/stl/shin_r_front_passive.stl"/>
-          </geometry>
-          <material name="dark_gray"/>
-        </visual>
-      </xacro:unless>
-      <xacro:if value="$(arg box_visual)">
-        <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
-      </xacro:if>
-      <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114"/>
-      <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114" mass="0.013"/>
-    </link>
+
+    <xacro:unless value="$(arg gazebo)">
+      <link name="shin_r_front_passive_link">
+        <xacro:unless value="$(arg box_visual)">
+          <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+              <mesh filename="${MESH_DIR}/kuroko/stl/shin_r_front_passive.stl"/>
+            </geometry>
+            <material name="dark_gray"/>
+          </visual>
+        </xacro:unless>
+        <xacro:if value="$(arg box_visual)">
+          <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
+        </xacro:if>
+        <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114"/>
+        <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114" mass="0.013"/>
+      </link>
+    </xacro:unless>
+    <xacro:if value="$(arg gazebo)">
+      <link name="shin_r_front_passive_upper__link">
+        <xacro:unless value="$(arg box_visual)">
+          <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+              <mesh filename="${MESH_DIR}/kuroko/stl/shin_r_front_passive.stl"/>
+            </geometry>
+            <material name="dark_gray"/>
+          </visual>
+        </xacro:unless>
+        <xacro:if value="$(arg box_visual)">
+          <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
+        </xacro:if>
+        <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114"/>
+        <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114" mass="0.0065"/>
+      </link>
+      <link name="shin_r_front_passive_lower_link">
+        <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114" mass="0.0065"/>
+      </link>
+      <gazebo>
+        <plugin filename="libgz-sim-detachable-joint-system.so" name="gz::sim::systems::DetachableJoint">
+          <parent_link>shin_r_front_passive_upper_link</parent_link>
+          <child_model>${robot_name}</child_model>
+          <child_link>shin_r_front_passive_lower_link</child_link>
+        </plugin>
+      </gazebo>
+    </xacro:if>
 
     <joint name="thigh_r_middle_passive" type="revolute">
       <parent link="hip_r_pitch_link"/>
@@ -251,7 +323,7 @@
     </link>
     <xacro:if value="$(arg gazebo)">
       <xacro:gazebo_passive_joint name="knee_r_front_passive_loop" xyz="0.0335 0 0"
-        parent="knee_r_passive_link" child="thigh_r_active_link" axis="0 1 0" lower="-1.8588" upper="0.4974"/>
+        parent="knee_r_passive_link" child="thigh_r_active_lower_link" axis="0 1 0" lower="-1.8588" upper="0.4974"/>
     </xacro:if>
 
     <xacro:unless value="$(arg gazebo)">
@@ -275,35 +347,68 @@
         <mimic joint="shin_r_active" multiplier="-1" offset="0"/>
       </joint>
     </xacro:unless>
+
     <xacro:if value="$(arg gazebo)">
       <joint name="thigh_r_rear_passive" type="revolute">
         <parent link="shin_r_rear_passive_link"/>
-        <child link="thigh_r_rear_passive_link"/>
+        <child link="thigh_r_rear_passive_upper_link"/>
         <origin xyz="-0.00776457 0 -0.0289778" rpy="0 -1.570796327 0"/>
         <axis xyz="0 1 0"/>
         <limit effort="0" lower="-0.9948" upper="1.570796327" velocity="1000.0"/>
         <dynamics damping="0.0" friction="0.0"/>
       </joint>
     </xacro:if>
-    <link name="thigh_r_rear_passive_link">
-      <xacro:unless value="$(arg box_visual)">
-        <visual>
-          <origin xyz="0 0 0.1" rpy="0 0 0"/>
-          <geometry>
-            <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_rear_passive.stl"/>
-          </geometry>
-          <material name="dark_gray"/>
-        </visual>
-      </xacro:unless>
-      <xacro:if value="$(arg box_visual)">
-        <xacro:box_visual xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114"/>
-      </xacro:if>
-      <xacro:box_collision xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114"/>
-      <xacro:box_inertial xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114" mass="0.011"/>
-    </link>
+
+    <xacro:unless value="$(arg gazebo)">
+      <link name="thigh_r_rear_passive_link">
+        <xacro:unless value="$(arg box_visual)">
+          <visual>
+            <origin xyz="0 0 0.1" rpy="0 0 0"/>
+            <geometry>
+              <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_rear_passive.stl"/>
+            </geometry>
+            <material name="dark_gray"/>
+          </visual>
+        </xacro:unless>
+        <xacro:if value="$(arg box_visual)">
+          <xacro:box_visual xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114"/>
+        </xacro:if>
+        <xacro:box_collision xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114"/>
+        <xacro:box_inertial xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114" mass="0.011"/>
+      </link>
+    </xacro:unless>
+    <xacro:if value="$(arg gazebo)">
+      <link name="thigh_r_rear_passive_upper_link">
+        <xacro:unless value="$(arg box_visual)">
+          <visual>
+            <origin xyz="0 0 0.1" rpy="0 0 0"/>
+            <geometry>
+              <mesh filename="${MESH_DIR}/kuroko/stl/thigh_r_rear_passive.stl"/>
+            </geometry>
+            <material name="dark_gray"/>
+          </visual>
+        </xacro:unless>
+        <xacro:if value="$(arg box_visual)">
+          <xacro:box_visual xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114"/>
+        </xacro:if>
+        <xacro:box_collision xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114"/>
+        <xacro:box_inertial xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114" mass="0.0055"/>
+      </link>
+      <link name="thigh_r_rear_passive_lower_link">
+        <xacro:box_inertial xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114" mass="0.0055"/>
+      </link>
+      <gazebo>
+        <plugin filename="libgz-sim-detachable-joint-system.so" name="gz::sim::systems::DetachableJoint">
+          <parent_link>thigh_r_rear_passive_upper_link</parent_link>
+          <child_model>${robot_name}</child_model>
+          <child_link>thigh_r_rear_passive_lower_link</child_link>
+        </plugin>
+      </gazebo>
+    </xacro:if>
+
     <xacro:if value="$(arg gazebo)">
       <xacro:gazebo_passive_joint name="thigh_r_rear_passive_loop" xyz="0 0 0.1" rpy="0 1.832597551 0"
-        parent="thigh_r_rear_passive_link" child="shin_r_active_link" axis="0 1 0"/>
+        parent="thigh_r_rear_passive_upper_link" child="shin_r_active_link" axis="0 1 0"/>
     </xacro:if>
 
     <joint name="ankle_r_rear_passive" type="revolute">
@@ -334,7 +439,7 @@
     </link>
     <xacro:if value="$(arg gazebo)">
       <xacro:gazebo_passive_joint name="ankle_r_front_passive_loop" xyz="0.0335 0 0" rpy="0 -0.785398163 0"
-        parent="ankle_r_rear_passive_link" child="shin_r_front_passive_link" axis="0 1 0"/>
+        parent="ankle_r_rear_passive_link" child="shin_r_front_passive_lower_link" axis="0 1 0"/>
     </xacro:if>
 
     <joint name="ankle_r_roll" type="revolute">
