@@ -3,7 +3,7 @@
 #   kp: N*m/rad
 #   ki: N*m/(rad*s)
 #   kd: N*m*s/rad
-gains:
+pid_gains:
   chest:
     p: 16.62
     i: 0.0

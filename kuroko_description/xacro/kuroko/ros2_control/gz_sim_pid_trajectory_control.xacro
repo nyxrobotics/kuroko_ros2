@@ -74,11 +74,11 @@
 
       <!-- Read per-joint overrides from pid_gains_yaml (p/i/d) -->
       <xacro:property name="jkp"
-        value="${pid_cfg.get('gains', dict()).get(jn, dict()).get('p', pid_kp)}"/>
+        value="${pid_cfg.get('pid_gains', dict()).get(jn, dict()).get('p', pid_kp)}"/>
       <xacro:property name="jki"
-        value="${pid_cfg.get('gains', dict()).get(jn, dict()).get('i', pid_ki)}"/>
+        value="${pid_cfg.get('pid_gains', dict()).get(jn, dict()).get('i', pid_ki)}"/>
       <xacro:property name="jkd"
-        value="${pid_cfg.get('gains', dict()).get(jn, dict()).get('d', pid_kd)}"/>
+        value="${pid_cfg.get('pid_gains', dict()).get(jn, dict()).get('d', pid_kd)}"/>
 
       <xacro:gz_pid_joint_hardware_interface
         joint_name="${jn}"
