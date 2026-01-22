@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!--
+    Gazebo Classic gazebo_ros2_control helper (ROS 2 Humble / restricted xacro eval safe)
+
+    Safe constraints:
+      - no xacro:for
+      - no isinstance()
+      - no next()
+      - no dict literal {}  (use dict())
+      - avoid len() (use list + [default] trick)
+
+    Params:
+      - enabled: bool
+      - controller: controller instance name (e.g. joint_trajectory_controller)
+      - yaml_files: semicolon-separated list of YAML file paths (absolute paths strongly recommended)
+      - command_interface: optional override (position/velocity/effort); empty => infer
+      - debug: print xacro-time messages
+
+    YAML layouts supported:
+      A) <controller>:
+           ros__parameters: { type, joints, ... }
+      B) controller_manager:
+           ros__parameters:
+             <controller>: { type, joints, ... }
+  -->
+
   <xacro:macro name="gazebo_ros2_control_plugin"
                params="enabled
                        controller:=''
@@ -11,38 +36,48 @@
                        robot_param:=robot_description
                        robot_param_node:=robot_state_publisher">
 
+    <!-- Split YAML list -->
     <xacro:property name="_yaml_list"
                     value="${[s for s in yaml_files.split(';') if s.strip()]}" />
+
+    <!-- Load YAMLs -->
     <xacro:property name="_cfg_list"
                     value="${[xacro.load_yaml(p) for p in _yaml_list]}" />
 
+    <!-- Build candidates -->
     <xacro:property name="_cm_candidates"
                     value="${[
                       cfg.get('controller_manager', {}).get('ros__parameters', {}).get(controller, None)
                       for cfg in _cfg_list
-                      if isinstance(cfg, dict)
                     ]}" />
+
     <xacro:property name="_direct_candidates"
                     value="${[
                       cfg.get(controller, {}).get('ros__parameters', None)
                       for cfg in _cfg_list
-                      if isinstance(cfg, dict)
                     ]}" />
+
+    <!-- Pick controller config dict without next()/len():
+         - filter out None
+         - append a default dict()
+         - take first element
+    -->
+    <xacro:property name="_ctrl_cfg_cm"
+                    value="${([c for c in _cm_candidates if c is not None] + [dict()])[0]}" />
+
+    <xacro:property name="_ctrl_cfg_direct"
+                    value="${([c for c in _direct_candidates if c is not None] + [dict()])[0]}" />
+
     <xacro:property name="_ctrl_cfg"
-                    value="${next(
-                      (c for c in _cm_candidates if isinstance(c, dict)),
-                      next((c for c in _direct_candidates if isinstance(c, dict)), {})
-                    )}" />
+                    value="${_ctrl_cfg_cm if _ctrl_cfg_cm else _ctrl_cfg_direct}" />
 
-    <xacro:property name="_ctrl_type"
-                    value="${_ctrl_cfg.get('type', '') if isinstance(_ctrl_cfg, dict) else ''}" />
-    <xacro:property name="_joints"
-                    value="${_ctrl_cfg.get('joints', []) if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('joints', []), list)) else []}" />
-    <xacro:property name="_cmd_ifs"
-                    value="${_ctrl_cfg.get('command_interfaces', []) if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('command_interfaces', []), list)) else []}" />
-    <xacro:property name="_iface_name"
-                    value="${_ctrl_cfg.get('interface_name', '') if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('interface_name', ''), str)) else ''}" />
+    <!-- Extract fields -->
+    <xacro:property name="_ctrl_type" value="${_ctrl_cfg.get('type', '')}" />
+    <xacro:property name="_joints" value="${_ctrl_cfg.get('joints', [])}" />
+    <xacro:property name="_cmd_ifs" value="${_ctrl_cfg.get('command_interfaces', [])}" />
+    <xacro:property name="_iface_name" value="${_ctrl_cfg.get('interface_name', '')}" />
 
+    <!-- Resolve command interface (explicit > command_interfaces > interface_name > type default) -->
     <xacro:property name="_cmd_if"
                     value="${
                       command_interface if command_interface else
@@ -51,11 +86,11 @@
                           'effort' if ('effort' in _cmd_ifs) else
                           ('position' if ('position' in _cmd_ifs) else
                            ('velocity' if ('velocity' in _cmd_ifs) else
-                            (_cmd_ifs[0] if len(_cmd_ifs) > 0 else 'position')
+                            (_cmd_ifs[0] if _cmd_ifs else 'position')
                            )
                           )
                         )
-                        if len(_cmd_ifs) > 0 else
+                        if _cmd_ifs else
                         (
                           (
                             'effort' if ('effort' in _iface_name) else
@@ -76,28 +111,34 @@
                       )
                     }" />
 
+    <!-- Debug -->
     <xacro:if value="${enabled and debug}">
       <xacro:message text="[gazebo_ros2_control] enabled=true"/>
       <xacro:message text="${'[gazebo_ros2_control] controller=' + (controller if controller else '(empty)')}"/>
-      <xacro:message text="${'[gazebo_ros2_control] yaml_files=' + (','.join(_yaml_list) if len(_yaml_list)>0 else '(empty)')}"/>
+      <xacro:message text="${'[gazebo_ros2_control] yaml_files=' + (','.join(_yaml_list) if _yaml_list else '(empty)')}"/>
       <xacro:message text="${'[gazebo_ros2_control] type=' + (_ctrl_type if _ctrl_type else '(not found)')}"/>
-      <xacro:message text="${'[gazebo_ros2_control] command_interfaces=' + (str(_cmd_ifs) if len(_cmd_ifs)>0 else '[]')}"/>
+      <xacro:message text="${'[gazebo_ros2_control] command_interfaces=' + (str(_cmd_ifs) if _cmd_ifs else '[]')}"/>
       <xacro:message text="${'[gazebo_ros2_control] interface_name=' + (_iface_name if _iface_name else '(none)')}"/>
       <xacro:message text="${'[gazebo_ros2_control] resolved_command_interface=' + _cmd_if}"/>
       <xacro:message text="${'[gazebo_ros2_control] joints_count=' + str(len(_joints))}"/>
-      <xacro:message text="${'[gazebo_ros2_control] joints_head=' + (str(_joints[:6]) if len(_joints)>0 else '[]')}"/>
-      <xacro:if value="${len(_joints) == 0}">
-        <xacro:warning text="[gazebo_ros2_control] joints list is empty (no ros2_control joints will be generated)."/>
+      <xacro:message text="${'[gazebo_ros2_control] joints_head=' + (str(_joints[:6]) if _joints else '[]')}"/>
+      <xacro:if value="${not _joints}">
+        <xacro:warning text="[gazebo_ros2_control] joints list is empty. No ros2_control joints will be generated."/>
+      </xacro:if>
+      <xacro:if value="${not _yaml_list}">
+        <xacro:warning text="[gazebo_ros2_control] yaml_files is empty. Plugin will not load any parameters."/>
       </xacro:if>
     </xacro:if>
 
+    <!-- Emit <parameters> recursively (no xacro:for) -->
     <xacro:macro name="_emit_params" params="paths">
-      <xacro:if value="${len(paths) > 0}">
+      <xacro:if value="${paths}">
         <parameters>${paths[0]}</parameters>
         <xacro:_emit_params paths="${paths[1:]}"/>
       </xacro:if>
     </xacro:macro>
 
+    <!-- Emit joints recursively -->
     <xacro:macro name="_joint_block" params="joint_name cmd_if">
       <joint name="${joint_name}">
         <command_interface name="${cmd_if}"/>
@@ -108,7 +149,7 @@
     </xacro:macro>
 
     <xacro:macro name="_joint_loop" params="joints cmd_if">
-      <xacro:if value="${len(joints) > 0}">
+      <xacro:if value="${joints}">
         <xacro:_joint_block joint_name="${joints[0]}" cmd_if="${cmd_if}"/>
         <xacro:_joint_loop joints="${joints[1:]}" cmd_if="${cmd_if}"/>
       </xacro:if>
@@ -116,7 +157,7 @@
 
     <xacro:if value="${enabled}">
 
-      <!-- This block is REQUIRED so gazebo_ros2_control can start controller_manager -->
+      <!-- REQUIRED: ros2_control block for gazebo_ros2_control -->
       <ros2_control name="${ros2_control_name}" type="system">
         <hardware>
           <plugin>gazebo_ros2_control/GazeboSystem</plugin>
@@ -124,6 +165,7 @@
         <xacro:_joint_loop joints="${_joints}" cmd_if="${_cmd_if}"/>
       </ros2_control>
 
+      <!-- Gazebo Classic plugin -->
       <gazebo>
         <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
           <robot_param>${robot_param}</robot_param>
