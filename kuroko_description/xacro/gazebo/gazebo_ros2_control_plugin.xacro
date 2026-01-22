@@ -1,41 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!--
-    Gazebo Classic gazebo_ros2_control plugin helper.
-
-    Params:
-      - enabled: bool (typically ${gazebo})
-      - yaml_files: semicolon-separated yaml list
-      - robot_param: default robot_description
-      - robot_param_node: default robot_state_publisher
-
-    Notes:
-      - Avoids xacro:for (not available in some ROS 2 Humble xacro setups).
-      - Expands yaml_files into multiple <parameters> tags using recursion.
-  -->
-
   <xacro:macro name="gazebo_ros2_control_plugin"
                params="enabled
+                       controller:=''
                        yaml_files:=''
+                       command_interface:=''
+                       debug:=false
+                       ros2_control_name:=GazeboSystem
                        robot_param:=robot_description
-                       robot_param_node:=robot_state_publisher
-                       debug:=false">
+                       robot_param_node:=robot_state_publisher">
 
-    <!-- Split yaml_files -->
     <xacro:property name="_yaml_list"
                     value="${[s for s in yaml_files.split(';') if s.strip()]}" />
+    <xacro:property name="_cfg_list"
+                    value="${[xacro.load_yaml(p) for p in _yaml_list]}" />
 
-    <!-- Debug -->
+    <xacro:property name="_cm_candidates"
+                    value="${[
+                      cfg.get('controller_manager', {}).get('ros__parameters', {}).get(controller, None)
+                      for cfg in _cfg_list
+                      if isinstance(cfg, dict)
+                    ]}" />
+    <xacro:property name="_direct_candidates"
+                    value="${[
+                      cfg.get(controller, {}).get('ros__parameters', None)
+                      for cfg in _cfg_list
+                      if isinstance(cfg, dict)
+                    ]}" />
+    <xacro:property name="_ctrl_cfg"
+                    value="${next(
+                      (c for c in _cm_candidates if isinstance(c, dict)),
+                      next((c for c in _direct_candidates if isinstance(c, dict)), {})
+                    )}" />
+
+    <xacro:property name="_ctrl_type"
+                    value="${_ctrl_cfg.get('type', '') if isinstance(_ctrl_cfg, dict) else ''}" />
+    <xacro:property name="_joints"
+                    value="${_ctrl_cfg.get('joints', []) if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('joints', []), list)) else []}" />
+    <xacro:property name="_cmd_ifs"
+                    value="${_ctrl_cfg.get('command_interfaces', []) if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('command_interfaces', []), list)) else []}" />
+    <xacro:property name="_iface_name"
+                    value="${_ctrl_cfg.get('interface_name', '') if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('interface_name', ''), str)) else ''}" />
+
+    <xacro:property name="_cmd_if"
+                    value="${
+                      command_interface if command_interface else
+                      (
+                        (
+                          'effort' if ('effort' in _cmd_ifs) else
+                          ('position' if ('position' in _cmd_ifs) else
+                           ('velocity' if ('velocity' in _cmd_ifs) else
+                            (_cmd_ifs[0] if len(_cmd_ifs) > 0 else 'position')
+                           )
+                          )
+                        )
+                        if len(_cmd_ifs) > 0 else
+                        (
+                          (
+                            'effort' if ('effort' in _iface_name) else
+                            ('position' if ('position' in _iface_name) else
+                             ('velocity' if ('velocity' in _iface_name) else
+                              (_iface_name if _iface_name else 'position')
+                             )
+                            )
+                          )
+                          if _iface_name else
+                          (
+                            'position' if ('JointGroupPositionController' in _ctrl_type) else
+                            ('effort' if ('JointGroupEffortController' in _ctrl_type) else
+                             'position'
+                            )
+                          )
+                        )
+                      )
+                    }" />
+
     <xacro:if value="${enabled and debug}">
       <xacro:message text="[gazebo_ros2_control] enabled=true"/>
+      <xacro:message text="${'[gazebo_ros2_control] controller=' + (controller if controller else '(empty)')}"/>
       <xacro:message text="${'[gazebo_ros2_control] yaml_files=' + (','.join(_yaml_list) if len(_yaml_list)>0 else '(empty)')}"/>
-      <xacro:if value="${len(_yaml_list) == 0}">
-        <xacro:warning text="[gazebo_ros2_control] yaml_files is empty. Plugin will not load any parameters."/>
+      <xacro:message text="${'[gazebo_ros2_control] type=' + (_ctrl_type if _ctrl_type else '(not found)')}"/>
+      <xacro:message text="${'[gazebo_ros2_control] command_interfaces=' + (str(_cmd_ifs) if len(_cmd_ifs)>0 else '[]')}"/>
+      <xacro:message text="${'[gazebo_ros2_control] interface_name=' + (_iface_name if _iface_name else '(none)')}"/>
+      <xacro:message text="${'[gazebo_ros2_control] resolved_command_interface=' + _cmd_if}"/>
+      <xacro:message text="${'[gazebo_ros2_control] joints_count=' + str(len(_joints))}"/>
+      <xacro:message text="${'[gazebo_ros2_control] joints_head=' + (str(_joints[:6]) if len(_joints)>0 else '[]')}"/>
+      <xacro:if value="${len(_joints) == 0}">
+        <xacro:warning text="[gazebo_ros2_control] joints list is empty (no ros2_control joints will be generated)."/>
       </xacro:if>
     </xacro:if>
 
-    <!-- Recursively emit <parameters> -->
     <xacro:macro name="_emit_params" params="paths">
       <xacro:if value="${len(paths) > 0}">
         <parameters>${paths[0]}</parameters>
@@ -43,15 +98,40 @@
       </xacro:if>
     </xacro:macro>
 
+    <xacro:macro name="_joint_block" params="joint_name cmd_if">
+      <joint name="${joint_name}">
+        <command_interface name="${cmd_if}"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+    </xacro:macro>
+
+    <xacro:macro name="_joint_loop" params="joints cmd_if">
+      <xacro:if value="${len(joints) > 0}">
+        <xacro:_joint_block joint_name="${joints[0]}" cmd_if="${cmd_if}"/>
+        <xacro:_joint_loop joints="${joints[1:]}" cmd_if="${cmd_if}"/>
+      </xacro:if>
+    </xacro:macro>
+
     <xacro:if value="${enabled}">
+
+      <!-- This block is REQUIRED so gazebo_ros2_control can start controller_manager -->
+      <ros2_control name="${ros2_control_name}" type="system">
+        <hardware>
+          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+        <xacro:_joint_loop joints="${_joints}" cmd_if="${_cmd_if}"/>
+      </ros2_control>
+
       <gazebo>
-        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+        <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
           <robot_param>${robot_param}</robot_param>
           <robot_param_node>${robot_param_node}</robot_param_node>
-
           <xacro:_emit_params paths="${_yaml_list}"/>
         </plugin>
       </gazebo>
+
     </xacro:if>
 
   </xacro:macro>
