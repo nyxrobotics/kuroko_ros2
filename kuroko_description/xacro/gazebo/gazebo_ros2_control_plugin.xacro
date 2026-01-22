@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <xacro:macro name="gazebo_ros2_control_plugin"
-               params="enabled
-                       controller:=''
-                       controller_yaml:=''
-                       command_interface:=''
-                       debug:=false
-                       ros2_control_name:=GazeboSystem">
+  <!-- Reuse helper macros from sibling files -->
+  <xacro:include filename="gazebo_ros2_transmission.xacro"/>
+  <xacro:include filename="gazebo_ros2_control_system.xacro"/>
 
-    <!-- Load YAML (single file). If empty, use empty dict. -->
-    <xacro:property name="_cfg"
-                    value="${xacro.load_yaml(controller_yaml) if controller_yaml else dict()}" />
+  <!--
+    Gazebo Classic ros2_control plugin wrapper.
 
-    <!-- Support both layouts:
-         A) <controller>.ros__parameters
-         B) controller_manager.ros__parameters.<controller>
-    -->
+    Args:
+      controller_yaml: path to a ros2_control controller YAML file.
+
+    This macro:
+      - Loads controller_yaml
+      - Picks the first controller under controller_manager.ros__parameters
+      - Extracts joints and (best-effort) infers command interface
+      - Emits:
+          * <ros2_control> system block
+          * <transmission> blocks (via gazebo_ros2_transmission.xacro)
+          * <gazebo> plugin with <parameters> pointing to controller_yaml
+  -->
+  <xacro:macro name="gazebo_ros2_control_plugin" params="controller_yaml">
+
+    <xacro:property name="_cfg" value="${xacro.load_yaml(controller_yaml)}" />
     <xacro:property name="_cm_params"
                     value="${_cfg.get('controller_manager', dict()).get('ros__parameters', dict())}" />
-    <xacro:property name="_ctrl_cfg_cm"
-                    value="${_cm_params.get(controller, dict())}" />
-    <xacro:property name="_ctrl_cfg_direct"
-                    value="${_cfg.get(controller, dict()).get('ros__parameters', dict())}" />
-    <xacro:property name="_ctrl_cfg"
-                    value="${_ctrl_cfg_cm if _ctrl_cfg_cm else _ctrl_cfg_direct}" />
 
+    <!-- Choose the first controller entry (skip update_rate if present) -->
+    <xacro:property name="_ctrl_name"
+                    value="${[k for k in _cm_params.keys() if k != 'update_rate'][0] if len([k for k in _cm_params.keys() if k != 'update_rate']) > 0 else ''}" />
+
+    <xacro:property name="_ctrl_cfg" value="${_cm_params.get(_ctrl_name, dict())}" />
     <xacro:property name="_ctrl_type" value="${_ctrl_cfg.get('type', '')}" />
     <xacro:property name="_joints" value="${_ctrl_cfg.get('joints', [])}" />
     <xacro:property name="_cmd_ifs" value="${_ctrl_cfg.get('command_interfaces', [])}" />
     <xacro:property name="_iface_name" value="${_ctrl_cfg.get('interface_name', '')}" />
 
-    <!-- Decide command interface:
-         - If user passed command_interface (non-empty): use it
-         - Else:
-           - For ForwardCommandController family: use interface_name
-           - For JTC / Pid / others: prefer command_interfaces
-    -->
+    <!-- Infer command interface (position/velocity/effort) -->
     <xacro:property name="_is_forward"
                     value="${('ForwardCommandController' in _ctrl_type) or ('forward_command_controller' in _ctrl_type)}" />
 
@@ -62,24 +62,8 @@
                       )
                     }" />
 
-    <xacro:property name="_cmd_if_inferred"
-                    value="${_cmd_if_from_iface_name if _is_forward else _cmd_if_from_cmd_ifs}" />
-
     <xacro:property name="_cmd_if"
-                    value="${command_interface if command_interface else _cmd_if_inferred}" />
-
-    <xacro:if value="${enabled and debug}">
-      <xacro:message text="[gazebo_ros2_control] enabled=true"/>
-      <xacro:message text="${'[gazebo_ros2_control] controller_yaml=' + (controller_yaml if controller_yaml else '(empty)')}"/>
-      <xacro:message text="${'[gazebo_ros2_control] controller=' + (controller if controller else '(empty)')}"/>
-      <xacro:message text="${'[gazebo_ros2_control] type=' + (_ctrl_type if _ctrl_type else '(not found)')}"/>
-      <xacro:message text="${'[gazebo_ros2_control] joints_count=' + str(len(_joints))}"/>
-      <xacro:message text="${'[gazebo_ros2_control] joints_head=' + (str(_joints[:8]) if _joints else '[]')}"/>
-      <xacro:message text="${'[gazebo_ros2_control] inferred_command_interface=' + _cmd_if}"/>
-      <xacro:if value="${not _joints}">
-        <xacro:warning text="[gazebo_ros2_control] joints list is empty (check YAML layout / controller name / joints names)."/>
-      </xacro:if>
-    </xacro:if>
+                    value="${_cmd_if_from_iface_name if _is_forward else _cmd_if_from_cmd_ifs}" />
 
     <!-- ros2_control joint entry -->
     <xacro:macro name="_ros2_control_joint" params="joint_name cmd_if">
@@ -91,47 +75,34 @@
       </joint>
     </xacro:macro>
 
-    <!-- transmission entry (SimpleTransmission) -->
-    <xacro:macro name="_transmission" params="joint_name hw_if">
-      <transmission name="${joint_name}_trans">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="${joint_name}">
-          <hardwareInterface>hardware_interface/${hw_if}</hardwareInterface>
-        </joint>
-        <actuator name="${joint_name}_motor">
-          <hardwareInterface>hardware_interface/${hw_if}</hardwareInterface>
-          <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-      </transmission>
-    </xacro:macro>
-
-    <!-- Loop joints recursively -->
-    <xacro:macro name="_joint_loop" params="joints cmd_if">
-      <xacro:if value="${joints}">
+    <!-- Recursive loop for ros2_control joint entries -->
+    <xacro:macro name="_ros2_control_joint_loop" params="joints cmd_if">
+      <xacro:if value="${len(joints) > 0}">
         <xacro:_ros2_control_joint joint_name="${joints[0]}" cmd_if="${cmd_if}"/>
-        <xacro:_transmission joint_name="${joints[0]}" hw_if="${cmd_if}"/>
-        <xacro:_joint_loop joints="${joints[1:]}" cmd_if="${cmd_if}"/>
+        <xacro:_ros2_control_joint_loop joints="${joints[1:]}" cmd_if="${cmd_if}"/>
       </xacro:if>
     </xacro:macro>
 
-    <xacro:if value="${enabled}">
+    <!-- ros2_control block -->
+    <xacro:gazebo_ros2_control_system/>
 
-      <!-- ros2_control block -->
-      <ros2_control name="${ros2_control_name}" type="system">
-        <hardware>
-          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
-        </hardware>
-        <xacro:_joint_loop joints="${_joints}" cmd_if="${_cmd_if}"/>
-      </ros2_control>
-
-      <!-- Gazebo Classic plugin: single YAML -->
-      <gazebo>
-        <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-          <parameters>${controller_yaml}</parameters>
-        </plugin>
-      </gazebo>
-
+    <!-- transmissions -->
+    <xacro:if value="${_cmd_if == 'effort'}">
+      <xacro:set_effort_interfaces joints="${_joints}"/>
     </xacro:if>
+    <xacro:if value="${_cmd_if == 'velocity'}">
+      <xacro:set_velocity_interfaces joints="${_joints}"/>
+    </xacro:if>
+    <xacro:if value="${_cmd_if == 'position'}">
+      <xacro:set_position_interfaces joints="${_joints}"/>
+    </xacro:if>
+
+    <!-- Gazebo Classic plugin -->
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>${controller_yaml}</parameters>
+      </plugin>
+    </gazebo>
 
   </xacro:macro>
 

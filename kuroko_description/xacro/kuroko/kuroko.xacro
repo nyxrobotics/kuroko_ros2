@@ -91,11 +91,7 @@
 
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
     <xacro:gazebo_ros2_control_plugin
-      enabled="${gazebo}"
-      controller="$(arg controller)"
-      controller_yaml="$(arg controller_yaml)"
-      command_interface="$(arg command_interface)"
-      debug="$(arg debug_control)"/>
+      controller_yaml="$(arg controller_yaml)"/>
 
   </xacro:macro>
 

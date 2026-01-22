@@ -1,27 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="effort_transmission" params="joint_name">
+
+  <!--
+    Transmission generators (no YAML dependency)
+
+    Single joint:
+      <xacro:set_effort_interface joint_name="joint1"/>
+      <xacro:set_velocity_interface joint_name="joint1"/>
+      <xacro:set_position_interface joint_name="joint1"/>
+
+    Multiple joints:
+      <xacro:set_effort_interfaces joints="${['joint1','joint2']}"/>
+      <xacro:set_velocity_interfaces joints="${['joint1','joint2']}"/>
+      <xacro:set_position_interfaces joints="${['joint1','joint2']}"/>
+  -->
+
+  <!-- Generic transmission block -->
+  <xacro:macro name="simple_transmission" params="joint_name hw_if">
     <transmission name="${joint_name}_tran">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${joint_name}">
-        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        <hardwareInterface>${hw_if}</hardwareInterface>
       </joint>
       <actuator name="${joint_name}_actr">
-        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        <hardwareInterface>${hw_if}</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
   </xacro:macro>
-  <xacro:macro name="position_transmission" params="joint_name">
-    <transmission name="${joint_name}_tran">
-      <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${joint_name}">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      </joint>
-      <actuator name="${joint_name}_actr">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
-      </actuator>
-    </transmission>
+
+  <!-- Internal: per-joint wrappers -->
+  <xacro:macro name="_effort_transmission" params="joint_name">
+    <xacro:simple_transmission joint_name="${joint_name}"
+                               hw_if="hardware_interface/EffortJointInterface" />
   </xacro:macro>
+
+  <xacro:macro name="_velocity_transmission" params="joint_name">
+    <xacro:simple_transmission joint_name="${joint_name}"
+                               hw_if="hardware_interface/VelocityJointInterface" />
+  </xacro:macro>
+
+  <xacro:macro name="_position_transmission" params="joint_name">
+    <xacro:simple_transmission joint_name="${joint_name}"
+                               hw_if="hardware_interface/PositionJointInterface" />
+  </xacro:macro>
+
+  <!-- Public: single joint -->
+  <xacro:macro name="set_effort_interface" params="joint_name">
+    <xacro:_effort_transmission joint_name="${joint_name}"/>
+  </xacro:macro>
+
+  <xacro:macro name="set_velocity_interface" params="joint_name">
+    <xacro:_velocity_transmission joint_name="${joint_name}"/>
+  </xacro:macro>
+
+  <xacro:macro name="set_position_interface" params="joint_name">
+    <xacro:_position_transmission joint_name="${joint_name}"/>
+  </xacro:macro>
+
+  <!-- Public: multiple joints (recursive inside) -->
+  <xacro:macro name="set_effort_interfaces" params="joints">
+    <xacro:if value="${len(joints) > 0}">
+      <xacro:_effort_transmission joint_name="${joints[0]}"/>
+      <xacro:set_effort_interfaces joints="${joints[1:]}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="set_velocity_interfaces" params="joints">
+    <xacro:if value="${len(joints) > 0}">
+      <xacro:_velocity_transmission joint_name="${joints[0]}"/>
+      <xacro:set_velocity_interfaces joints="${joints[1:]}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="set_position_interfaces" params="joints">
+    <xacro:if value="${len(joints) > 0}">
+      <xacro:_position_transmission joint_name="${joints[0]}"/>
+      <xacro:set_position_interfaces joints="${joints[1:]}"/>
+    </xacro:if>
+  </xacro:macro>
+
 </robot>
