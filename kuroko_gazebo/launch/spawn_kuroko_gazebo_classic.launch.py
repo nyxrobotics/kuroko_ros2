@@ -29,11 +29,7 @@ def _xacro_to_urdf_one_line(xacro_path: str, xacro_args: list[str]) -> str:
 def _runtime_setup(context, *args, **kwargs):
     robot_z = LaunchConfiguration("robot_z").perform(context)
     gazebo = LaunchConfiguration("gazebo").perform(context)
-    gz_sim = LaunchConfiguration("gz_sim").perform(context)
-    controller = LaunchConfiguration("controller").perform(context)
-    command_interface = LaunchConfiguration("command_interface").perform(context)
-    controller_yaml = LaunchConfiguration("controller_yaml").perform(context)
-    debug_control = LaunchConfiguration("debug_control").perform(context)
+    gazebo_hardware_interface = LaunchConfiguration("gazebo_hardware_interface").perform(context)
 
     kuroko_description_share = get_package_share_directory("kuroko_description")
     xacro_file = f"{kuroko_description_share}/xacro/kuroko/kuroko.xacro"
@@ -42,11 +38,7 @@ def _runtime_setup(context, *args, **kwargs):
         xacro_file,
         [
             f"gazebo:={gazebo}",
-            f"gz_sim:={gz_sim}",
-            f"controller:={controller}",
-            f"command_interface:={command_interface}",
-            f"controller_yaml:={controller_yaml}",
-            f"debug_control:={debug_control}",
+            f"gazebo_hardware_interface:={gazebo_hardware_interface}",
         ],
     )
 
@@ -88,11 +80,7 @@ def generate_launch_description():
         [
             DeclareLaunchArgument("robot_z", default_value="0.35"),
             DeclareLaunchArgument("gazebo", default_value="true"),
-            DeclareLaunchArgument("gz_sim", default_value="false"),
-            DeclareLaunchArgument("controller", default_value="joint_trajectory_controller"),
-            DeclareLaunchArgument("command_interface", default_value="position"),
-            DeclareLaunchArgument("controller_yaml", default_value=""),
-            DeclareLaunchArgument("debug_control", default_value="false"),
+            DeclareLaunchArgument("gazebo_hardware_interface", default_value="position"),
             OpaqueFunction(function=_runtime_setup),
         ]
     )

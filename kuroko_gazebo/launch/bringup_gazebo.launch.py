@@ -12,9 +12,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     robot_z = LaunchConfiguration("robot_z")
-    debug_control = LaunchConfiguration("debug_control")
-    controller = LaunchConfiguration("controller")
-    command_interface = LaunchConfiguration("command_interface")
+    gazebo_hardware_interface = LaunchConfiguration("gazebo_hardware_interface")
     controller_yaml = LaunchConfiguration("controller_yaml")
     world = LaunchConfiguration("world")
     pause = LaunchConfiguration("pause")
@@ -31,9 +29,7 @@ def generate_launch_description():
 
     declare_args = [
         DeclareLaunchArgument("robot_z", default_value="0.35"),
-        DeclareLaunchArgument("debug_control", default_value="false"),
-        DeclareLaunchArgument("controller", default_value="joint_trajectory_controller"),
-        DeclareLaunchArgument("command_interface", default_value="position"),
+        DeclareLaunchArgument("gazebo_hardware_interface", default_value="position"),
         DeclareLaunchArgument("controller_yaml", default_value=default_controller_yaml),
         DeclareLaunchArgument("world", default_value=default_world),
         DeclareLaunchArgument("pause", default_value="true"),
@@ -56,11 +52,7 @@ def generate_launch_description():
         launch_arguments={
             "robot_z": robot_z,
             "gazebo": TextSubstitution(text="true"),
-            "gz_sim": TextSubstitution(text="false"),
-            "controller": controller,
-            "command_interface": command_interface,
-            "controller_yaml": controller_yaml,
-            "debug_control": debug_control,
+            "gazebo_hardware_interface": gazebo_hardware_interface,
         }.items(),
     )
 
@@ -76,7 +68,7 @@ def generate_launch_description():
     spawn_main = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=[controller, "--controller-manager", "/controller_manager"],
+        arguments=["joint_group_position_controller", "--controller-manager", "/controller_manager"],
         output="screen",
     )
 
@@ -84,8 +76,8 @@ def generate_launch_description():
         period=3.0,
         actions=[
             LogInfo(msg=["[kuroko_gazebo] controller_yaml=", controller_yaml]),
-            LogInfo(msg=["[kuroko_gazebo] controller=", controller]),
-            LogInfo(msg=["[kuroko_gazebo] command_interface=", command_interface]),
+            LogInfo(msg=["[kuroko_gazebo] controller=", "joint_group_position_controller"]),
+            LogInfo(msg=["[kuroko_gazebo] gazebo_hardware_interface=", gazebo_hardware_interface]),
             spawn_jsb,
             TimerAction(period=2.0, actions=[spawn_main]),
         ],

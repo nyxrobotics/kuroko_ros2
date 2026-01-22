@@ -2,20 +2,7 @@
 <robot name="kuroko" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:arg name="gazebo" default="false"/>
-  <xacro:arg name="gz_sim" default="false"/>
-
-  <!-- Which controller instance name you want to use (must match YAML) -->
-  <xacro:arg name="controller" default="joint_trajectory_controller"/>
-
-  <!-- Optional override; if empty, plugin macro may infer from YAML -->
-  <xacro:arg name="command_interface" default="position"/>
-
-  <!-- Single YAML file (absolute path recommended) -->
-  <xacro:arg name="controller_yaml" default=""/>
-
-  <!-- Print xacro-time debug messages -->
-  <xacro:arg name="debug_control" default="false"/>
-
+  <xacro:arg name="gazebo_hardware_interface" default="position"/>
   <xacro:arg name="box_visual" default="false"/>
 
   <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
@@ -47,10 +34,10 @@
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
 
   <!-- Gazebo Classic ros2_control helper -->
-  <xacro:include filename="${XACRO_DIR}/gazebo/gazebo_ros2_control_plugin.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/kuroko_transmission.gazebo"/>
 
   <!-- Main robot model macro -->
-  <xacro:macro name="kuroko_model" params="gazebo box_visual">
+  <xacro:macro name="kuroko_model" params="gazebo gazebo_hardware_interface box_visual">
 
     <link name="body_link"/>
     <joint name="root_joint" type="fixed">
@@ -90,11 +77,18 @@
     <xacro:enable_gz_imu_plugin/>
 
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
-    <xacro:gazebo_ros2_control_plugin controller_yaml="$(arg controller_yaml)"/>
+    <xacro:if value="${gazebo}">
+      <xacro:if value="${gazebo_hardware_interface=='position'}">
+        <xacro:kuroko_transmission_position/>
+      </xacro:if>
+      <xacro:if value="${gazebo_hardware_interface=='effort'}">
+        <xacro:kuroko_transmission_effort/>
+      </xacro:if>
+    </xacro:if>
 
   </xacro:macro>
 
   <!-- Instantiate -->
-  <xacro:kuroko_model gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
+  <xacro:kuroko_model gazebo="$(arg gazebo)" box_visual="$(arg box_visual)" gazebo_hardware_interface="$(arg gazebo_hardware_interface)"/>
 
 </robot>
