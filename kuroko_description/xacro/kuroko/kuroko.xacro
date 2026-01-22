@@ -1,75 +1,140 @@
 <?xml version="1.0"?>
 <robot name="kuroko" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Arguments -->
   <xacro:arg name="gazebo" default="false"/>
   <xacro:arg name="gz_sim" default="false"/>
-  <xacro:arg name="command_interface" default="position"/>
   <xacro:arg name="box_visual" default="false"/>
-  
-  <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
-  <xacro:property name="MESH_DIR" value="package://kuroko_description/meshes" />
 
+  <!-- Controller selection -->
+  <xacro:arg name="controller" default="joint_trajectory_controller"/>
+
+  <!-- Optional explicit override; empty means infer from YAML (cmd_interfaces / interface_name / type defaults) -->
+  <xacro:arg name="command_interface" default=""/>
+
+  <!-- Semicolon-separated YAML list to be loaded by ros2_control plugin(s) -->
+  <xacro:arg name="controller_yaml_files"
+            default="$(find kuroko_description)/config/ros2_control/controller_manager.yaml;
+                      $(find kuroko_description)/config/ros2_control/joint_state_broadcaster.yaml;
+                      $(find kuroko_description)/config/ros2_control/joint_trajectory_controller.yaml"/>
+
+
+  <!-- Debug for xacro expansion -->
+  <xacro:arg name="debug_control" default="false"/>
+
+  <!-- Paths -->
+  <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro"/>
+  <xacro:property name="MESH_DIR" value="package://kuroko_description/meshes"/>
+
+  <!-- Includes: physics -->
   <xacro:include filename="${XACRO_DIR}/physics/materials.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/box_physics.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/gazebo_passive_joint.xacro"/>
+
+  <!-- Includes: parts -->
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/body.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/body.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_r.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/arm_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/arm_l.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/arm_l.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_r.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/parts/leg_l.xacro"/>
+
+  <!-- Includes: Gazebo Classic tags for each part -->
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/body.gazebo"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/arm_r.gazebo"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/arm_l.gazebo"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_r.gazebo"/>
   <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_l.gazebo"/>
+
+  <!-- Includes: sensors -->
   <xacro:include filename="${XACRO_DIR}/sensors/range/tfluna.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/imu/enable_gz_imu_plugin.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/imu/imu_n100mini.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/camera/enable_gz_rendering_plugin.xacro"/>
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
 
-
-  <!-- <xacro:include filename="${XACRO_DIR}/kuroko/gz/gz_sim_trajectory_control.xacro"/> -->
-  <!-- <xacro:include filename="${XACRO_DIR}/kuroko/gz/gz_sim_position_control.xacro"/> -->
-
+  <!-- ros2_control plugin macros -->
   <xacro:include filename="${XACRO_DIR}/gazebo/gazebo_ros2_control_plugin.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/gz/gz_ros2_control_plugin.xacro"/>
 
-  <!-- DOTO:Loading Gazebo Controllers for joints -->
+  <!-- ====================================================================== -->
+  <!-- Macro: build the robot model                                            -->
+  <!-- ====================================================================== -->
+  <xacro:macro name="kuroko_model"
+               params="gazebo:=false
+                       gz_sim:=false
+                       box_visual:=false
+                       controller:=''
+                       controller_yaml_files:=''
+                       command_interface:=''
+                       debug_control:=false">
 
-
-  <!-- MACRO:Setting up a Robot Model -->
-  <xacro:macro name="kuroko_xacro" params="gazebo box_visual">
+    <!-- Base -->
     <link name="body_link"/>
     <joint name="root_joint" type="fixed">
       <parent link="body_link"/>
       <child link="waist_link"/>
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
+
+    <!-- Body + limbs -->
     <xacro:body_xacro box_visual="${box_visual}"/>
-    <xacro:body_gazebo/>
     <xacro:arm_r_xacro box_visual="${box_visual}"/>
-    <xacro:arm_r_gazebo/>
     <xacro:arm_l_xacro box_visual="${box_visual}"/>
-    <xacro:arm_l_gazebo/>
     <xacro:leg_r_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
-    <xacro:leg_r_gazebo/>
     <xacro:leg_l_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
-    <xacro:leg_l_gazebo/>
+
+    <!-- Gazebo Classic visuals/physics tags for parts -->
+    <xacro:if value="${gazebo}">
+      <xacro:body_gazebo/>
+      <xacro:arm_r_gazebo/>
+      <xacro:arm_l_gazebo/>
+      <xacro:leg_r_gazebo/>
+      <xacro:leg_l_gazebo/>
+    </xacro:if>
+
+    <!-- Sensors -->
     <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
     </xacro:imu_n100mini>
+
     <xacro:usb_camera parent="waist_link" name="camera" namespace="/kuroko/sensors/camera">
       <origin xyz="0.07 0 -0.026" rpy="0 0 0"/>
     </xacro:usb_camera>
+
     <xacro:tfluna parent="waist_link" name="tfluna" ros_topic="/kuroko/sensors/range">
       <origin xyz="0.07 0 -0.044" rpy="0 0 0"/>
     </xacro:tfluna>
-    <!-- <xacro:gz_sim_trajectory_control/> -->
-    <xacro:gz_sim_position_control/>
-    <xacro:enable_gz_rendering_plugin/>
-    <xacro:enable_gz_imu_plugin/>
+
+    <!-- Sensor plugins: Gazebo backends only -->
+    <xacro:if value="${gazebo or gz_sim}">
+      <xacro:enable_gz_rendering_plugin/>
+      <xacro:enable_gz_imu_plugin/>
+    </xacro:if>
+
+    <!-- ros2_control plugin injection -->
+    <!-- Gazebo Classic: expects gazebo_ros2_control_plugin macro to expand yaml_files -->
+    <xacro:gazebo_ros2_control_plugin
+      enabled="${gazebo}"
+      yaml_files="${controller_yaml_files}"/>
+
+    <!-- Gazebo Sim: use the new gz_ros2_control_setup macro -->
+    <xacro:gz_ros2_control_setup
+      enabled="${gz_sim}"
+      controller="${controller}"
+      yaml_files="${controller_yaml_files}"
+      command_interface="${command_interface}"
+      debug="${debug_control}"/>
+
   </xacro:macro>
 
-  <!-- Load Macros -->
-  <xacro:kuroko_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
+  <!-- Instantiate -->
+  <xacro:kuroko_model
+    gazebo="$(arg gazebo)"
+    gz_sim="$(arg gz_sim)"
+    box_visual="$(arg box_visual)"
+    controller="$(arg controller)"
+    controller_yaml_files="$(arg controller_yaml_files)"
+    command_interface="$(arg command_interface)"
+    debug_control="$(arg debug_control)"/>
 
 </robot>
