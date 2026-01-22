@@ -7,6 +7,20 @@ from launch_ros.actions import Node, PushRosNamespace
 from launch_ros.substitutions import FindPackageShare, FindExecutable
 
 
+def _spawner(controller_name: str, cm_ns: LaunchConfiguration, param_files, condition=None):
+    args = [controller_name]
+    for pf in param_files:
+        args += ['--param-file', pf]
+    args += ['-c', cm_ns]
+    return Node(
+        package='controller_manager',
+        executable='spawner',
+        output='screen',
+        arguments=args,
+        condition=condition,
+    )
+
+
 def generate_launch_description() -> LaunchDescription:
     paused = LaunchConfiguration('paused')
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -14,14 +28,12 @@ def generate_launch_description() -> LaunchDescription:
     headless = LaunchConfiguration('headless')
     debug = LaunchConfiguration('debug')
     robot_name = LaunchConfiguration('robot_name')
-    controller = LaunchConfiguration('controller')
-    use_small_ring = LaunchConfiguration('use_small_ring')
-    spawn_enemy = LaunchConfiguration('spawn_enemy')
-    enemy_name = LaunchConfiguration('enemy_name')
+    controller_mode = LaunchConfiguration('controller')
     wait_after_spawn = LaunchConfiguration('wait_after_spawn')
 
     kuroko_desc_share = FindPackageShare('kuroko_description')
     gazebo_share = FindPackageShare('gazebo_ros')
+    kuroko_gazebo_share = FindPackageShare('kuroko_gazebo')
 
     set_gazebo_model_path = SetEnvironmentVariable(
         name='GAZEBO_MODEL_PATH',
@@ -49,45 +61,9 @@ def generate_launch_description() -> LaunchDescription:
 
     xacro_exec = FindExecutable(name='xacro')
     robot_xacro = PathJoinSubstitution([kuroko_desc_share, 'xacro', 'kuroko', 'kuroko.xacro'])
-    enemy_xacro = PathJoinSubstitution([kuroko_desc_share, 'xacro', 'kuroko', 'enemy.xacro'])
-    ring_small_xacro = PathJoinSubstitution([
-        kuroko_desc_share,
-        'xacro',
-        'roboone_ring',
-        'small_ring.xacro',
-    ])
-    ring_large_xacro = PathJoinSubstitution([
-        kuroko_desc_share,
-        'xacro',
-        'roboone_ring',
-        'large_ring.xacro',
-    ])
 
     robot_description = Command([xacro_exec, ' ', robot_xacro, ' gazebo:=false'])
     robot_description_gazebo = Command([xacro_exec, ' ', robot_xacro, ' gazebo:=true'])
-    enemy_description_gazebo = Command([xacro_exec, ' ', enemy_xacro, ' gazebo:=true'])
-    ring_small_urdf = Command([xacro_exec, ' ', ring_small_xacro])
-    ring_large_urdf = Command([xacro_exec, ' ', ring_large_xacro])
-
-    spawn_small_ring = Node(
-        package='kuroko_gazebo',
-        executable='spawn_entity_from_param.py',
-        name='spawn_ring_small',
-        output='screen',
-        parameters=[{'ring_urdf': ring_small_urdf}],
-        arguments=['--name', 'ring_model', '--param', 'ring_urdf', '-x', '0.0', '-y', '0.0', '-z', '0.0'],
-        condition=IfCondition(use_small_ring),
-    )
-
-    spawn_large_ring = Node(
-        package='kuroko_gazebo',
-        executable='spawn_entity_from_param.py',
-        name='spawn_ring_large',
-        output='screen',
-        parameters=[{'ring_urdf': ring_large_urdf}],
-        arguments=['--name', 'ring_model', '--param', 'ring_urdf', '-x', '0.0', '-y', '0.0', '-z', '0.0'],
-        condition=UnlessCondition(use_small_ring),
-    )
 
     spawn_robot = Node(
         package='kuroko_gazebo',
@@ -99,30 +75,9 @@ def generate_launch_description() -> LaunchDescription:
             '--name', robot_name,
             '--param', 'robot_description_gazebo',
             '--namespace', robot_name,
-            '-x', '-0.9',
+            '-x', '0.0',
             '-y', '0.0',
-            '-z', '0.9',
-            '-J', 'ankle_l_roll', '-0.17453292519943295',
-            '-J', 'ankle_l_yaw', '0.0',
-            '-J', 'ankle_r_roll', '0.17453292519943295',
-            '-J', 'ankle_r_yaw', '0.0',
-            '-J', 'chest', '0.0',
-            '-J', 'elbow_l_front', '2.007128639793479',
-            '-J', 'elbow_l_rear', '-2.007128639793479',
-            '-J', 'elbow_r_front', '-2.007128639793479',
-            '-J', 'elbow_r_rear', '2.007128639793479',
-            '-J', 'hip_l_pitch', '0.0',
-            '-J', 'hip_l_roll', '-0.17453292519943295',
-            '-J', 'hip_r_pitch', '0.0',
-            '-J', 'hip_r_roll', '-0.17453292519943295',
-            '-J', 'shin_l_active', '0.0',
-            '-J', 'shin_r_active', '0.0',
-            '-J', 'shoulder_l_pitch', '-1.1344640137963142',
-            '-J', 'shoulder_l_roll', '-1.4311699866353502',
-            '-J', 'shoulder_r_pitch', '1.1344640137963142',
-            '-J', 'shoulder_r_roll', '1.4311699866353502',
-            '-J', 'thigh_l_active', '0.0',
-            '-J', 'thigh_r_active', '0.0',
+            '-z', '0.32',
         ],
     )
 
@@ -143,121 +98,44 @@ def generate_launch_description() -> LaunchDescription:
         ]
     )
 
-    spawn_enemy_node = Node(
-        package='kuroko_gazebo',
-        executable='spawn_entity_from_param.py',
-        name='spawn_enemy',
-        output='screen',
-        parameters=[{'enemy_description': enemy_description_gazebo}],
-        arguments=[
-            '--name', enemy_name,
-            '--param', 'enemy_description',
-            '--namespace', enemy_name,
-            '-x', '0.9',
-            '-y', '0.0',
-            '-z', '0.9',
-            '-Y', '3.1416',
-            '-J', 'ankle_l_roll', '-0.17453292519943295',
-            '-J', 'ankle_l_yaw', '0.0',
-            '-J', 'ankle_r_roll', '0.17453292519943295',
-            '-J', 'ankle_r_yaw', '0.0',
-            '-J', 'chest', '0.0',
-            '-J', 'elbow_l_front', '2.007128639793479',
-            '-J', 'elbow_l_rear', '-2.007128639793479',
-            '-J', 'elbow_r_front', '-2.007128639793479',
-            '-J', 'elbow_r_rear', '2.007128639793479',
-            '-J', 'hip_l_pitch', '0.0',
-            '-J', 'hip_l_roll', '-0.17453292519943295',
-            '-J', 'hip_r_pitch', '0.0',
-            '-J', 'hip_r_roll', '-0.17453292519943295',
-            '-J', 'shin_l_active', '0.0',
-            '-J', 'shin_r_active', '0.0',
-            '-J', 'shoulder_l_pitch', '-1.1344640137963142',
-            '-J', 'shoulder_l_roll', '-1.4311699866353502',
-            '-J', 'shoulder_r_pitch', '1.1344640137963142',
-            '-J', 'shoulder_r_roll', '1.4311699866353502',
-            '-J', 'thigh_l_active', '0.0',
-            '-J', 'thigh_r_active', '0.0',
-        ],
-        condition=IfCondition(spawn_enemy),
-    )
+    cm_ns = [TextSubstitution(text='/'), robot_name, TextSubstitution(text='/controller_manager')]
 
-    jsb_yaml = PathJoinSubstitution([FindPackageShare('kuroko_gazebo'), 'config', 'joint_state_controller.yaml'])
-    traj_yaml = PathJoinSubstitution([FindPackageShare('kuroko_gazebo'), 'config', 'joint_trajectory_controller.yaml'])
-    group_pos_yaml = PathJoinSubstitution([FindPackageShare('kuroko_gazebo'), 'config', 'joint_position_group_controller.yaml'])
-    common_spawner_args = ['-c', [TextSubstitution(text='/'), robot_name, TextSubstitution(text='/controller_manager')]]
+    cm_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'controller_manager.yaml'])
+    jsb_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_state_controller.yaml'])
+    pos_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_position_controller.yaml'])
+    group_pos_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_position_group_controller.yaml'])
+    pos_pid_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_position_pid_controller.yaml'])
+    traj_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_trajectory_controller.yaml'])
+    traj_pid_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_trajectory_pid_controller.yaml'])
 
-    spawn_jsb = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['joint_state_broadcaster', '--param-file', jsb_yaml, *common_spawner_args],
-        output='screen',
-    )
-        is_trajectory = PythonExpression(["'", controller, "' == 'trajectory'"])
-    is_group_position = PythonExpression(["'", controller, "' == 'group_position'"])
-    is_individual_position = PythonExpression(["'", controller, "' == 'individual_position'"])
+    param_base = [cm_yaml]
 
-    spawn_traj = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['joint_trajectory_controller', '--param-file', traj_yaml, *common_spawner_args],
-        output='screen',
-        condition=IfCondition(is_trajectory),
-    )
+    spawn_jsb = _spawner('joint_state_broadcaster', cm_ns, [*param_base, jsb_yaml])
 
-    spawn_pos_group = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['joint_group_position_controller', '--param-file', group_pos_yaml, *common_spawner_args],
-        output='screen',
-        condition=IfCondition(is_group_position),
-    )
+        is_individual_position = PythonExpression(["'", controller_mode, "' == 'individual_position'"])
+    is_group_position = PythonExpression(["'", controller_mode, "' == 'group_position' or '", controller_mode, "' == 'position'"])
+    is_position_pid = PythonExpression(["'", controller_mode, "' == 'position_pid'"])
+    is_trajectory = PythonExpression(["'", controller_mode, "' == 'trajectory'"])
+    is_trajectory_pid = PythonExpression(["'", controller_mode, "' == 'trajectory_pid'"])
 
-    joint_names = [
-        'chest',
-        'shoulder_r_pitch',
-        'shoulder_r_roll',
-        'elbow_r_front',
-        'elbow_r_rear',
-        'shoulder_l_pitch',
-        'shoulder_l_roll',
-        'elbow_l_front',
-        'elbow_l_rear',
-        'hip_r_roll',
-        'hip_r_pitch',
-        'thigh_r_active',
-        'shin_r_active',
-        'ankle_r_roll',
-        'ankle_r_yaw',
-        'hip_l_roll',
-        'hip_l_pitch',
-        'thigh_l_active',
-        'shin_l_active',
-        'ankle_l_roll',
-        'ankle_l_yaw',
+            spawn_group_pos = _spawner('joint_group_position_controller', cm_ns, [*param_base, group_pos_yaml], condition=IfCondition(is_group_position))
+    # Individual position controllers (one per joint)
+    _individual_names = ['chest_position', 'shoulder_r_pitch_position', 'shoulder_r_roll_position', 'elbow_r_front_position', 'elbow_r_rear_position', 'shoulder_l_pitch_position', 'shoulder_l_roll_position', 'elbow_l_front_position', 'elbow_l_rear_position', 'hip_r_roll_position', 'hip_r_pitch_position', 'thigh_r_active_position', 'shin_r_active_position', 'ankle_r_roll_position', 'ankle_r_yaw_position', 'hip_l_roll_position', 'hip_l_pitch_position', 'thigh_l_active_position', 'shin_l_active_position', 'ankle_l_roll_position', 'ankle_l_yaw_position']
+    spawn_individual_pos = [
+        _spawner(name, cm_ns, [*param_base, pos_yaml], condition=IfCondition(is_individual_position))
+        for name in _individual_names
     ]
+    spawn_pos_pid = _spawner('joint_position_pid_controller', cm_ns, [*param_base, pos_pid_yaml], condition=IfCondition(is_position_pid))
+    spawn_traj = _spawner('joint_trajectory_controller', cm_ns, [*param_base, traj_yaml], condition=IfCondition(is_trajectory))
+    spawn_traj_pid = _spawner('joint_trajectory_effort_controller', cm_ns, [*param_base, traj_pid_yaml], condition=IfCondition(is_trajectory_pid))
 
-    spawn_pos_individual = [
-        Node(
-            package='controller_manager',
-            executable='spawner',
-            arguments=[f"{j}_position_controller", '--param-file', ind_pos_yaml, *common_spawner_args],
-            output='screen',
-            condition=IfCondition(is_individual_position),
-        )
-        for j in joint_names
-    ]
-,
-    )
-
-    expected_models_expr = [robot_name, TextSubstitution(text=' ring_model ground_plane')]
     unpause = Node(
         package='kuroko_gazebo',
         executable='unpause_physics.py',
         name='unpause_physics',
         output='screen',
         parameters=[
-            {'expected_models': expected_models_expr},
+            {'expected_models': [robot_name, TextSubstitution(text=' ground_plane')]},
             {'wait_after_spawn': wait_after_spawn},
         ],
         condition=UnlessCondition(paused),
@@ -270,24 +148,27 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument('gui', default_value='true'),
             DeclareLaunchArgument('headless', default_value='false'),
             DeclareLaunchArgument('debug', default_value='false'),
-            DeclareLaunchArgument('robot_name', default_value='kuroko'),
-            DeclareLaunchArgument('controller', default_value='group_position', description='trajectory | group_position | individual_position'),
-            DeclareLaunchArgument('use_small_ring', default_value='false'),
-            DeclareLaunchArgument('spawn_enemy', default_value='true'),
-            DeclareLaunchArgument('enemy_name', default_value='enemy'),
+            DeclareLaunchArgument('gazebo_model_path', default_value=''),
+            DeclareLaunchArgument('robot_name', default_value='roboone'),
+            DeclareLaunchArgument(
+                'controller',
+                default_value='group_position',
+                description=(
+                    'Controller mode: ' \
+                    'group_position | position(=group_position) | individual_position | position_pid | trajectory | trajectory_pid'
+                ),
+            ),
             DeclareLaunchArgument('wait_after_spawn', default_value='1.0'),
-            DeclareLaunchArgument('gazebo_model_path', default_value=TextSubstitution(text='')),
             set_gazebo_model_path,
             gazebo,
-            spawn_small_ring,
-            spawn_large_ring,
             spawn_robot,
             robot_state_publisher,
-            spawn_enemy_node,
             spawn_jsb,
+            spawn_group_pos,
+            *spawn_individual_pos,
+            spawn_pos_pid,
             spawn_traj,
-            spawn_pos_group,
-            *spawn_pos_individual,
+            spawn_traj_pid,
             unpause,
         ]
     )

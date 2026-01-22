@@ -1,151 +1,122 @@
 #!/usr/bin/python3
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
-from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression, TextSubstitution
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-import os
 
 
-def _make_spawner(controller_name: str, param_files: list[str]) -> Node:
-    # controller_manager spawner:
-    #  - loads controller type/params from param files
-    #  - then spawns the controller
-    args = [controller_name, "--controller-manager", "/controller_manager"]
+def _spawner(controller_name, controller_manager_ns, param_files, condition=None):
+    args = [controller_name, '--controller-manager']
+    args += controller_manager_ns
     for f in param_files:
-        args += ["--param-file", f]
-
+        args += ['--param-file', f]
     return Node(
-        package="controller_manager",
-        executable="spawner",
+        package='controller_manager',
+        executable='spawner',
+        output='screen',
         arguments=args,
-        output="screen",
+        condition=condition,
     )
 
 
-def _launch_setup(context, *args, **kwargs):
-    pkg = get_package_share_directory("kuroko_gazebo")
-    cfg = os.path.join(pkg, "config")
+def _setup(context, *args, **kwargs):
+    controller_mode = LaunchConfiguration('controller')
+    robot_name = LaunchConfiguration('robot_name')
 
-    # Your 7 yaml files (as-is)
-    controller_manager_yaml = os.path.join(cfg, "controller_manager.yaml")
-    joint_state_yaml = os.path.join(cfg, "joint_state_controller.yaml")
-    joint_traj_yaml = os.path.join(cfg, "joint_trajectory_controller.yaml")
-    joint_traj_pid_yaml = os.path.join(cfg, "joint_trajectory_pid_controller.yaml")
-    joint_group_pos_yaml = os.path.join(cfg, "joint_position_group_controller.yaml")
-    joint_individual_pos_yaml = os.path.join(cfg, "joint_position_controller.yaml")
-    joint_pos_pid_yaml = os.path.join(cfg, "joint_position_pid_controller.yaml")
+    kuroko_gazebo_share = get_package_share_directory('kuroko_gazebo')
 
-    mode = LaunchConfiguration("controller").perform(context)
-    state_controller_name = LaunchConfiguration("state_controller").perform(context)
+    cm_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'controller_manager.yaml'])
+    jsb_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_state_controller.yaml'])
+    pos_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_position_controller.yaml'])
+    group_pos_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_position_group_controller.yaml'])
+    pos_pid_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_position_pid_controller.yaml'])
+    traj_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_trajectory_controller.yaml'])
+    traj_pid_yaml = PathJoinSubstitution([kuroko_gazebo_share, 'config', 'joint_trajectory_pid_controller.yaml'])
 
-    # Common: keep controller_manager params always applied (update_rate, etc)
-    common_param_files = [controller_manager_yaml]
+    cm_ns = [TextSubstitution(text='/'), robot_name, TextSubstitution(text='/controller_manager')]
 
-    nodes = []
+    # Always start joint_state_broadcaster (ROS2)
+    spawn_jsb = _spawner('joint_state_broadcaster', cm_ns, [cm_yaml, jsb_yaml])
 
-    # 1) State controller (spawn ONLY the one you request)
-    #    - default is "joint_state_broadcaster"
-    #    - if you want ROS1-like name, pass state_controller:=joint_state_controller
-    nodes.append(
-        _make_spawner(
-            state_controller_name,
-            common_param_files + [joint_state_yaml, joint_group_pos_yaml],
-        )
+    is_group_position = PythonExpression(["'", controller_mode, "' == 'group_position' or '", controller_mode, "' == 'position'"])
+    is_individual_position = PythonExpression(["'", controller_mode, "' == 'individual_position'"])
+    is_position_pid = PythonExpression(["'", controller_mode, "' == 'position_pid'"])
+    is_traj = PythonExpression(["'", controller_mode, "' == 'trajectory'"])
+    is_traj_pid = PythonExpression(["'", controller_mode, "' == 'trajectory_pid'"])
+
+    spawn_group_pos = _spawner(
+        'joint_group_position_controller',
+        cm_ns,
+        [cm_yaml, group_pos_yaml],
+        condition=IfCondition(is_group_position),
     )
 
-    # 2) Main controller: spawn exactly one group depending on mode
-    if mode == "trajectory":
-        # YAML defines controller name "trajectory_controller" (per your joint_trajectory_controller.yaml)
-        nodes.append(
-            _make_spawner(
-                "trajectory_controller",
-                common_param_files + [joint_traj_yaml],
-            )
-        )
+    # Individual position controllers (one per joint)
+    individual_names = [
+        'chest_position',
+        'shoulder_r_pitch_position',
+        'shoulder_r_roll_position',
+        'elbow_r_front_position',
+        'elbow_r_rear_position',
+        'shoulder_l_pitch_position',
+        'shoulder_l_roll_position',
+        'elbow_l_front_position',
+        'elbow_l_rear_position',
+        'hip_r_roll_position',
+        'hip_r_pitch_position',
+        'thigh_r_active_position',
+        'shin_r_active_position',
+        'ankle_r_roll_position',
+        'ankle_r_yaw_position',
+        'hip_l_roll_position',
+        'hip_l_pitch_position',
+        'thigh_l_active_position',
+        'shin_l_active_position',
+        'ankle_l_roll_position',
+        'ankle_l_yaw_position',
+    ]
+    spawn_individual_pos = [
+        _spawner(name, cm_ns, [cm_yaml, pos_yaml], condition=IfCondition(is_individual_position))
+        for name in individual_names
+    ]
 
-    elif mode == "trajectory_pid":
-        # YAML defines controller name "joint_trajectory_effort_controller"
-        nodes.append(
-            _make_spawner(
-                "joint_trajectory_effort_controller",
-                common_param_files + [joint_traj_pid_yaml],
-            )
-        )
+    spawn_pos_pid = _spawner(
+        'joint_position_pid_controller',
+        cm_ns,
+        [cm_yaml, pos_pid_yaml],
+        condition=IfCondition(is_position_pid),
+    )
 
-    elif mode == "group_position":
-        # YAML defines controller name "joint_group_position_controller"
-        nodes.append(
-            _make_spawner(
-                "joint_group_position_controller",
-                common_param_files + [joint_group_pos_yaml],
-            )
-        )
+    spawn_traj = _spawner(
+        'trajectory_controller',
+        cm_ns,
+        [cm_yaml, traj_yaml],
+        condition=IfCondition(is_traj),
+    )
 
-    elif mode == "position_pid":
-        # YAML defines controller name "joint_position_pid_controller"
-        nodes.append(
-            _make_spawner(
-                "joint_position_pid_controller",
-                common_param_files + [joint_pos_pid_yaml],
-            )
-        )
+    spawn_traj_pid = _spawner(
+        'joint_trajectory_effort_controller',
+        cm_ns,
+        [cm_yaml, traj_pid_yaml],
+        condition=IfCondition(is_traj_pid),
+    )
 
-    elif mode == "individual_position":
-        # YAML defines many controllers like "*_position"
-        # Spawn ALL of them (no extra controllers).
-        individual_names = [
-            "chest_position",
-            "shoulder_r_pitch_position",
-            "shoulder_r_roll_position",
-            "elbow_r_front_position",
-            "elbow_r_rear_position",
-            "shoulder_l_pitch_position",
-            "shoulder_l_roll_position",
-            "elbow_l_front_position",
-            "elbow_l_rear_position",
-            "hip_r_roll_position",
-            "hip_r_pitch_position",
-            "thigh_r_active_position",
-            "shin_r_active_position",
-            "ankle_r_roll_position",
-            "ankle_r_yaw_position",
-            "hip_l_roll_position",
-            "hip_l_pitch_position",
-            "thigh_l_active_position",
-            "shin_l_active_position",
-            "ankle_l_roll_position",
-            "ankle_l_yaw_position",
-        ]
-        for name in individual_names:
-            nodes.append(
-                _make_spawner(
-                    name,
-                    common_param_files + [joint_individual_pos_yaml],
-                )
-            )
-    else:
-        raise RuntimeError(
-            f"Unknown controller mode: {mode}. "
-            "Use: trajectory | trajectory_pid | group_position | position_pid | individual_position"
-        )
-
-    return nodes
+    return [spawn_jsb, spawn_group_pos, spawn_pos_pid, spawn_traj, spawn_traj_pid] + spawn_individual_pos
 
 
 def generate_launch_description():
-    return LaunchDescription(
-        [
-            DeclareLaunchArgument(
-                "controller",
-                default_value="group_position",
-                description="trajectory | trajectory_pid | group_position | position_pid | individual_position",
-            ),
-            DeclareLaunchArgument(
-                "state_controller",
-                default_value="joint_state_broadcaster",
-                description="joint_state_broadcaster (ROS2) or joint_state_controller (legacy name)",
-            ),
-            OpaqueFunction(function=_launch_setup),
-        ]
-    )
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'robot_name',
+            default_value='kuroko',
+            description='Namespace used for controller_manager (/<robot_name>/controller_manager)',
+        ),
+        DeclareLaunchArgument(
+            'controller',
+            default_value='group_position',
+            description='group_position | position | individual_position | position_pid | trajectory | trajectory_pid',
+        ),
+        OpaqueFunction(function=_setup),
+    ])
