@@ -35,7 +35,7 @@ def _controller_names_from_params(merged_params: dict) -> list[str]:
 
 
 def _setup(context, *args, **kwargs):
-    pkg_share = Path(get_package_share_directory("kuroko_gazebo"))
+    pkg_share = Path(get_package_share_directory("kuroko_description"))
     config_dir = pkg_share / "config"
 
     # Always-loaded yamls
