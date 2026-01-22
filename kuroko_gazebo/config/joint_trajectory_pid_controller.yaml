@@ -14,6 +14,11 @@ controller_manager:
 
 joint_trajectory_effort_controller:
   ros__parameters:
+    command_interfaces:
+      - effort
+    state_interfaces:
+      - position
+      - velocity
     joints:
       - chest
       - shoulder_r_pitch
@@ -36,11 +41,6 @@ joint_trajectory_effort_controller:
       - shin_l_active
       - ankle_l_roll
       - ankle_l_yaw
-    command_interfaces:
-      - effort
-    state_interfaces:
-      - position
-      - velocity
     allow_partial_joints_goal: true
     interpolate_from_desired_state: true
     allow_integration_in_goal_trajectories: true

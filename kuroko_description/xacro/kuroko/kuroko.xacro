@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <robot name="kuroko" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:arg name="gazebo" default="false"/>
+  <xacro:arg name="gz_sim" default="false"/>
   <xacro:arg name="box_visual" default="false"/>
-  <xacro:arg name="gazebo_hw_interface" default="position"/>
+  <xacro:arg name="command_interface" default="position"/>
   
   <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
   <xacro:property name="MESH_DIR" value="package://kuroko_description/meshes" />
@@ -34,22 +35,22 @@
 
 
   <!-- MACRO:Setting up a Robot Model -->
-  <xacro:macro name="kuroko_xacro" params="gazebo box_visual gazebo_hw_interface">
+  <xacro:macro name="kuroko_xacro" params="gazebo box_visual">
     <link name="body_link"/>
     <joint name="root_joint" type="fixed">
       <parent link="body_link"/>
       <child link="waist_link"/>
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
-    <xacro:body_xacro box_visual="$(arg box_visual)"/>
+    <xacro:body_xacro box_visual="${box_visual}"/>
     <xacro:body_gazebo/>
-    <xacro:arm_r_xacro box_visual="$(arg box_visual)"/>
+    <xacro:arm_r_xacro box_visual="${box_visual}"/>
     <xacro:arm_r_gazebo/>
-    <xacro:arm_l_xacro box_visual="$(arg box_visual)"/>
+    <xacro:arm_l_xacro box_visual="${box_visual}"/>
     <xacro:arm_l_gazebo/>
-    <xacro:leg_r_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
+    <xacro:leg_r_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
     <xacro:leg_r_gazebo/>
-    <xacro:leg_l_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
+    <xacro:leg_l_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
     <xacro:leg_l_gazebo/>
     <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
@@ -67,7 +68,6 @@
   </xacro:macro>
 
   <!-- Load Macros -->
-  <xacro:kuroko_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"
-    gazebo_hw_interface="$(arg gazebo_hw_interface)"/>
+  <xacro:kuroko_xacro gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
 
 </robot>
