@@ -1,0 +1,150 @@
+controller_manager:
+  ros__parameters:
+    chest_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    shoulder_r_pitch_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    shoulder_r_roll_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    elbow_r_front_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    elbow_r_rear_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    shoulder_l_pitch_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    shoulder_l_roll_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    elbow_l_front_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    elbow_l_rear_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    hip_r_roll_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    hip_r_pitch_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    thigh_r_active_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    shin_r_active_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    ankle_r_roll_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    ankle_r_yaw_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    hip_l_roll_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    hip_l_pitch_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    thigh_l_active_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    shin_l_active_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    ankle_l_roll_position_controller:
+      type: forward_command_controller/ForwardCommandController
+    ankle_l_yaw_position_controller:
+      type: forward_command_controller/ForwardCommandController
+
+chest_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - chest
+shoulder_r_pitch_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - shoulder_r_pitch
+shoulder_r_roll_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - shoulder_r_roll
+elbow_r_front_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - elbow_r_front
+elbow_r_rear_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - elbow_r_rear
+shoulder_l_pitch_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - shoulder_l_pitch
+shoulder_l_roll_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - shoulder_l_roll
+elbow_l_front_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - elbow_l_front
+elbow_l_rear_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - elbow_l_rear
+hip_r_roll_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - hip_r_roll
+hip_r_pitch_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - hip_r_pitch
+thigh_r_active_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - thigh_r_active
+shin_r_active_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - shin_r_active
+ankle_r_roll_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - ankle_r_roll
+ankle_r_yaw_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - ankle_r_yaw
+hip_l_roll_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - hip_l_roll
+hip_l_pitch_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - hip_l_pitch
+thigh_l_active_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - thigh_l_active
+shin_l_active_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - shin_l_active
+ankle_l_roll_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - ankle_l_roll
+ankle_l_yaw_position_controller:
+  ros__parameters:
+    interface_name: position
+    joints:
+      - ankle_l_yaw

@@ -1,4 +1,4 @@
-# joint_position_pid_controller.yaml
+# joint_group_position_pid_controller.yaml
 #
 # PID position control writing to effort interface:
 # reference/state: position
@@ -10,10 +10,10 @@
 
 controller_manager:
   ros__parameters:
-    joint_position_pid_controller:
+    joint_group_position_pid_controller:
       type: pid_controller/PidController
 
-joint_position_pid_controller:
+joint_group_position_pid_controller:
   ros__parameters:
     dof_names:
       - chest
@@ -46,7 +46,7 @@ joint_position_pid_controller:
       - position
 
     # References will come from:
-    #   /joint_position_pid_controller/reference  (control_msgs/msg/MultiDOFCommand)
+    #   /joint_group_position_pid_controller/reference  (control_msgs/msg/MultiDOFCommand)
     # unless used in chained mode.
     use_external_measured_states: false
 
