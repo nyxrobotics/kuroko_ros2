@@ -2,28 +2,21 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!--
-    Gazebo Classic gazebo_ros2_control helper (ROS 2 Humble / restricted xacro eval safe)
+    Gazebo Classic gazebo_ros2_control helper (restricted xacro eval safe)
 
-    Safe constraints:
+    Constraints handled:
       - no xacro:for
       - no isinstance()
       - no next()
-      - no dict literal {}  (use dict())
-      - avoid len() (use list + [default] trick)
+      - NO dict literal {} anywhere (use dict())
+      - keep expressions simple
 
     Params:
       - enabled: bool
       - controller: controller instance name (e.g. joint_trajectory_controller)
-      - yaml_files: semicolon-separated list of YAML file paths (absolute paths strongly recommended)
-      - command_interface: optional override (position/velocity/effort); empty => infer
-      - debug: print xacro-time messages
-
-    YAML layouts supported:
-      A) <controller>:
-           ros__parameters: { type, joints, ... }
-      B) controller_manager:
-           ros__parameters:
-             <controller>: { type, joints, ... }
+      - yaml_files: semicolon-separated list of YAML file paths (absolute paths recommended)
+      - command_interface: optional override; empty => infer
+      - debug: xacro-time messages
   -->
 
   <xacro:macro name="gazebo_ros2_control_plugin"
@@ -44,24 +37,21 @@
     <xacro:property name="_cfg_list"
                     value="${[xacro.load_yaml(p) for p in _yaml_list]}" />
 
-    <!-- Build candidates -->
+    <!-- Layout B candidates: controller_manager.ros__parameters[controller] -->
     <xacro:property name="_cm_candidates"
                     value="${[
-                      cfg.get('controller_manager', {}).get('ros__parameters', {}).get(controller, None)
+                      cfg.get('controller_manager', dict()).get('ros__parameters', dict()).get(controller, None)
                       for cfg in _cfg_list
                     ]}" />
 
+    <!-- Layout A candidates: cfg[controller].ros__parameters -->
     <xacro:property name="_direct_candidates"
                     value="${[
-                      cfg.get(controller, {}).get('ros__parameters', None)
+                      cfg.get(controller, dict()).get('ros__parameters', None)
                       for cfg in _cfg_list
                     ]}" />
 
-    <!-- Pick controller config dict without next()/len():
-         - filter out None
-         - append a default dict()
-         - take first element
-    -->
+    <!-- Pick controller config dict (no next/len; no {} literal) -->
     <xacro:property name="_ctrl_cfg_cm"
                     value="${([c for c in _cm_candidates if c is not None] + [dict()])[0]}" />
 
@@ -77,7 +67,7 @@
     <xacro:property name="_cmd_ifs" value="${_ctrl_cfg.get('command_interfaces', [])}" />
     <xacro:property name="_iface_name" value="${_ctrl_cfg.get('interface_name', '')}" />
 
-    <!-- Resolve command interface (explicit > command_interfaces > interface_name > type default) -->
+    <!-- Resolve command interface -->
     <xacro:property name="_cmd_if"
                     value="${
                       command_interface if command_interface else
@@ -130,7 +120,7 @@
       </xacro:if>
     </xacro:if>
 
-    <!-- Emit <parameters> recursively (no xacro:for) -->
+    <!-- Emit <parameters> recursively -->
     <xacro:macro name="_emit_params" params="paths">
       <xacro:if value="${paths}">
         <parameters>${paths[0]}</parameters>
