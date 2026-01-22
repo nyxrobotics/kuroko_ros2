@@ -1,7 +1,8 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution, PythonExpression
+from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
@@ -37,26 +38,16 @@ def generate_launch_description():
 
     # If you choose the effort JTC, use effort, otherwise position.
     # (You can extend this mapping later if you add velocity controllers.)
-    inferred_command_interface = Command(
-        [
-            "python3",
-            "-c",
-            (
-                "import os\n"
-                "c=os.environ.get('CTRL','')\n"
-                "ci=os.environ.get('CI','')\n"
-                "if ci:\n"
-                "  print(ci)\n"
-                "elif c=='joint_trajectory_effort_controller':\n"
-                "  print('effort')\n"
-                "else:\n"
-                "  print('position')\n"
-            ),
-        ],
-        environment={"CTRL": controller, "CI": command_interface_override},
-    )
+    controller = LaunchConfiguration("controller")
+    command_interface_override = LaunchConfiguration("command_interface")
 
-    # --- robot_description from xacro ---
+    # If command_interface arg is set (non-empty), use it.
+    # Otherwise: effort only when controller == joint_trajectory_effort_controller, else position.
+    inferred_command_interface = PythonExpression([
+        "'", command_interface_override, "' if '", command_interface_override, "' != '' "
+        "else ('effort' if '", controller, "' == 'joint_trajectory_effort_controller' else 'position')"
+    ])
+
     xacro_file = PathJoinSubstitution(
         [FindPackageShare("kuroko_description"), "xacro", "kuroko", "kuroko.xacro"]
     )
@@ -146,7 +137,6 @@ def generate_launch_description():
             robot_z_arg,
             gazebo_launch,
             rsp,
-            spawn_ground,
             spawn_robot,
         ]
     )
