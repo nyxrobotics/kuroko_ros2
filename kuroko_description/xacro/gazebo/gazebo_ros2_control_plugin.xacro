@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Macro: gazebo_ros2_control plugin with multiple YAML parameter files.
+
+    Args:
+      - enabled: true/false (typically ${gazebo})
+      - robot_param: usually "robot_description"
+      - robot_param_node: usually "robot_state_publisher"
+      - controller_manager_name: optional, default "controller_manager"
+      - yaml_files: semicolon-separated list of YAML paths
+                   e.g. "$(find kuroko_description)/config/ros2_control/controller_manager.yaml;..."
+  -->
+  <xacro:macro name="gazebo_ros2_control_plugin"
+               params="enabled
+                       robot_param:=robot_description
+                       robot_param_node:=robot_state_publisher
+                       controller_manager_name:=controller_manager
+                       yaml_files:=''">
+
+    <xacro:if value="${enabled}">
+      <gazebo>
+        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+          <robot_param>${robot_param}</robot_param>
+          <robot_param_node>${robot_param_node}</robot_param_node>
+
+          <!-- Optional: if you want to force the name -->
+          <!-- <controller_manager_name>${controller_manager_name}</controller_manager_name> -->
+
+          <!-- Expand all YAML files into multiple <parameters> tags -->
+          <xacro:for each="y" value="${[s for s in yaml_files.split(';') if s.strip()]}">
+            <parameters>${y}</parameters>
+          </xacro:for>
+        </plugin>
+      </gazebo>
+    </xacro:if>
+
+  </xacro:macro>
+
+</robot>

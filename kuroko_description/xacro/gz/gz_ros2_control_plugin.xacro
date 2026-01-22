@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Macro: gz_ros2_control plugin for Gazebo Sim (gz_sim).
+    - Expands a semicolon-separated list of YAML files into multiple <parameters> tags.
+
+    Args:
+      - enabled: true/false (typically ${gz_sim})
+      - robot_param: usually "robot_description"
+      - robot_param_node: usually "robot_state_publisher"
+      - controller_manager_name: optional (default: controller_manager)
+      - yaml_files: semicolon-separated list of YAML paths
+  -->
+  <xacro:macro name="gz_ros2_control_plugin"
+               params="enabled
+                       robot_param:=robot_description
+                       robot_param_node:=robot_state_publisher
+                       controller_manager_name:=controller_manager
+                       yaml_files:=''">
+
+    <xacro:if value="${enabled}">
+      <gazebo>
+        <!-- From gz_ros2_control docs -->
+        <plugin filename="gz_ros2_control-system"
+                name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+          <robot_param>${robot_param}</robot_param>
+          <robot_param_node>${robot_param_node}</robot_param_node>
+
+          <!-- Optional -->
+          <!-- <controller_manager_name>${controller_manager_name}</controller_manager_name> -->
+
+          <!-- Expand all YAML files into multiple <parameters> tags -->
+          <xacro:for each="y" value="${[s for s in yaml_files.split(';') if s.strip()]}">
+            <parameters>${y}</parameters>
+          </xacro:for>
+
+        </plugin>
+      </gazebo>
+    </xacro:if>
+
+  </xacro:macro>
+
+</robot>
+
