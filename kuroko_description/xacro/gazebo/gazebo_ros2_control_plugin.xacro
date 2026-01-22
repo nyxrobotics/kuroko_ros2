@@ -9,8 +9,9 @@
                        debug:=false
                        ros2_control_name:=GazeboSystem">
 
+    <!-- Split YAML list (strip each element) -->
     <xacro:property name="_yaml_list"
-                    value="${[s for s in yaml_files.split(';') if s.strip()]}" />
+                    value="${[s.strip() for s in yaml_files.split(';') if s.strip()]}" />
     <xacro:property name="_cfg_list"
                     value="${[xacro.load_yaml(p) for p in _yaml_list]}" />
 
@@ -76,13 +77,14 @@
       <xacro:message text="${'[gazebo_ros2_control] controller=' + (controller if controller else '(empty)')}"/>
       <xacro:message text="${'[gazebo_ros2_control] yaml_files=' + (','.join(_yaml_list) if _yaml_list else '(empty)')}"/>
       <xacro:message text="${'[gazebo_ros2_control] type=' + (_ctrl_type if _ctrl_type else '(not found)')}"/>
-      <xacro:message text="${'[gazebo_ros2_control] command_interfaces=' + (str(_cmd_ifs) if _cmd_ifs else '[]')}"/>
-      <xacro:message text="${'[gazebo_ros2_control] interface_name=' + (_iface_name if _iface_name else '(none)')}"/>
       <xacro:message text="${'[gazebo_ros2_control] resolved_command_interface=' + _cmd_if}"/>
       <xacro:message text="${'[gazebo_ros2_control] joints_count=' + str(len(_joints))}"/>
-      <xacro:message text="${'[gazebo_ros2_control] joints_head=' + (str(_joints[:6]) if _joints else '[]')}"/>
+      <xacro:if value="${not _joints}">
+        <xacro:warning text="[gazebo_ros2_control] joints list is empty -> gazebo_ros2_control will see 0 controllable joints."/>
+      </xacro:if>
     </xacro:if>
 
+    <!-- Emit <parameters> recursively -->
     <xacro:macro name="_emit_params" params="paths">
       <xacro:if value="${paths}">
         <parameters>${paths[0]}</parameters>
@@ -90,7 +92,8 @@
       </xacro:if>
     </xacro:macro>
 
-    <xacro:macro name="_joint_block" params="joint_name cmd_if">
+    <!-- ros2_control joint entry -->
+    <xacro:macro name="_ros2_control_joint" params="joint_name cmd_if">
       <joint name="${joint_name}">
         <command_interface name="${cmd_if}"/>
         <state_interface name="position"/>
@@ -99,14 +102,32 @@
       </joint>
     </xacro:macro>
 
+    <!-- transmission entry (SimpleTransmission) -->
+    <xacro:macro name="_transmission" params="joint_name hw_if">
+      <transmission name="${joint_name}_trans">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="${joint_name}">
+          <hardwareInterface>hardware_interface/${hw_if}</hardwareInterface>
+        </joint>
+        <actuator name="${joint_name}_motor">
+          <hardwareInterface>hardware_interface/${hw_if}</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+      </transmission>
+    </xacro:macro>
+
+    <!-- Loop joints recursively (no xacro:for) -->
     <xacro:macro name="_joint_loop" params="joints cmd_if">
       <xacro:if value="${joints}">
-        <xacro:_joint_block joint_name="${joints[0]}" cmd_if="${cmd_if}"/>
+        <xacro:_ros2_control_joint joint_name="${joints[0]}" cmd_if="${cmd_if}"/>
+        <xacro:_transmission joint_name="${joints[0]}" hw_if="${cmd_if}"/>
         <xacro:_joint_loop joints="${joints[1:]}" cmd_if="${cmd_if}"/>
       </xacro:if>
     </xacro:macro>
 
     <xacro:if value="${enabled}">
+
+      <!-- ros2_control block -->
       <ros2_control name="${ros2_control_name}" type="system">
         <hardware>
           <plugin>gazebo_ros2_control/GazeboSystem</plugin>
@@ -114,11 +135,13 @@
         <xacro:_joint_loop joints="${_joints}" cmd_if="${_cmd_if}"/>
       </ros2_control>
 
+      <!-- Gazebo Classic plugin -->
       <gazebo>
         <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
           <xacro:_emit_params paths="${_yaml_list}"/>
         </plugin>
       </gazebo>
+
     </xacro:if>
 
   </xacro:macro>

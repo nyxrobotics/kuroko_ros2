@@ -1,7 +1,35 @@
 controller_manager:
   ros__parameters:
+    update_rate: 1000
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
     joint_group_position_pid_controller:
       type: pid_controller/PidController
+
+joint_state_broadcaster:
+  ros__parameters:
+    joints:
+      - chest
+      - shoulder_r_pitch
+      - shoulder_r_roll
+      - elbow_r_front
+      - elbow_r_rear
+      - shoulder_l_pitch
+      - shoulder_l_roll
+      - elbow_l_front
+      - elbow_l_rear
+      - hip_r_roll
+      - hip_r_pitch
+      - thigh_r_active
+      - shin_r_active
+      - ankle_r_roll
+      - ankle_r_yaw
+      - hip_l_roll
+      - hip_l_pitch
+      - thigh_l_active
+      - shin_l_active
+      - ankle_l_roll
+      - ankle_l_yaw
 
 joint_group_position_pid_controller:
   ros__parameters:
