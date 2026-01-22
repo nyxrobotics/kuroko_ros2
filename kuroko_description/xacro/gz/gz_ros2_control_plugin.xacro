@@ -1,45 +1,183 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!--
-    Macro: gz_ros2_control plugin for Gazebo Sim (gz_sim).
-    - Expands a semicolon-separated list of YAML files into multiple <parameters> tags.
+    Gazebo Sim gz_ros2_control helper.
 
-    Args:
-      - enabled: true/false (typically ${gz_sim})
-      - robot_param: usually "robot_description"
-      - robot_param_node: usually "robot_state_publisher"
-      - controller_manager_name: optional (default: controller_manager)
-      - yaml_files: semicolon-separated list of YAML paths
+    - yaml_files: semicolon-separated list of YAML files.
+    - controller: controller instance name to select (e.g. joint_trajectory_controller).
+    - Supports YAML layouts:
+        Layout B (recommended):
+          controller_manager:
+            ros__parameters:
+              <controller>: { type, joints, ... }
+        Layout A:
+          <controller>:
+            ros__parameters: { type, joints, ... }
+
+    Command interface resolution precedence:
+      1) xacro arg command_interface (non-empty)
+      2) command_interfaces (JointTrajectoryController / PID)
+      3) interface_name (ForwardCommandController)
+      4) safe type-based defaults (only for obvious group controllers)
+      5) fallback "position"
+
+    Debug output:
+      - enable with debug:=true
   -->
-  <xacro:macro name="gz_ros2_control_plugin"
+
+  <xacro:macro name="gz_ros2_control_setup"
                params="enabled
+                       controller:=''
+                       yaml_files:=''
+                       command_interface:=''
+                       debug:=false
+                       ros2_control_name:=GazeboSystem
                        robot_param:=robot_description
-                       robot_param_node:=robot_state_publisher
-                       controller_manager_name:=controller_manager
-                       yaml_files:=''">
+                       robot_param_node:=robot_state_publisher">
+
+    <!-- Build YAML path list -->
+    <xacro:property name="_yaml_list"
+                    value="${[s for s in yaml_files.split(';') if s.strip()]}" />
+
+    <!-- Load YAML files -->
+    <xacro:property name="_cfg_list"
+                    value="${[xacro.load_yaml(p) for p in _yaml_list]}" />
+
+    <!-- Candidates -->
+    <xacro:property name="_cm_candidates"
+                    value="${[
+                      cfg.get('controller_manager', {}).get('ros__parameters', {}).get(controller, None)
+                      for cfg in _cfg_list
+                      if isinstance(cfg, dict)
+                    ]}" />
+
+    <xacro:property name="_direct_candidates"
+                    value="${[
+                      cfg.get(controller, {}).get('ros__parameters', None)
+                      for cfg in _cfg_list
+                      if isinstance(cfg, dict)
+                    ]}" />
+
+    <!-- Choose controller config dict -->
+    <xacro:property name="_ctrl_cfg"
+                    value="${next(
+                      (c for c in _cm_candidates if isinstance(c, dict)),
+                      next((c for c in _direct_candidates if isinstance(c, dict)), {})
+                    )}" />
+
+    <!-- Extract controller fields from _ctrl_cfg -->
+    <xacro:property name="_ctrl_type"
+                    value="${_ctrl_cfg.get('type', '') if isinstance(_ctrl_cfg, dict) else ''}" />
+
+    <xacro:property name="_joints"
+                    value="${_ctrl_cfg.get('joints', []) if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('joints', []), list)) else []}" />
+
+    <xacro:property name="_cmd_ifs"
+                    value="${_ctrl_cfg.get('command_interfaces', []) if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('command_interfaces', []), list)) else []}" />
+
+    <xacro:property name="_iface_name"
+                    value="${_ctrl_cfg.get('interface_name', '') if (isinstance(_ctrl_cfg, dict) and isinstance(_ctrl_cfg.get('interface_name', ''), str)) else ''}" />
+
+    <!-- Decide command interface -->
+    <xacro:property name="_cmd_if"
+                    value="${
+                      command_interface if command_interface else
+                      (
+                        (
+                          'effort' if ('effort' in _cmd_ifs) else
+                          ('position' if ('position' in _cmd_ifs) else
+                           ('velocity' if ('velocity' in _cmd_ifs) else
+                            (_cmd_ifs[0] if len(_cmd_ifs) > 0 else 'position')
+                           )
+                          )
+                        )
+                        if len(_cmd_ifs) > 0 else
+                        (
+                          (
+                            'effort' if ('effort' in _iface_name) else
+                            ('position' if ('position' in _iface_name) else
+                             ('velocity' if ('velocity' in _iface_name) else
+                              (_iface_name if _iface_name else 'position')
+                             )
+                            )
+                          )
+                          if _iface_name else
+                          (
+                            'position' if ('JointGroupPositionController' in _ctrl_type) else
+                            ('effort' if ('JointGroupEffortController' in _ctrl_type) else
+                             'position'
+                            )
+                          )
+                        )
+                      )
+                    }" />
+
+    <!-- Debug messages -->
+    <xacro:if value="${enabled and debug}">
+      <xacro:message text="[gz_ros2_control] enabled=true"/>
+      <xacro:message text="${'[gz_ros2_control] controller=' + (controller if controller else '(empty)')}"/>
+      <xacro:message text="${'[gz_ros2_control] yaml_files=' + (','.join(_yaml_list) if len(_yaml_list)>0 else '(empty)')}"/>
+      <xacro:message text="${'[gz_ros2_control] type=' + (_ctrl_type if _ctrl_type else '(not found)')}"/>
+      <xacro:message text="${'[gz_ros2_control] command_interfaces=' + (str(_cmd_ifs) if len(_cmd_ifs)>0 else '[]')}"/>
+      <xacro:message text="${'[gz_ros2_control] interface_name=' + (_iface_name if _iface_name else '(none)')}"/>
+      <xacro:message text="${'[gz_ros2_control] resolved_command_interface=' + _cmd_if}"/>
+      <xacro:message text="${'[gz_ros2_control] joints_count=' + str(len(_joints))}"/>
+      <xacro:message text="${'[gz_ros2_control] joints_head=' + (str(_joints[:6]) if len(_joints)>0 else '[]')}"/>
+
+      <xacro:if value="${controller == ''}">
+        <xacro:warning text="[gz_ros2_control] controller name is empty. No controller config will be found."/>
+      </xacro:if>
+      <xacro:if value="${len(_yaml_list) == 0}">
+        <xacro:warning text="[gz_ros2_control] yaml_files is empty. Plugin will not load any parameters."/>
+      </xacro:if>
+      <xacro:if value="${len(_joints) == 0}">
+        <xacro:warning text="[gz_ros2_control] joints list is empty. YAML may not contain 'joints' for the selected controller."/>
+      </xacro:if>
+    </xacro:if>
+
+    <!-- Recursive joint loop -->
+    <xacro:macro name="_gz_joint_block" params="joint_name cmd_if">
+      <joint name="${joint_name}">
+        <command_interface name="${cmd_if}"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+    </xacro:macro>
+
+    <xacro:macro name="_gz_joint_loop" params="joints cmd_if">
+      <xacro:if value="${len(joints) > 0}">
+        <xacro:_gz_joint_block joint_name="${joints[0]}" cmd_if="${cmd_if}"/>
+        <xacro:_gz_joint_loop joints="${joints[1:]}" cmd_if="${cmd_if}"/>
+      </xacro:if>
+    </xacro:macro>
 
     <xacro:if value="${enabled}">
+
+      <!-- ros2_control definition for gz_ros2_control -->
+      <ros2_control name="${ros2_control_name}" type="system">
+        <hardware>
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </hardware>
+        <xacro:_gz_joint_loop joints="${_joints}" cmd_if="${_cmd_if}"/>
+      </ros2_control>
+
+      <!-- gz_ros2_control plugin -->
       <gazebo>
-        <!-- From gz_ros2_control docs -->
         <plugin filename="gz_ros2_control-system"
                 name="gz_ros2_control::GazeboSimROS2ControlPlugin">
           <robot_param>${robot_param}</robot_param>
           <robot_param_node>${robot_param_node}</robot_param_node>
 
-          <!-- Optional -->
-          <!-- <controller_manager_name>${controller_manager_name}</controller_manager_name> -->
-
-          <!-- Expand all YAML files into multiple <parameters> tags -->
-          <xacro:for each="y" value="${[s for s in yaml_files.split(';') if s.strip()]}">
-            <parameters>${y}</parameters>
+          <xacro:for each="p" value="${_yaml_list}">
+            <parameters>${p}</parameters>
           </xacro:for>
-
         </plugin>
       </gazebo>
+
     </xacro:if>
 
   </xacro:macro>
 
 </robot>
-
