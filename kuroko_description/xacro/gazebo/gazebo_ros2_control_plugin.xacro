@@ -11,14 +11,12 @@
     Args:
       controller_yaml: path to a ros2_control controller YAML file.
 
-    This macro:
-      - Loads controller_yaml
-      - Picks the first controller under controller_manager.ros__parameters
-      - Extracts joints and (best-effort) infers command interface
-      - Emits:
-          * <ros2_control> system block
-          * <transmission> blocks (via gazebo_ros2_transmission.xacro)
-          * <gazebo> plugin with <parameters> pointing to controller_yaml
+    Notes:
+      - This macro does NOT emit per-joint <command_interface>/<state_interface> blocks.
+        The ros2_control system block is delegated to gazebo_ros2_control_system.xacro
+        and kept minimal, per your requirement.
+      - Transmissions are generated from the controller joint list (best-effort) via
+        gazebo_ros2_transmission.xacro.
   -->
   <xacro:macro name="gazebo_ros2_control_plugin" params="controller_yaml">
 
@@ -65,25 +63,7 @@
     <xacro:property name="_cmd_if"
                     value="${_cmd_if_from_iface_name if _is_forward else _cmd_if_from_cmd_ifs}" />
 
-    <!-- ros2_control joint entry -->
-    <xacro:macro name="_ros2_control_joint" params="joint_name cmd_if">
-      <joint name="${joint_name}">
-        <command_interface name="${cmd_if}"/>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
-      </joint>
-    </xacro:macro>
-
-    <!-- Recursive loop for ros2_control joint entries -->
-    <xacro:macro name="_ros2_control_joint_loop" params="joints cmd_if">
-      <xacro:if value="${len(joints) > 0}">
-        <xacro:_ros2_control_joint joint_name="${joints[0]}" cmd_if="${cmd_if}"/>
-        <xacro:_ros2_control_joint_loop joints="${joints[1:]}" cmd_if="${cmd_if}"/>
-      </xacro:if>
-    </xacro:macro>
-
-    <!-- ros2_control block -->
+    <!-- ros2_control system block (minimal) -->
     <xacro:gazebo_ros2_control_system/>
 
     <!-- transmissions -->

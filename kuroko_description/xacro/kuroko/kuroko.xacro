@@ -19,7 +19,7 @@
   <xacro:arg name="box_visual" default="false"/>
 
   <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
-  <xacro:property name="MESH_DIR" value="package://kuroko_description/meshes" />
+  <xacro:property name="MESH_DIR" value="$(find kuroko_description)/meshes" />
 
   <xacro:include filename="${XACRO_DIR}/physics/materials.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/box_physics.xacro"/>
@@ -62,7 +62,7 @@
     <xacro:body_xacro box_visual="${box_visual}"/>
     <xacro:body_gazebo/>
 
-    <xacro:arm_r_xacro box_visual="${box_visual}"/>
+    <!-- <xacro:arm_r_xacro box_visual="${box_visual}"/>
     <xacro:arm_r_gazebo/>
 
     <xacro:arm_l_xacro box_visual="${box_visual}"/>
@@ -87,11 +87,10 @@
     </xacro:tfluna>
 
     <xacro:enable_gz_rendering_plugin/>
-    <xacro:enable_gz_imu_plugin/>
+    <xacro:enable_gz_imu_plugin/> -->
 
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
-    <xacro:gazebo_ros2_control_plugin
-      controller_yaml="$(arg controller_yaml)"/>
+    <!-- <xacro:gazebo_ros2_control_plugin controller_yaml="$(arg controller_yaml)"/> -->
 
   </xacro:macro>
 
