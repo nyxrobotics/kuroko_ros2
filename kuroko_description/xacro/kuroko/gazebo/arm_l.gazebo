@@ -7,5 +7,9 @@
     <xacro:default_link_collision link_name="shoulder_l_roll_link" friction="0.01"/>
     <xacro:default_link_collision link_name="elbow_l_front_link" friction="0.01"/>
     <xacro:default_link_collision link_name="elbow_l_rear_link" friction="0.01"/>
+    <xacro:implicit_damping_joint joint_name="shoulder_l_pitch"/>
+    <xacro:implicit_damping_joint joint_name="shoulder_l_roll"/>
+    <xacro:implicit_damping_joint joint_name="elbow_l_front"/>
+    <xacro:implicit_damping_joint joint_name="elbow_l_rear"/>
   </xacro:macro>
 </robot>

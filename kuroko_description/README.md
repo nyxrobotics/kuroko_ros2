@@ -115,6 +115,14 @@ handled by the following packages:
 Those packages are responsible for invoking Xacro with `gazebo:=true`
 and spawning the resulting model into the simulator.
 
+## Test xacro -> sdf
+```bash
+ros2 run xacro xacro \
+  $(ros2 pkg prefix kuroko_description)/share/kuroko_description/xacro/kuroko/kuroko.xacro \
+  > kuroko.urdf
+gz sdf -p kuroko.urdf > kuroko.sdf
+```
+
 ## License
 
 Apache License 2.0

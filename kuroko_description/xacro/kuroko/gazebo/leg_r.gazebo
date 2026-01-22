@@ -33,5 +33,11 @@
       <selfCollide>false</selfCollide>
       <dampingFactor>0.0</dampingFactor>
     </gazebo>
+    <xacro:implicit_damping_joint joint_name="hip_r_roll"/>
+    <xacro:implicit_damping_joint joint_name="hip_r_pitch"/>
+    <xacro:implicit_damping_joint joint_name="thigh_r_active"/>
+    <xacro:implicit_damping_joint joint_name="shin_r_active"/>
+    <xacro:implicit_damping_joint joint_name="ankle_r_roll"/>
+    <xacro:implicit_damping_joint joint_name="ankle_r_yaw"/>
   </xacro:macro>
 </robot>
