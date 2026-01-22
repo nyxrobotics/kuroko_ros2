@@ -1,0 +1,138 @@
+# joint_trajectory_effort_controller.yaml
+#
+# Effort-based position/trajectory control:
+# target trajectory (position) -> PID -> effort command
+#
+# This file defines:
+#  - controller_manager entry (type registration)
+#  - controller parameters (joints/interfaces/gains)
+
+controller_manager:
+  ros__parameters:
+    joint_trajectory_effort_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+joint_trajectory_effort_controller:
+  ros__parameters:
+    command_interfaces:
+      - effort
+    state_interfaces:
+      - position
+      - velocity
+    joints:
+      - chest
+      - shoulder_r_pitch
+      - shoulder_r_roll
+      - elbow_r_front
+      - elbow_r_rear
+      - shoulder_l_pitch
+      - shoulder_l_roll
+      - elbow_l_front
+      - elbow_l_rear
+      - hip_r_roll
+      - hip_r_pitch
+      - thigh_r_active
+      - shin_r_active
+      - ankle_r_roll
+      - ankle_r_yaw
+      - hip_l_roll
+      - hip_l_pitch
+      - thigh_l_active
+      - shin_l_active
+      - ankle_l_roll
+      - ankle_l_yaw
+
+    state_publish_rate: 50.0
+    action_monitor_rate: 20.0
+    allow_partial_joints_goal: false
+    open_loop_control: false
+
+    constraints:
+      stopped_velocity_tolerance: 0.0
+      goal_time: 0.0
+
+    gains:
+      chest:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      shoulder_r_pitch:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      shoulder_r_roll:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+      elbow_r_front:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      elbow_r_rear:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      shoulder_l_pitch:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      shoulder_l_roll:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+      elbow_l_front:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      elbow_l_rear:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      hip_r_roll:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      hip_r_pitch:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      thigh_r_active:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+      shin_r_active:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+      ankle_r_roll:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      ankle_r_yaw:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      hip_l_roll:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      hip_l_pitch:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      thigh_l_active:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+      shin_l_active:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+      ankle_l_roll:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+      ankle_l_yaw:
+        p: 16.62
+        i: 0.0
+        d: 0.0

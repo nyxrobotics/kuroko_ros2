@@ -193,7 +193,9 @@ def generate_launch_description() -> LaunchDescription:
         arguments=['joint_state_broadcaster', '--param-file', jsb_yaml, *common_spawner_args],
         output='screen',
     )
-    is_trajectory = PythonExpression(["'", controller, "' == 'trajectory'"])
+        is_trajectory = PythonExpression(["'", controller, "' == 'trajectory'"])
+    is_group_position = PythonExpression(["'", controller, "' == 'group_position'"])
+    is_individual_position = PythonExpression(["'", controller, "' == 'individual_position'"])
 
     spawn_traj = Node(
         package='controller_manager',
@@ -202,12 +204,50 @@ def generate_launch_description() -> LaunchDescription:
         output='screen',
         condition=IfCondition(is_trajectory),
     )
-    spawn_pos = Node(
+
+    spawn_pos_group = Node(
         package='controller_manager',
         executable='spawner',
         arguments=['joint_group_position_controller', '--param-file', group_pos_yaml, *common_spawner_args],
         output='screen',
-        condition=UnlessCondition(is_trajectory),
+        condition=IfCondition(is_group_position),
+    )
+
+    joint_names = [
+        'chest',
+        'shoulder_r_pitch',
+        'shoulder_r_roll',
+        'elbow_r_front',
+        'elbow_r_rear',
+        'shoulder_l_pitch',
+        'shoulder_l_roll',
+        'elbow_l_front',
+        'elbow_l_rear',
+        'hip_r_roll',
+        'hip_r_pitch',
+        'thigh_r_active',
+        'shin_r_active',
+        'ankle_r_roll',
+        'ankle_r_yaw',
+        'hip_l_roll',
+        'hip_l_pitch',
+        'thigh_l_active',
+        'shin_l_active',
+        'ankle_l_roll',
+        'ankle_l_yaw',
+    ]
+
+    spawn_pos_individual = [
+        Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=[f"{j}_position_controller", '--param-file', ind_pos_yaml, *common_spawner_args],
+            output='screen',
+            condition=IfCondition(is_individual_position),
+        )
+        for j in joint_names
+    ]
+,
     )
 
     expected_models_expr = [robot_name, TextSubstitution(text=' ring_model ground_plane')]
@@ -231,7 +271,7 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument('headless', default_value='false'),
             DeclareLaunchArgument('debug', default_value='false'),
             DeclareLaunchArgument('robot_name', default_value='kuroko'),
-            DeclareLaunchArgument('controller', default_value='group_position'),
+            DeclareLaunchArgument('controller', default_value='group_position', description='trajectory | group_position | individual_position'),
             DeclareLaunchArgument('use_small_ring', default_value='false'),
             DeclareLaunchArgument('spawn_enemy', default_value='true'),
             DeclareLaunchArgument('enemy_name', default_value='enemy'),
@@ -246,7 +286,8 @@ def generate_launch_description() -> LaunchDescription:
             spawn_enemy_node,
             spawn_jsb,
             spawn_traj,
-            spawn_pos,
+            spawn_pos_group,
+            *spawn_pos_individual,
             unpause,
         ]
     )
