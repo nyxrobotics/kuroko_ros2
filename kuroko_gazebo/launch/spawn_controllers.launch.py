@@ -36,7 +36,7 @@ def _controller_names_from_params(merged_params: dict) -> list[str]:
 
 def _setup(context, *args, **kwargs):
     pkg_share = Path(get_package_share_directory("kuroko_description"))
-    config_dir = pkg_share / "config"
+    config_dir = pkg_share / "config/ros2_control"
 
     # Always-loaded yamls
     controller_manager_yaml = config_dir / "controller_manager.yaml"

@@ -78,7 +78,7 @@ def generate_launch_description():
                 " gz_sim:=false",
                 " controller:=", LaunchConfiguration("controller"),
                 " command_interface:=", inferred_command_interface,
-                " controller_yaml_files:=", LaunchConfiguration("controller_yaml_files"),
+                " controller_yaml_files:='", LaunchConfiguration("controller_yaml_files"), "'",
                 " debug_control:=", LaunchConfiguration("debug_control"),
             ]
         ),
