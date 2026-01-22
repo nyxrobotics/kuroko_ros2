@@ -38,7 +38,8 @@
 
     <!-- Build YAML path list -->
     <xacro:property name="_yaml_list"
-                    value="${[s for s in yaml_files.split(';') if s.strip()]}" />
+                    value="${[s.strip() for s in yaml_files.split(';') if s.strip()]}" />
+
 
     <!-- Load YAML files -->
     <xacro:property name="_cfg_list"

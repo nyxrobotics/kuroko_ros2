@@ -1,164 +1,87 @@
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution, PythonExpression
-from launch_ros.substitutions import FindPackageShare
-from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
-from launch_ros.parameter_descriptions import ParameterValue
+#!/usr/bin/env python3
+
+import re
+import subprocess
+
 from ament_index_python.packages import get_package_share_directory
-from pathlib import Path
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
+
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
-def generate_launch_description():
-    # --- Launch args ---
-    controller_arg = DeclareLaunchArgument(
-        "controller",
-        default_value="joint_trajectory_controller",
-        description=(
-            "Which ros2_control controller config to use. "
-            "Examples: joint_trajectory_controller | joint_group_position_controller | "
-            "joint_group_position_pid_controller | joint_trajectory_effort_controller"
-        ),
-    )
+def _xacro_to_urdf_one_line(xacro_path: str, xacro_args: list[str]) -> str:
+    cmd = ["xacro", xacro_path] + xacro_args
+    urdf = subprocess.check_output(cmd, text=True)
 
-    # Optional override; if empty, it will be inferred from controller.
-    command_interface_arg = DeclareLaunchArgument(
-        "command_interface",
-        default_value="",
-        description="Override command_interface passed to xacro (position/effort). Empty = auto.",
-    )
+    urdf = re.sub(r"<!--.*?-->", "", urdf, flags=re.DOTALL)
+    urdf = urdf.replace("\n", " ").replace("\r", " ")
+    urdf = re.sub(r"\s+", " ", urdf).strip()
+    return urdf
 
-    robot_z_arg = DeclareLaunchArgument(
-        "robot_z", default_value="0.35", description="Spawn height for the robot (z)."
-    )
 
-    controller_yaml_files_arg = DeclareLaunchArgument(
-        "controller_yaml_files",
-        default_value=(
-            "$(find kuroko_description)/config/ros2_control/controller_manager.yaml;"
-            "$(find kuroko_description)/config/ros2_control/joint_state_broadcaster.yaml;"
-            "$(find kuroko_description)/config/ros2_control/joint_trajectory_controller.yaml"
-        ),
-        description="Semicolon-separated YAML list for ros2_control plugin.",
-    )
+def _runtime_setup(context, *args, **kwargs):
+    robot_z = LaunchConfiguration("robot_z").perform(context)
+    gazebo = LaunchConfiguration("gazebo").perform(context)
+    gz_sim = LaunchConfiguration("gz_sim").perform(context)
+    controller = LaunchConfiguration("controller").perform(context)
+    command_interface = LaunchConfiguration("command_interface").perform(context)
+    controller_yaml_files = LaunchConfiguration("controller_yaml_files").perform(context)
+    debug_control = LaunchConfiguration("debug_control").perform(context)
 
-    debug_control_arg = DeclareLaunchArgument(
-        "debug_control",
-        default_value="false",
-        description="Enable xacro debug messages.",
-    )
+    kuroko_description_share = get_package_share_directory("kuroko_description")
+    xacro_file = f"{kuroko_description_share}/xacro/kuroko/kuroko.xacro"
 
-    # --- Infer command_interface from controller (simple rule) ---
-    controller = LaunchConfiguration("controller")
-    command_interface_override = LaunchConfiguration("command_interface")
-
-    # If you choose the effort JTC, use effort, otherwise position.
-    # (You can extend this mapping later if you add velocity controllers.)
-    controller = LaunchConfiguration("controller")
-    command_interface_override = LaunchConfiguration("command_interface")
-
-    # If command_interface arg is set (non-empty), use it.
-    # Otherwise: effort only when controller == joint_trajectory_effort_controller, else position.
-    inferred_command_interface = PythonExpression([
-        "'", command_interface_override, "' if '", command_interface_override, "' != '' "
-        "else ('effort' if '", controller, "' == 'joint_trajectory_effort_controller' else 'position')"
-    ])
-
-    xacro_file = PathJoinSubstitution(
-        [FindPackageShare("kuroko_description"), "xacro", "kuroko", "kuroko.xacro"]
-    )
-
-    robot_description = ParameterValue(
-        Command(
-            [
-                "xacro ",
-                xacro_file,
-                " gazebo:=true",
-                " gz_sim:=false",
-                " controller:=", LaunchConfiguration("controller"),
-                " command_interface:=", inferred_command_interface,
-                " controller_yaml_files:='", LaunchConfiguration("controller_yaml_files"), "'",
-                " debug_control:=", LaunchConfiguration("debug_control"),
-            ]
-        ),
-        value_type=str,
-    )
-
-    # --- Start Gazebo Classic ---
-    gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [FindPackageShare("gazebo_ros"), "launch", "gazebo.launch.py"]
-                )
-            ]
-        ),
-        launch_arguments={
-            # empty.world usually already has a ground plane + sun.
-            # Still, we'll spawn a ground_plane explicitly below to match your request.
-            "verbose": "false",
-        }.items(),
-    )
-
-    # --- Spawn ground plane at z=0 ---
-    # Uses Gazebo model database name "ground_plane"
-    spawn_ground = Node(
-        package="gazebo_ros",
-        executable="spawn_entity.py",
-        name="spawn_ground_plane",
-        output="screen",
-        arguments=[
-            "-entity",
-            "ground_plane",
-            "-database",
-            "ground_plane",
-            "-x",
-            "0.0",
-            "-y",
-            "0.0",
-            "-z",
-            "0.0",
+    urdf_one_line = _xacro_to_urdf_one_line(
+        xacro_file,
+        [
+            f"gazebo:={gazebo}",
+            f"gz_sim:={gz_sim}",
+            f"controller:={controller}",
+            f"command_interface:={command_interface}",
+            f"controller_yaml_files:={controller_yaml_files}",
+            f"debug_control:={debug_control}",
         ],
     )
 
-    # --- Spawn robot at z=0.35 ---
-    spawn_robot = Node(
-        package="gazebo_ros",
-        executable="spawn_entity.py",
-        name="spawn_kuroko",
-        output="screen",
-        arguments=[
-            "-entity",
-            "kuroko",
-            "-topic",
-            "robot_description",
-            "-x",
-            "0.0",
-            "-y",
-            "0.0",
-            "-z",
-            LaunchConfiguration("robot_z"),
-        ],
-    )
+    robot_description = ParameterValue(urdf_one_line, value_type=str)
 
-    # --- robot_state_publisher ---
-    rsp = Node(
+    robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
         parameters=[{"robot_description": robot_description}],
     )
 
+    spawn_kuroko = Node(
+        package="gazebo_ros",
+        executable="spawn_entity.py",
+        arguments=[
+            "-entity", "kuroko",
+            "-topic", "robot_description",
+            "-x", "0.0",
+            "-y", "0.0",
+            "-z", robot_z,
+        ],
+        output="screen",
+    )
+
+    return [robot_state_publisher, spawn_kuroko]
+
+
+def generate_launch_description():
     return LaunchDescription(
         [
-          controller_arg,
-          command_interface_arg,
-          controller_yaml_files_arg,
-          debug_control_arg,
-          robot_z_arg,
-          gazebo_launch,
-          rsp,
-          spawn_robot,
+            DeclareLaunchArgument("robot_z", default_value="0.35"),
+            DeclareLaunchArgument("gazebo", default_value="true"),
+            DeclareLaunchArgument("gz_sim", default_value="false"),
+            DeclareLaunchArgument("controller", default_value="joint_trajectory_controller"),
+            DeclareLaunchArgument("command_interface", default_value="position"),
+            DeclareLaunchArgument("controller_yaml_files", default_value=""),
+            DeclareLaunchArgument("debug_control", default_value="false"),
+            OpaqueFunction(function=_runtime_setup),
         ]
     )
