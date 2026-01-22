@@ -36,7 +36,7 @@ def generate_launch_description():
         DeclareLaunchArgument("command_interface", default_value="position"),
         DeclareLaunchArgument("controller_yaml", default_value=default_controller_yaml),
         DeclareLaunchArgument("world", default_value=default_world),
-        DeclareLaunchArgument("pause", default_value="false"),
+        DeclareLaunchArgument("pause", default_value="true"),
     ]
 
     gazebo = IncludeLaunchDescription(
