@@ -6,6 +6,7 @@ from launch.conditions import IfCondition
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.parameter_descriptions import ParameterValue  # <-- add
 
 
 def generate_launch_description():
@@ -18,13 +19,16 @@ def generate_launch_description():
     pkg_share = FindPackageShare("kuroko_description")
     xacro_file = PathJoinSubstitution([pkg_share, "xacro", "kuroko", "kuroko.xacro"])
 
-    # RViz-friendly URDF: mimic enabled, gazebo-only closed loops disabled
-    robot_description = Command(
-        [
-            "xacro ",
-            xacro_file,
-            " gazebo:=false",
-        ]
+    # RViz-friendly URDF
+    robot_description = ParameterValue(  # <-- wrap as string
+        Command(
+            [
+                "xacro ",
+                xacro_file,
+                " gazebo:=false",
+            ]
+        ),
+        value_type=str,
     )
 
     # Nodes
