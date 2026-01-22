@@ -1,58 +1,107 @@
-# kuroko_gazebo (ROS 2 Humble, Gazebo Classic)
+# kuroko_gazebo
 
-This is a ROS 2 Humble port of the original ROS 1 `kuroko_gazebo` package, targeting **Gazebo Classic** (`gazebo_ros`).
+ROS 2 Humble + Gazebo Classic 用の Kuroko 起動パッケージです。
 
-## Provided launch files
+- Gazebo Classic を起動
+- `kuroko_description/xacro/kuroko/kuroko.xacro` を `gazebo:=true` で展開して `robot_description` を生成
+- 床（ground plane）を `z=0` に spawn
+- Kuroko を `z=0.35`（デフォルト）に spawn
+- `controller_manager.yaml` + `joint_state_broadcaster.yaml` を常に読み込み、
+  残りのコントローラ yaml を 1 つ選択して spawner で起動
 
-- `ground_gazebo.launch.py`
-- `roboone_gazebo.launch.py`
+---
 
-Both launch files:
+## 前提
 
-1. start Gazebo Classic (paused)
-2. generate the URDF from xacro (gazebo:=true/false)
-3. spawn entities using `scripts/spawn_entity_from_param.py`
-4. run `robot_state_publisher`
-5. unpause physics once the expected models exist (`scripts/unpause_physics.py`)
+- ROS 2 Humble
+- Gazebo Classic（`gazebo_ros`）
+- `kuroko_description` パッケージが存在すること
+  - `kuroko_description/xacro/kuroko/kuroko.xacro`
+  - xacro 引数:
+    - `gazebo` (default: false)
+    - `gz_sim` (default: false)
+    - `command_interface` (default: position)
 
-## How to build
+---
+
+## パッケージ構成
+
+```
+kuroko_gazebo/
+  config/
+    controller_manager.yaml
+    joint_state_broadcaster.yaml
+    joint_group_position_controller.yaml
+    joint_group_position_pid_controller.yaml
+    joint_trajectory_controller.yaml
+    joint_trajectory_pid_controller.yaml
+  launch/
+    spawn_kuroko_gazebo_classic.launch.py
+    spawn_controllers.launch.py
+    bringup_gazebo.launch.py
+```
+
+---
+
+## ビルド
 
 ```bash
-cd ~/ros2_ws/src
-git clone <your repo containing this package>
 cd ~/ros2_ws
-rosdep install --from-paths src --ignore-src -r -y
-colcon build --symlink-install
+colcon build --packages-select kuroko_gazebo
 source install/setup.bash
 ```
 
-## How to run
+---
+
+## 起動方法
+
+### Gazebo + ロボット + コントローラ（統合）
 
 ```bash
-ros2 launch kuroko_gazebo ground_gazebo.launch.py
-ros2 launch kuroko_gazebo roboone_gazebo.launch.py
+ros2 launch kuroko_gazebo bringup_gazebo.launch.py   controller:=joint_trajectory_controller
 ```
 
-Useful overrides:
+effort ベース JTC の例：
 
 ```bash
-ros2 launch kuroko_gazebo ground_gazebo.launch.py gui:=false headless:=true
-ros2 launch kuroko_gazebo ground_gazebo.launch.py robot_name:=kuroko controller:=trajectory
-ros2 launch kuroko_gazebo ground_gazebo.launch.py robot_name:=kuroko controller:=group_position
+ros2 launch kuroko_gazebo bringup_gazebo.launch.py   controller:=joint_trajectory_effort_controller
 ```
 
-## Controllers (ros2_control)
+### スポーン高さを変更
 
-This package ships a ready-to-use controller config at:
+```bash
+ros2 launch kuroko_gazebo bringup_gazebo.launch.py robot_z:=0.35
+```
 
-- `config/ros2_controllers.yaml`
+---
 
-The launch files **attempt** to spawn controllers using `controller_manager/spawner`.
-For this to work, your robot model must load `gazebo_ros2_control` (Gazebo Classic plugin) and pass the controller parameter file to the plugin, as documented by `gazebo_ros2_control`.
+## コントローラ選択について
 
-If your URDF does not start a `controller_manager`, you can still run Gazebo + spawn entities + TF, and add control later.
+- 常に読み込まれる yaml:
+  - `controller_manager.yaml`
+  - `joint_state_broadcaster.yaml`
+- 追加で 1 つ選択（launch 引数 `controller`）:
+  - `joint_group_position_controller`
+  - `joint_group_position_pid_controller`
+  - `joint_trajectory_controller`
+  - `joint_trajectory_effort_controller`
 
-## Notes
+`spawn_controllers.launch.py` は、
+`controller_manager.ros__parameters` 内で `type` を持つエントリを自動検出し、
+すべて spawner により起動します。
 
-- All Python scripts use the fixed shebang: `#!/usr/bin/python3`.
-- Some Gazebo ROS service names differ across setups (`/spawn_entity` vs `/gazebo/spawn_entity`, etc.). The helper scripts try both variants.
+---
+
+## トラブルシュート
+
+### コントローラが spawn されない
+
+Gazebo Classic + `gazebo_ros2_control` 構成では、
+`/controller_manager` は Gazebo plugin 側で起動します。
+
+URDF / xacro 内の `gazebo_ros2_control` plugin に、
+以下の yaml が渡されていることを確認してください。
+
+- `controller_manager.yaml`
+- `joint_state_broadcaster.yaml`
+- 選択した controller yaml

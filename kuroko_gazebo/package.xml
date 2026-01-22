@@ -1,28 +1,34 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>kuroko_gazebo</name>
-  <version>0.1.0</version>
-  <description>Gazebo Classic launch and helper scripts for the Kuroko robot on ROS 2 Humble.</description>
+  <version>0.0.1</version>
+  <description>Gazebo Classic bringup package for Kuroko (ROS 2 Humble): spawn robot and ros2_control controllers.</description>
 
-  <maintainer email="nyxroboticss@gmail.com">nyxrobotics</maintainer>
-  <author email="nyxroboticss@gmail.com">nyxrobotics</author>
+  <maintainer email="you@example.com">Your Name</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>rclpy</exec_depend>
-  <exec_depend>std_srvs</exec_depend>
-  <exec_depend>gazebo_ros</exec_depend>
-  <exec_depend>gazebo_msgs</exec_depend>
-  <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>xacro</exec_depend>
-  <exec_depend>controller_manager</exec_depend>
-  <exec_depend>joint_state_broadcaster</exec_depend>
-  <exec_depend>joint_trajectory_controller</exec_depend>
-  <exec_depend>forward_command_controller</exec_depend>
+  <!-- Runtime dependencies for launch files -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
 
-  <!-- External packages providing the robot model and worlds -->
-  <exec_depend>kuroko_description</exec_depend>
+  <!-- Tools/nodes used by launch -->
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+
+  <!-- If you use ros2_control / gazebo_ros2_control in your robot description,
+       those are usually dependencies of the robot/description packages, but
+       having them here is often convenient. Uncomment if needed.
+  <exec_depend>ros2_control</exec_depend>
+  <exec_depend>gazebo_ros2_control</exec_depend>
+  -->
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

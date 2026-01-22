@@ -7,16 +7,10 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
-# Python-based ROS 2 nodes (scripts)
-install(PROGRAMS
-  scripts/spawn_entity_from_param.py
-  scripts/unpause_physics.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(DIRECTORY
-  launch
-  config
+# This package provides launch/config resources only.
+# Install launch and config directories into the share folder.
+install(
+  DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
