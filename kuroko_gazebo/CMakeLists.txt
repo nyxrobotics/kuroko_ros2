@@ -10,7 +10,7 @@ find_package(ament_cmake REQUIRED)
 # This package provides launch/config resources only.
 # Install launch and config directories into the share folder.
 install(
-  DIRECTORY launch
+  DIRECTORY launch worlds
   DESTINATION share/${PROJECT_NAME}
 )
 

@@ -62,17 +62,17 @@
     <xacro:body_xacro box_visual="${box_visual}"/>
     <xacro:body_gazebo/>
 
-    <!-- <xacro:arm_r_xacro box_visual="${box_visual}"/>
+    <xacro:arm_r_xacro box_visual="${box_visual}"/>
     <xacro:arm_r_gazebo/>
 
     <xacro:arm_l_xacro box_visual="${box_visual}"/>
     <xacro:arm_l_gazebo/>
 
-    <xacro:leg_r_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
+    <!-- <xacro:leg_r_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
     <xacro:leg_r_gazebo/>
 
     <xacro:leg_l_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
-    <xacro:leg_l_gazebo/>
+    <xacro:leg_l_gazebo/> -->
 
     <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
@@ -87,7 +87,7 @@
     </xacro:tfluna>
 
     <xacro:enable_gz_rendering_plugin/>
-    <xacro:enable_gz_imu_plugin/> -->
+    <xacro:enable_gz_imu_plugin/>
 
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
     <!-- <xacro:gazebo_ros2_control_plugin controller_yaml="$(arg controller_yaml)"/> -->

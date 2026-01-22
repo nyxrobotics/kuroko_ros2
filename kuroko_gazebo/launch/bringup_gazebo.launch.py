@@ -16,6 +16,8 @@ def generate_launch_description():
     controller = LaunchConfiguration("controller")
     command_interface = LaunchConfiguration("command_interface")
     controller_yaml = LaunchConfiguration("controller_yaml")
+    world = LaunchConfiguration("world")
+    pause = LaunchConfiguration("pause")
 
     kuroko_description_share = get_package_share_directory("kuroko_description")
     kuroko_gazebo_share = get_package_share_directory("kuroko_gazebo")
@@ -25,18 +27,26 @@ def generate_launch_description():
         f"{kuroko_description_share}/config/ros2_control/joint_trajectory_controller.yaml"
     )
 
+    default_world = f"{kuroko_gazebo_share}/worlds/default.world"
+
     declare_args = [
         DeclareLaunchArgument("robot_z", default_value="0.35"),
         DeclareLaunchArgument("debug_control", default_value="false"),
         DeclareLaunchArgument("controller", default_value="joint_trajectory_controller"),
         DeclareLaunchArgument("command_interface", default_value="position"),
         DeclareLaunchArgument("controller_yaml", default_value=default_controller_yaml),
+        DeclareLaunchArgument("world", default_value=default_world),
+        DeclareLaunchArgument("pause", default_value="false"),
     ]
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             f"{get_package_share_directory('gazebo_ros')}/launch/gazebo.launch.py"
         ),
+        launch_arguments={
+            'world': world,
+            'pause': pause,
+        }.items(),
     )
 
     spawn_kuroko = IncludeLaunchDescription(

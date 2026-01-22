@@ -29,7 +29,10 @@ kuroko_gazebo/
     spawn_kuroko_gazebo_classic.launch.py
     spawn_controllers.launch.py
     bringup_gazebo.launch.py
+  worlds/
+    default.world
 ```
+
 
 ---
 
@@ -53,6 +56,19 @@ ros2 launch kuroko_gazebo bringup_gazebo.launch.py   controller:=joint_trajector
 
 ```bash
 ros2 launch kuroko_gazebo bringup_gazebo.launch.py   controller:=joint_group_position_controller
+```
+
+### world / pause を指定
+
+```bash
+# デフォルト: worlds/default.world
+ros2 launch kuroko_gazebo bringup_gazebo.launch.py
+
+# world を指定
+ros2 launch kuroko_gazebo bringup_gazebo.launch.py world:=/path/to/your.world
+
+# 起動時に pause
+ros2 launch kuroko_gazebo bringup_gazebo.launch.py pause:=true
 ```
 
 ### スポーン高さを変更
