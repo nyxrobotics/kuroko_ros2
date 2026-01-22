@@ -17,7 +17,10 @@ def _xacro_to_urdf_one_line(xacro_path: str, xacro_args: list[str]) -> str:
     cmd = ["xacro", xacro_path] + xacro_args
     urdf = subprocess.check_output(cmd, text=True)
 
+    # Drop XML comments to reduce size/noise
     urdf = re.sub(r"<!--.*?-->", "", urdf, flags=re.DOTALL)
+
+    # Make it single-line (avoids rcl argument parsing issues in gazebo_ros2_control)
     urdf = urdf.replace("\n", " ").replace("\r", " ")
     urdf = re.sub(r"\s+", " ", urdf).strip()
     return urdf
@@ -29,7 +32,7 @@ def _runtime_setup(context, *args, **kwargs):
     gz_sim = LaunchConfiguration("gz_sim").perform(context)
     controller = LaunchConfiguration("controller").perform(context)
     command_interface = LaunchConfiguration("command_interface").perform(context)
-    controller_yaml_files = LaunchConfiguration("controller_yaml_files").perform(context)
+    controller_yaml = LaunchConfiguration("controller_yaml").perform(context)
     debug_control = LaunchConfiguration("debug_control").perform(context)
 
     kuroko_description_share = get_package_share_directory("kuroko_description")
@@ -42,7 +45,7 @@ def _runtime_setup(context, *args, **kwargs):
             f"gz_sim:={gz_sim}",
             f"controller:={controller}",
             f"command_interface:={command_interface}",
-            f"controller_yaml_files:={controller_yaml_files}",
+            f"controller_yaml:={controller_yaml}",
             f"debug_control:={debug_control}",
         ],
     )
@@ -60,11 +63,19 @@ def _runtime_setup(context, *args, **kwargs):
         package="gazebo_ros",
         executable="spawn_entity.py",
         arguments=[
-            "-entity", "kuroko",
-            "-topic", "robot_description",
-            "-x", "0.0",
-            "-y", "0.0",
-            "-z", robot_z,
+            "-entity",
+            "kuroko",
+            "-topic",
+            "robot_description",
+            "-x",
+            "0.0",
+            "-y",
+            "0.0",
+            "-z",
+            robot_z,
+            "--ros-args",
+            "-r",
+            "__node:=spawn_kuroko",
         ],
         output="screen",
     )
@@ -80,7 +91,7 @@ def generate_launch_description():
             DeclareLaunchArgument("gz_sim", default_value="false"),
             DeclareLaunchArgument("controller", default_value="joint_trajectory_controller"),
             DeclareLaunchArgument("command_interface", default_value="position"),
-            DeclareLaunchArgument("controller_yaml_files", default_value=""),
+            DeclareLaunchArgument("controller_yaml", default_value=""),
             DeclareLaunchArgument("debug_control", default_value="false"),
             OpaqueFunction(function=_runtime_setup),
         ]
