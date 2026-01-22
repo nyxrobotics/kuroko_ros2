@@ -5,6 +5,7 @@ from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitut
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.parameter_descriptions import ParameterValue
 from ament_index_python.packages import get_package_share_directory
 from pathlib import Path
 
@@ -32,6 +33,22 @@ def generate_launch_description():
         "robot_z", default_value="0.35", description="Spawn height for the robot (z)."
     )
 
+    controller_yaml_files_arg = DeclareLaunchArgument(
+        "controller_yaml_files",
+        default_value=(
+            "$(find kuroko_description)/config/ros2_control/controller_manager.yaml;"
+            "$(find kuroko_description)/config/ros2_control/joint_state_broadcaster.yaml;"
+            "$(find kuroko_description)/config/ros2_control/joint_trajectory_controller.yaml"
+        ),
+        description="Semicolon-separated YAML list for ros2_control plugin.",
+    )
+
+    debug_control_arg = DeclareLaunchArgument(
+        "debug_control",
+        default_value="false",
+        description="Enable xacro debug messages.",
+    )
+
     # --- Infer command_interface from controller (simple rule) ---
     controller = LaunchConfiguration("controller")
     command_interface_override = LaunchConfiguration("command_interface")
@@ -52,18 +69,21 @@ def generate_launch_description():
         [FindPackageShare("kuroko_description"), "xacro", "kuroko", "kuroko.xacro"]
     )
 
-    robot_description = {
-        "robot_description": Command(
+    robot_description = ParameterValue(
+        Command(
             [
                 "xacro ",
                 xacro_file,
                 " gazebo:=true",
                 " gz_sim:=false",
-                " command_interface:=",
-                inferred_command_interface,
+                " controller:=", LaunchConfiguration("controller"),
+                " command_interface:=", inferred_command_interface,
+                " controller_yaml_files:=", LaunchConfiguration("controller_yaml_files"),
+                " debug_control:=", LaunchConfiguration("debug_control"),
             ]
-        )
-    }
+        ),
+        value_type=str,
+    )
 
     # --- Start Gazebo Classic ---
     gazebo_launch = IncludeLaunchDescription(
@@ -127,16 +147,18 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
-        parameters=[robot_description],
+        parameters=[{"robot_description": robot_description}],
     )
 
     return LaunchDescription(
         [
-            controller_arg,
-            command_interface_arg,
-            robot_z_arg,
-            gazebo_launch,
-            rsp,
-            spawn_robot,
+          controller_arg,
+          command_interface_arg,
+          controller_yaml_files_arg,
+          debug_control_arg,
+          robot_z_arg,
+          gazebo_launch,
+          rsp,
+          spawn_robot,
         ]
     )

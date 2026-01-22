@@ -24,6 +24,22 @@ def generate_launch_description():
         "robot_z", default_value="0.35", description="Spawn height of kuroko"
     )
 
+    controller_yaml_files_arg = DeclareLaunchArgument(
+        "controller_yaml_files",
+        default_value=(
+            "$(find kuroko_description)/config/ros2_control/controller_manager.yaml;"
+            "$(find kuroko_description)/config/ros2_control/joint_state_broadcaster.yaml;"
+            "$(find kuroko_description)/config/ros2_control/joint_trajectory_controller.yaml"
+        ),
+        description="Semicolon-separated YAML list for ros2_control plugin.",
+    )
+
+    debug_control_arg = DeclareLaunchArgument(
+        "debug_control",
+        default_value="false",
+        description="Enable xacro debug messages for ros2_control setup.",
+    )
+
     # --- spawn robot + gazebo ---
     spawn_kuroko = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -38,6 +54,8 @@ def generate_launch_description():
         launch_arguments={
             "controller": LaunchConfiguration("controller"),
             "command_interface": LaunchConfiguration("command_interface"),
+            "controller_yaml_files": LaunchConfiguration("controller_yaml_files"),
+            "debug_control": LaunchConfiguration("debug_control"),
             "robot_z": LaunchConfiguration("robot_z"),
         }.items(),
     )
@@ -68,6 +86,8 @@ def generate_launch_description():
         [
             controller_arg,
             command_interface_arg,
+            controller_yaml_files_arg,
+            debug_control_arg,
             robot_z_arg,
             spawn_kuroko,
             delayed_spawn_controllers,
