@@ -96,6 +96,6 @@ def generate_launch_description():
         + [
             gazebo,
             spawn_kuroko,
-            # spawn_controllers_delayed,
+            spawn_controllers_delayed,
         ]
     )

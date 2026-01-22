@@ -90,7 +90,7 @@
     <xacro:enable_gz_imu_plugin/>
 
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
-    <!-- <xacro:gazebo_ros2_control_plugin controller_yaml="$(arg controller_yaml)"/> -->
+    <xacro:gazebo_ros2_control_plugin controller_yaml="$(arg controller_yaml)"/>
 
   </xacro:macro>
 
