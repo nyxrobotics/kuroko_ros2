@@ -30,14 +30,14 @@
 
   <!-- Effort control (ros2_control joint interfaces + transmissions) -->
   <xacro:macro name="kuroko_transmission_effort" params="controller_yaml:=''">
-    <xacro:gazebo_ros2_control_system_with_joints joints="${kuroko_joints}" command_if="effort"/>
+    <xacro:gazebo_ros2_control_system/>
     <xacro:kuroko_gazebo_ros2_control_plugin parameters="${controller_yaml}"/>
     <xacro:set_effort_interfaces joints="${kuroko_joints}"/>
   </xacro:macro>
 
   <!-- Position control (ros2_control joint interfaces + transmissions) -->
   <xacro:macro name="kuroko_transmission_position" params="controller_yaml:=''">
-    <xacro:gazebo_ros2_control_system_with_joints joints="${kuroko_joints}" command_if="position"/>
+    <xacro:gazebo_ros2_control_system/>
     <xacro:kuroko_gazebo_ros2_control_plugin parameters="${controller_yaml}"/>
     <xacro:set_position_interfaces joints="${kuroko_joints}"/>
   </xacro:macro>

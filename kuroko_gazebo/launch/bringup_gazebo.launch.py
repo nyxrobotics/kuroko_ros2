@@ -1,96 +1,78 @@
 #!/usr/bin/env python3
-
-from ament_index_python.packages import get_package_share_directory
+# Copyright ...
+#
+# Launch Gazebo Classic and spawn Kuroko, then start ros2_control controllers.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-
-from launch_ros.actions import Node
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
+from launch_ros.substitutions import FindPackageShare
+from ament_index_python.packages import get_package_share_directory
+import os
 
 
 def generate_launch_description():
+    # Arguments
+    world = LaunchConfiguration("world")
     robot_z = LaunchConfiguration("robot_z")
     gazebo_hardware_interface = LaunchConfiguration("gazebo_hardware_interface")
     controller_yaml = LaunchConfiguration("controller_yaml")
     controller = LaunchConfiguration("controller")
-    world = LaunchConfiguration("world")
-    pause = LaunchConfiguration("pause")
-
-    kuroko_description_share = get_package_share_directory("kuroko_description")
-    kuroko_gazebo_share = get_package_share_directory("kuroko_gazebo")
-
-    # Default: trajectory control YAML (single file)
-    default_controller_yaml = (
-        f"{kuroko_description_share}/config/ros2_control/joint_trajectory_controller.yaml"
-    )
-
-    default_world = f"{kuroko_gazebo_share}/worlds/default.world"
 
     declare_args = [
+        DeclareLaunchArgument(
+            "world",
+            default_value=TextSubstitution(
+                text=os.path.join(
+                    get_package_share_directory("kuroko_gazebo"),
+                    "worlds",
+                    "default.world",
+                )
+            ),
+        ),
         DeclareLaunchArgument("robot_z", default_value="0.35"),
-        DeclareLaunchArgument("gazebo_hardware_interface", default_value="position"),
-        DeclareLaunchArgument("controller_yaml", default_value=default_controller_yaml),
-        DeclareLaunchArgument("controller", default_value="joint_trajectory_controller"),
-        DeclareLaunchArgument("world", default_value=default_world),
-        DeclareLaunchArgument("pause", default_value="true"),
+        DeclareLaunchArgument(
+            "gazebo_hardware_interface",
+            default_value="position",
+            description="position or effort (matches the transmissions you include)",
+        ),
+        DeclareLaunchArgument(
+            "controller_yaml",
+            default_value=TextSubstitution(
+                text=os.path.join(
+                    get_package_share_directory("kuroko_description"),
+                    "config",
+                    "ros2_control",
+                    "joint_trajectory_controller.yaml",
+                )
+            ),
+        ),
+        DeclareLaunchArgument(
+            "controller",
+            default_value="joint_trajectory_controller",
+            description="Main controller name to load/start after joint_state_broadcaster",
+        ),
     ]
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            f"{get_package_share_directory('gazebo_ros')}/launch/gazebo.launch.py"
+            PathJoinSubstitution([FindPackageShare("gazebo_ros"), "launch", "gazebo.launch.py"])
         ),
-        launch_arguments={
-            'world': world,
-            'pause': pause,
-        }.items(),
+        launch_arguments={"world": world}.items(),
     )
 
     spawn_kuroko = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            f"{kuroko_gazebo_share}/launch/spawn_kuroko_gazebo_classic.launch.py"
+            PathJoinSubstitution([FindPackageShare("kuroko_gazebo"), "launch", "spawn_kuroko_gazebo_classic.launch.py"])
         ),
         launch_arguments={
             "robot_z": robot_z,
             "gazebo": TextSubstitution(text="true"),
             "gazebo_hardware_interface": gazebo_hardware_interface,
-                "controller_yaml": controller_yaml,
+            "controller_yaml": controller_yaml,
+            "controller": controller,
         }.items(),
     )
 
-    # Spawn controllers after gazebo_ros2_control had time to start controller_manager.
-    # Order matters: joint_state_broadcaster first, then your selected controller.
-    spawn_jsb = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-        output="screen",
-    )
-
-    spawn_main = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[controller, "--controller-manager", "/controller_manager"],
-        output="screen",
-    )
-
-    spawn_controllers_delayed = TimerAction(
-        period=3.0,
-        actions=[
-            LogInfo(msg=["[kuroko_gazebo] controller_yaml=", controller_yaml]),
-            LogInfo(msg=["[kuroko_gazebo] controller=", controller]),
-            LogInfo(msg=["[kuroko_gazebo] gazebo_hardware_interface=", gazebo_hardware_interface]),
-            spawn_jsb,
-            TimerAction(period=2.0, actions=[spawn_main]),
-        ],
-    )
-
-    return LaunchDescription(
-        declare_args
-        + [
-            gazebo,
-            spawn_kuroko,
-            spawn_controllers_delayed,
-        ]
-    )
+    return LaunchDescription(declare_args + [gazebo, spawn_kuroko])
