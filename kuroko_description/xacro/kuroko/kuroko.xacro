@@ -2,7 +2,7 @@
 <robot name="kuroko" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:arg name="gazebo" default="false"/>
-  <xacro:arg name="gazebo_hardware_interface" default="position"/>
+  <xacro:arg name="gazebo_command_interface" default="position"/>
   <xacro:arg name="box_visual" default="false"/>
   <!-- Optional ros2_control controller parameters YAML for Gazebo Classic plugin -->
   <xacro:arg name="controller_yaml" default=""/>
@@ -45,7 +45,7 @@
   <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/kuroko_command_interface.gazebo"/>
 
   <!-- Main robot model macro -->
-  <xacro:macro name="kuroko_model" params="gazebo gazebo_hardware_interface box_visual">
+  <xacro:macro name="kuroko_model" params="gazebo gazebo_command_interface box_visual">
 
     <link name="body_link"/>
     <joint name="root_joint" type="fixed">
@@ -85,16 +85,16 @@
     <xacro:enable_gz_imu_plugin/>
 
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
-    <xacro:if value="${gazebo_hardware_interface=='position'}">
+    <xacro:if value="${gazebo_command_interface=='position'}">
       <xacro:kuroko_command_interface_position controller_yaml="$(arg controller_yaml)" />
     </xacro:if>
-    <xacro:if value="${gazebo_hardware_interface=='effort'}">
+    <xacro:if value="${gazebo_command_interface=='effort'}">
       <xacro:kuroko_command_interface_effort controller_yaml="$(arg controller_yaml)" />
     </xacro:if>
 
   </xacro:macro>
 
   <!-- Instantiate -->
-  <xacro:kuroko_model gazebo="$(arg gazebo)" box_visual="$(arg box_visual)" gazebo_hardware_interface="$(arg gazebo_hardware_interface)"/>
+  <xacro:kuroko_model gazebo="$(arg gazebo)" box_visual="$(arg box_visual)" gazebo_command_interface="$(arg gazebo_command_interface)"/>
 
 </robot>

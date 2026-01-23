@@ -28,7 +28,7 @@ def _xacro_to_urdf_one_line(xacro_path: str, xacro_args: list[str]) -> str:
 
 def _runtime_setup(context, *args, **kwargs):
     robot_z = LaunchConfiguration("robot_z").perform(context)
-    gazebo_hardware_interface = LaunchConfiguration("gazebo_hardware_interface").perform(context)
+    gazebo_command_interface = LaunchConfiguration("gazebo_command_interface").perform(context)
     controller_yaml = LaunchConfiguration("controller_yaml").perform(context)
 
     xacro_file = os.path.join(
@@ -43,7 +43,7 @@ def _runtime_setup(context, *args, **kwargs):
         xacro_file,
         [
             "gazebo:=true",
-            f"gazebo_hardware_interface:={gazebo_hardware_interface}",
+            f"gazebo_command_interface:={gazebo_command_interface}",
             f"controller_yaml:={controller_yaml}",
         ],
     )
@@ -53,7 +53,7 @@ def _runtime_setup(context, *args, **kwargs):
         xacro_file,
         [
             "gazebo:=false",
-            f"gazebo_hardware_interface:={gazebo_hardware_interface}",
+            f"gazebo_command_interface:={gazebo_command_interface}",
             f"controller_yaml:={controller_yaml}",
         ],
     )
@@ -99,7 +99,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument("robot_z", default_value="0.35"),
-            DeclareLaunchArgument("gazebo_hardware_interface", default_value="position"),
+            DeclareLaunchArgument("gazebo_command_interface", default_value="position"),
             DeclareLaunchArgument("controller_yaml", default_value=""),
             OpaqueFunction(function=_runtime_setup),
         ]

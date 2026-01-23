@@ -18,7 +18,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     world = LaunchConfiguration("world")
     robot_z = LaunchConfiguration("robot_z")
-    gazebo_hardware_interface = LaunchConfiguration("gazebo_hardware_interface")
+    gazebo_command_interface = LaunchConfiguration("gazebo_command_interface")
     controller_yaml = LaunchConfiguration("controller_yaml")
     controller = LaunchConfiguration("controller")
 
@@ -35,7 +35,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument("robot_z", default_value="0.35"),
         DeclareLaunchArgument(
-            "gazebo_hardware_interface",
+            "gazebo_command_interface",
             default_value="position",
             description="position or effort (matches ros2_control command interfaces)",
         ),
@@ -72,7 +72,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             "robot_z": robot_z,
-            "gazebo_hardware_interface": gazebo_hardware_interface,
+            "gazebo_command_interface": gazebo_command_interface,
             "controller_yaml": controller_yaml,
         }.items(),
     )
