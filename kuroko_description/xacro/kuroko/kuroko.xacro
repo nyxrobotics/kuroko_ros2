@@ -81,10 +81,10 @@
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
     <xacro:if value="${gazebo}">
       <xacro:if value="${gazebo_hardware_interface=='position'}">
-        <xacro:kuroko_transmission_position controller_yaml="$(arg controller_yaml)" namespace="/"/>
+        <xacro:kuroko_transmission_position controller_yaml="$(arg controller_yaml)" />
       </xacro:if>
       <xacro:if value="${gazebo_hardware_interface=='effort'}">
-        <xacro:kuroko_transmission_effort controller_yaml="$(arg controller_yaml)" namespace="/"/>
+        <xacro:kuroko_transmission_effort controller_yaml="$(arg controller_yaml)" />
       </xacro:if>
     </xacro:if>
 
