@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-# Copyright ...
+# Launch Gazebo Classic, spawn Kuroko, then start ros2_control controllers.
 #
-# Launch Gazebo Classic and spawn Kuroko, then start ros2_control controllers.
+# Policy:
+# - The entity spawned into Gazebo is generated with gazebo:=true (Gazebo plugin tags included).
+# - robot_state_publisher (robot_description) uses gazebo:=false (no Gazebo-specific tags).
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
-from ament_index_python.packages import get_package_share_directory
-import os
 
 
 def generate_launch_description():
-    # Arguments
     world = LaunchConfiguration("world")
     robot_z = LaunchConfiguration("robot_z")
     gazebo_hardware_interface = LaunchConfiguration("gazebo_hardware_interface")
@@ -35,7 +37,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "gazebo_hardware_interface",
             default_value="position",
-            description="position or effort (matches the transmissions you include)",
+            description="position or effort (matches ros2_control command interfaces)",
         ),
         DeclareLaunchArgument(
             "controller_yaml",
@@ -51,7 +53,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "controller",
             default_value="joint_trajectory_controller",
-            description="Main controller name to load/start after joint_state_broadcaster",
+            description="Main controller name to spawn after joint_state_broadcaster",
         ),
     ]
 
@@ -64,15 +66,25 @@ def generate_launch_description():
 
     spawn_kuroko = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            PathJoinSubstitution([FindPackageShare("kuroko_gazebo"), "launch", "spawn_kuroko_gazebo_classic.launch.py"])
+            PathJoinSubstitution(
+                [FindPackageShare("kuroko_gazebo"), "launch", "spawn_kuroko_gazebo_classic.launch.py"]
+            )
         ),
         launch_arguments={
             "robot_z": robot_z,
-            "gazebo": TextSubstitution(text="true"),
             "gazebo_hardware_interface": gazebo_hardware_interface,
             "controller_yaml": controller_yaml,
-            "controller": controller,
         }.items(),
     )
 
-    return LaunchDescription(declare_args + [gazebo, spawn_kuroko])
+    spawn_controllers = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([FindPackageShare("kuroko_gazebo"), "launch", "spawn_controllers.launch.py"])
+        ),
+        launch_arguments={
+            "controller": controller,
+            "controller_manager": TextSubstitution(text="/controller_manager"),
+        }.items(),
+    )
+
+    return LaunchDescription(declare_args + [gazebo, spawn_kuroko, spawn_controllers])
