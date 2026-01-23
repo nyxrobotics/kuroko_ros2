@@ -30,6 +30,7 @@ def _runtime_setup(context, *args, **kwargs):
     robot_z = LaunchConfiguration("robot_z").perform(context)
     gazebo = LaunchConfiguration("gazebo").perform(context)
     gazebo_hardware_interface = LaunchConfiguration("gazebo_hardware_interface").perform(context)
+    controller_yaml = LaunchConfiguration("controller_yaml").perform(context)
 
     kuroko_description_share = get_package_share_directory("kuroko_description")
     xacro_file = f"{kuroko_description_share}/xacro/kuroko/kuroko.xacro"
@@ -39,6 +40,7 @@ def _runtime_setup(context, *args, **kwargs):
         [
             f"gazebo:={gazebo}",
             f"gazebo_hardware_interface:={gazebo_hardware_interface}",
+            f"controller_yaml:={controller_yaml}",
         ],
     )
 
@@ -81,6 +83,7 @@ def generate_launch_description():
             DeclareLaunchArgument("robot_z", default_value="0.35"),
             DeclareLaunchArgument("gazebo", default_value="true"),
             DeclareLaunchArgument("gazebo_hardware_interface", default_value="position"),
+            DeclareLaunchArgument("controller_yaml", default_value=""),
             OpaqueFunction(function=_runtime_setup),
         ]
     )

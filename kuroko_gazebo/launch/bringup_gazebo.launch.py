@@ -14,6 +14,7 @@ def generate_launch_description():
     robot_z = LaunchConfiguration("robot_z")
     gazebo_hardware_interface = LaunchConfiguration("gazebo_hardware_interface")
     controller_yaml = LaunchConfiguration("controller_yaml")
+    controller = LaunchConfiguration("controller")
     world = LaunchConfiguration("world")
     pause = LaunchConfiguration("pause")
 
@@ -31,6 +32,7 @@ def generate_launch_description():
         DeclareLaunchArgument("robot_z", default_value="0.35"),
         DeclareLaunchArgument("gazebo_hardware_interface", default_value="position"),
         DeclareLaunchArgument("controller_yaml", default_value=default_controller_yaml),
+        DeclareLaunchArgument("controller", default_value="joint_trajectory_controller"),
         DeclareLaunchArgument("world", default_value=default_world),
         DeclareLaunchArgument("pause", default_value="true"),
     ]
@@ -53,6 +55,7 @@ def generate_launch_description():
             "robot_z": robot_z,
             "gazebo": TextSubstitution(text="true"),
             "gazebo_hardware_interface": gazebo_hardware_interface,
+                "controller_yaml": controller_yaml,
         }.items(),
     )
 
@@ -68,7 +71,7 @@ def generate_launch_description():
     spawn_main = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_group_position_controller", "--controller-manager", "/controller_manager"],
+        arguments=[controller, "--controller-manager", "/controller_manager"],
         output="screen",
     )
 
@@ -76,7 +79,7 @@ def generate_launch_description():
         period=3.0,
         actions=[
             LogInfo(msg=["[kuroko_gazebo] controller_yaml=", controller_yaml]),
-            LogInfo(msg=["[kuroko_gazebo] controller=", "joint_group_position_controller"]),
+            LogInfo(msg=["[kuroko_gazebo] controller=", controller]),
             LogInfo(msg=["[kuroko_gazebo] gazebo_hardware_interface=", gazebo_hardware_interface]),
             spawn_jsb,
             TimerAction(period=2.0, actions=[spawn_main]),

@@ -4,6 +4,8 @@
   <xacro:arg name="gazebo" default="false"/>
   <xacro:arg name="gazebo_hardware_interface" default="position"/>
   <xacro:arg name="box_visual" default="false"/>
+  <!-- Optional ros2_control controller parameters YAML for Gazebo Classic plugin -->
+  <xacro:arg name="controller_yaml" default=""/>
 
   <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
   <xacro:property name="MESH_DIR" value="$(find kuroko_description)/meshes" />
@@ -79,10 +81,10 @@
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
     <xacro:if value="${gazebo}">
       <xacro:if value="${gazebo_hardware_interface=='position'}">
-        <xacro:kuroko_transmission_position/>
+        <xacro:kuroko_transmission_position controller_yaml="$(arg controller_yaml)" namespace="/"/>
       </xacro:if>
       <xacro:if value="${gazebo_hardware_interface=='effort'}">
-        <xacro:kuroko_transmission_effort/>
+        <xacro:kuroko_transmission_effort controller_yaml="$(arg controller_yaml)" namespace="/"/>
       </xacro:if>
     </xacro:if>
 
