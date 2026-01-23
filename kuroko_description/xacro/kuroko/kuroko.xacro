@@ -8,7 +8,13 @@
   <xacro:arg name="controller_yaml" default=""/>
 
   <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
-  <xacro:property name="MESH_DIR" value="$(find kuroko_description)/meshes" />
+
+  <xacro:unless value="$(arg gazebo)">
+    <xacro:property name="MESH_DIR" value="package://kuroko_description/meshes" />
+  </xacro:unless>
+  <xacro:if value="$(arg gazebo)">
+    <xacro:property name="MESH_DIR" value="$(find kuroko_description)/meshes" />
+  </xacro:if>
 
   <xacro:include filename="${XACRO_DIR}/physics/materials.xacro"/>
   <xacro:include filename="${XACRO_DIR}/physics/box_physics.xacro"/>
