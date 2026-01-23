@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Command interface generators for Gazebo Classic (gazebo_ros2_control)
+
+    Single joint:
+      <xacro:set_effort_command_interface joint_name="joint1"/>
+      <xacro:set_velocity_command_interface joint_name="joint1"/>
+      <xacro:set_position_command_interface joint_name="joint1"/>
+
+    Multiple joints:
+      <xacro:set_effort_command_interfaces joints="${['joint1','joint2']}"/>
+      <xacro:set_velocity_command_interfaces joints="${['joint1','joint2']}"/>
+      <xacro:set_position_command_interfaces joints="${['joint1','joint2']}"/>
+
+    Full Gazebo Classic ros2_control block:
+      <xacro:gazebo_classic_ros2_control_system
+          joints="${['joint1','joint2']}"
+          command_if="position"
+          state_ifs="${['position','velocity','effort']}"/>
+
+      <xacro:gazebo_classic_ros2_control_plugin
+          parameters_file="$(find your_pkg)/config/controllers.yaml"/>
+  -->
+
+  <!-- Internal: emit <state_interface> tags from a list -->
+  <xacro:macro name="_state_interfaces_loop" params="ifs">
+    <xacro:if value="${len(ifs) > 0}">
+      <state_interface name="${ifs[0]}"/>
+      <xacro:_state_interfaces_loop ifs="${ifs[1:]}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- Generic ros2_control joint block -->
+  <xacro:macro name="ros2_control_joint" params="joint_name command_if state_ifs:=${['position','velocity','effort']}">
+    <joint name="${joint_name}">
+      <command_interface name="${command_if}"/>
+      <xacro:_state_interfaces_loop ifs="${state_ifs}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Internal: per-joint wrappers -->
+  <xacro:macro name="_effort_command_joint" params="joint_name state_ifs:=${['position','velocity','effort']}">
+    <xacro:ros2_control_joint joint_name="${joint_name}" command_if="effort" state_ifs="${state_ifs}"/>
+  </xacro:macro>
+
+  <xacro:macro name="_velocity_command_joint" params="joint_name state_ifs:=${['position','velocity','effort']}">
+    <xacro:ros2_control_joint joint_name="${joint_name}" command_if="velocity" state_ifs="${state_ifs}"/>
+  </xacro:macro>
+
+  <xacro:macro name="_position_command_joint" params="joint_name state_ifs:=${['position','velocity','effort']}">
+    <xacro:ros2_control_joint joint_name="${joint_name}" command_if="position" state_ifs="${state_ifs}"/>
+  </xacro:macro>
+
+  <!-- Public: single joint -->
+  <xacro:macro name="set_effort_command_interface" params="joint_name state_ifs:=${['position','velocity','effort']}">
+    <xacro:_effort_command_joint joint_name="${joint_name}" state_ifs="${state_ifs}"/>
+  </xacro:macro>
+
+  <xacro:macro name="set_velocity_command_interface" params="joint_name state_ifs:=${['position','velocity','effort']}">
+    <xacro:_velocity_command_joint joint_name="${joint_name}" state_ifs="${state_ifs}"/>
+  </xacro:macro>
+
+  <xacro:macro name="set_position_command_interface" params="joint_name state_ifs:=${['position','velocity','effort']}">
+    <xacro:_position_command_joint joint_name="${joint_name}" state_ifs="${state_ifs}"/>
+  </xacro:macro>
+
+  <!-- Public: multiple joints -->
+  <xacro:macro name="set_effort_command_interfaces" params="joints state_ifs:=${['position','velocity','effort']}">
+    <xacro:if value="${len(joints) > 0}">
+      <xacro:_effort_command_joint joint_name="${joints[0]}" state_ifs="${state_ifs}"/>
+      <xacro:set_effort_command_interfaces joints="${joints[1:]}" state_ifs="${state_ifs}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="set_velocity_command_interfaces" params="joints state_ifs:=${['position','velocity','effort']}">
+    <xacro:if value="${len(joints) > 0}">
+      <xacro:_velocity_command_joint joint_name="${joints[0]}" state_ifs="${state_ifs}"/>
+      <xacro:set_velocity_command_interfaces joints="${joints[1:]}" state_ifs="${state_ifs}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="set_position_command_interfaces" params="joints state_ifs:=${['position','velocity','effort']}">
+    <xacro:if value="${len(joints) > 0}">
+      <xacro:_position_command_joint joint_name="${joints[0]}" state_ifs="${state_ifs}"/>
+      <xacro:set_position_command_interfaces joints="${joints[1:]}" state_ifs="${state_ifs}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- Gazebo Classic ros2_control system (fixed to gazebo_ros2_control) -->
+  <xacro:macro name="gazebo_classic_ros2_control_system"
+               params="joints
+                       command_if:='position'
+                       state_ifs:=${['position','velocity','effort']}">
+
+    <ros2_control name="GazeboSystem" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+
+      <xacro:if value="${command_if == 'position'}">
+        <xacro:set_position_command_interfaces joints="${joints}" state_ifs="${state_ifs}"/>
+      </xacro:if>
+      <xacro:if value="${command_if == 'velocity'}">
+        <xacro:set_velocity_command_interfaces joints="${joints}" state_ifs="${state_ifs}"/>
+      </xacro:if>
+      <xacro:if value="${command_if == 'effort'}">
+        <xacro:set_effort_command_interfaces joints="${joints}" state_ifs="${state_ifs}"/>
+      </xacro:if>
+
+    </ros2_control>
+  </xacro:macro>
+
+  <!-- Gazebo Classic plugin block (gazebo_ros2_control) -->
+  <xacro:macro name="gazebo_ros2_control_plugin" params="controller_yaml:=''">
+    <gazebo>
+      <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+        <robot_param>robot_description</robot_param>
+        <robot_param_node>robot_state_publisher</robot_param_node>
+        <xacro:if value="${controller_yaml != ''}">
+          <parameters>${controller_yaml}</parameters>
+        </xacro:if>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+</robot>

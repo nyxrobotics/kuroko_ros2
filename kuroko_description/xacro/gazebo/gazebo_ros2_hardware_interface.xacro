@@ -5,14 +5,14 @@
     Transmission generators (no YAML dependency)
 
     Single joint:
-      <xacro:set_effort_interface joint_name="joint1"/>
-      <xacro:set_velocity_interface joint_name="joint1"/>
-      <xacro:set_position_interface joint_name="joint1"/>
+      <xacro:set_effort_hardware_interface joint_name="joint1"/>
+      <xacro:set_velocity_hardware_interface joint_name="joint1"/>
+      <xacro:set_position_hardware_interface joint_name="joint1"/>
 
     Multiple joints:
-      <xacro:set_effort_interfaces joints="${['joint1','joint2']}"/>
-      <xacro:set_velocity_interfaces joints="${['joint1','joint2']}"/>
-      <xacro:set_position_interfaces joints="${['joint1','joint2']}"/>
+      <xacro:set_effort_hardware_interfaces joints="${['joint1','joint2']}"/>
+      <xacro:set_velocity_hardware_interfaces joints="${['joint1','joint2']}"/>
+      <xacro:set_position_hardware_interfaces joints="${['joint1','joint2']}"/>
   -->
 
   <!-- Generic transmission block -->
@@ -46,38 +46,57 @@
   </xacro:macro>
 
   <!-- Public: single joint -->
-  <xacro:macro name="set_effort_interface" params="joint_name">
+  <xacro:macro name="set_effort_hardware_interface" params="joint_name">
     <xacro:_effort_transmission joint_name="${joint_name}"/>
   </xacro:macro>
 
-  <xacro:macro name="set_velocity_interface" params="joint_name">
+  <xacro:macro name="set_velocity_hardware_interface" params="joint_name">
     <xacro:_velocity_transmission joint_name="${joint_name}"/>
   </xacro:macro>
 
-  <xacro:macro name="set_position_interface" params="joint_name">
+  <xacro:macro name="set_position_hardware_interface" params="joint_name">
     <xacro:_position_transmission joint_name="${joint_name}"/>
   </xacro:macro>
 
   <!-- Public: multiple joints (recursive inside) -->
-  <xacro:macro name="set_effort_interfaces" params="joints">
+  <xacro:macro name="set_effort_hardware_interfaces" params="joints">
     <xacro:if value="${len(joints) > 0}">
       <xacro:_effort_transmission joint_name="${joints[0]}"/>
-      <xacro:set_effort_interfaces joints="${joints[1:]}"/>
+      <xacro:set_effort_hardware_interfaces joints="${joints[1:]}"/>
     </xacro:if>
   </xacro:macro>
 
-  <xacro:macro name="set_velocity_interfaces" params="joints">
+  <xacro:macro name="set_velocity_hardware_interfaces" params="joints">
     <xacro:if value="${len(joints) > 0}">
       <xacro:_velocity_transmission joint_name="${joints[0]}"/>
-      <xacro:set_velocity_interfaces joints="${joints[1:]}"/>
+      <xacro:set_velocity_hardware_interfaces joints="${joints[1:]}"/>
     </xacro:if>
   </xacro:macro>
 
-  <xacro:macro name="set_position_interfaces" params="joints">
+  <xacro:macro name="set_position_hardware_interfaces" params="joints">
     <xacro:if value="${len(joints) > 0}">
       <xacro:_position_transmission joint_name="${joints[0]}"/>
-      <xacro:set_position_interfaces joints="${joints[1:]}"/>
+      <xacro:set_position_hardware_interfaces joints="${joints[1:]}"/>
     </xacro:if>
   </xacro:macro>
 
+  <xacro:macro name="gazebo_ros2_control_system">
+    <ros2_control name="GazeboSystem" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+    </ros2_control>
+  </xacro:macro>
+  
+  <xacro:macro name="gazebo_ros2_control_plugin" params="controller_yaml:=''">
+    <gazebo>
+      <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+        <robot_param>robot_description</robot_param>
+        <robot_param_node>robot_state_publisher</robot_param_node>
+        <xacro:if value="${controller_yaml != ''}">
+          <parameters>${controller_yaml}</parameters>
+        </xacro:if>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
 </robot>

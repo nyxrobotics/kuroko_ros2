@@ -2,6 +2,8 @@
 # Spawn Kuroko into Gazebo Classic and start ros2_control controllers robustly.
 
 import os
+import re
+import subprocess
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -11,13 +13,17 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-def _xacro_to_urdf_one_line(xacro_path: str, mappings: list[str]) -> str:
-    # xacro CLI produces a single XML. We strip newlines for spawn_entity stability.
-    import subprocess
-
-    cmd = ["xacro", xacro_path] + mappings
+def _xacro_to_urdf_one_line(xacro_path: str, xacro_args: list[str]) -> str:
+    cmd = ["xacro", xacro_path] + xacro_args
     urdf = subprocess.check_output(cmd, text=True)
-    return " ".join(urdf.split())
+
+    # Drop XML comments to reduce size/noise
+    urdf = re.sub(r"<!--.*?-->", "", urdf, flags=re.DOTALL)
+
+    # Make it single-line (avoids rcl argument parsing issues in gazebo_ros2_control)
+    urdf = urdf.replace("\n", " ").replace("\r", " ")
+    urdf = re.sub(r"\s+", " ", urdf).strip()
+    return urdf
 
 
 def _runtime_setup(context, *args, **kwargs):

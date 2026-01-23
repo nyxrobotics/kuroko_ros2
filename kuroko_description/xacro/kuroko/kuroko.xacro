@@ -36,7 +36,7 @@
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
 
   <!-- Gazebo Classic ros2_control helper -->
-  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/kuroko_transmission.gazebo"/>
+  <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/kuroko_command_interface.gazebo"/>
 
   <!-- Main robot model macro -->
   <xacro:macro name="kuroko_model" params="gazebo gazebo_hardware_interface box_visual">
@@ -81,10 +81,10 @@
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
     <xacro:if value="${gazebo}">
       <xacro:if value="${gazebo_hardware_interface=='position'}">
-        <xacro:kuroko_transmission_position controller_yaml="$(arg controller_yaml)" />
+        <xacro:kuroko_command_interface_position controller_yaml="$(arg controller_yaml)" />
       </xacro:if>
       <xacro:if value="${gazebo_hardware_interface=='effort'}">
-        <xacro:kuroko_transmission_effort controller_yaml="$(arg controller_yaml)" />
+        <xacro:kuroko_command_interface_effort controller_yaml="$(arg controller_yaml)" />
       </xacro:if>
     </xacro:if>
 
