@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 1000.0
+    update_rate: 1000
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
     joint_trajectory_effort_controller:
@@ -64,11 +64,11 @@ joint_trajectory_effort_controller:
     interpolate_from_desired_state: true
     allow_integration_in_goal_trajectories: true
     set_last_command_interface_value_as_state_on_activation: true
-    action_monitor_rate: 100.0
+    action_monitor_rate: 100
     allow_nonzero_velocity_at_trajectory_end: true
     cmd_timeout: 1.0
     stop_trajectory_duration: 0.1
-    state_publish_rate: 100.0
+    state_publish_rate: 100
     open_loop_control: true
     constraints:
       stopped_velocity_tolerance: 1000.0

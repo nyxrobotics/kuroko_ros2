@@ -5,7 +5,7 @@
   <xacro:arg name="gazebo_command_interface" default="position"/>
   <xacro:arg name="box_visual" default="false"/>
   <!-- Optional ros2_control controller parameters YAML for Gazebo Classic plugin -->
-  <xacro:arg name="controller_yaml" default=""/>
+  <xacro:arg name="controller_yaml" default="$(find kuroko_description)/config/ros2_control/joint_trajectory_controller.yaml"/>
 
   <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
 
@@ -69,29 +69,32 @@
     <xacro:leg_l_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
     <xacro:leg_l_gazebo/>
 
-    <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">
+    <!-- <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
-    </xacro:imu_n100mini>
+    </xacro:imu_n100mini> -->
 
-    <xacro:usb_camera parent="waist_link" name="camera" namespace="/kuroko/sensors/camera">
+    <!-- <xacro:usb_camera parent="waist_link" name="camera" namespace="/kuroko/sensors/camera">
       <origin xyz="0.07 0 -0.026" rpy="0 0 0"/>
-    </xacro:usb_camera>
+    </xacro:usb_camera> -->
 
-    <xacro:tfluna parent="waist_link" name="tfluna" ros_topic="/kuroko/sensors/range">
+    <!-- <xacro:tfluna parent="waist_link" name="tfluna" ros_topic="/kuroko/sensors/range">
       <origin xyz="0.07 0 -0.044" rpy="0 0 0"/>
-    </xacro:tfluna>
+    </xacro:tfluna> -->
 
-    <xacro:enable_gz_rendering_plugin/>
-    <xacro:enable_gz_imu_plugin/>
+    <!-- Gazebo-specific sensor/plugins only when gazebo:=true -->
+    <!-- <xacro:if value="${gazebo}">
+      <xacro:enable_gz_rendering_plugin/>
+      <xacro:enable_gz_imu_plugin/>
+    </xacro:if> -->
 
-    <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
+    <!-- ros2_control block is always present so gazebo_ros2_control can parse robot_description.
+         The Gazebo plugin itself is included only when gazebo:=true (spawned model). -->
     <xacro:if value="${gazebo_command_interface=='position'}">
       <xacro:kuroko_command_interface_position controller_yaml="$(arg controller_yaml)" />
     </xacro:if>
     <xacro:if value="${gazebo_command_interface=='effort'}">
       <xacro:kuroko_command_interface_effort controller_yaml="$(arg controller_yaml)" />
     </xacro:if>
-
   </xacro:macro>
 
   <!-- Instantiate -->
