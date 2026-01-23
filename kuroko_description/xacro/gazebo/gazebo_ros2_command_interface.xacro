@@ -15,13 +15,13 @@
       <xacro:set_position_command_interfaces joints="${['joint1','joint2']}"/>
 
     Full Gazebo Classic ros2_control block:
-      <xacro:gazebo_classic_ros2_control_system
+      <xacro:gazebo_ros2_control_system
           joints="${['joint1','joint2']}"
           command_if="position"
           state_ifs="${['position','velocity','effort']}"/>
 
-      <xacro:gazebo_classic_ros2_control_plugin
-          parameters_file="$(find your_pkg)/config/controllers.yaml"/>
+      <xacro:gazebo_ros2_control_plugin
+          controller_yaml="$(find your_pkg)/config/controllers.yaml"/>
   -->
 
   <!-- Internal: emit <state_interface> tags from a list -->
@@ -89,7 +89,7 @@
   </xacro:macro>
 
   <!-- Gazebo Classic ros2_control system (fixed to gazebo_ros2_control) -->
-  <xacro:macro name="gazebo_classic_ros2_control_system"
+  <xacro:macro name="gazebo_ros2_control_system"
                params="joints
                        command_if:='position'
                        state_ifs:=${['position','velocity','effort']}">

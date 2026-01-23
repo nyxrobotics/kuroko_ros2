@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:include filename="${XACRO_DIR}/gazebo/gazebo_ros2_control_system.xacro"/>
   <xacro:include filename="${XACRO_DIR}/gazebo/gazebo_ros2_command_interface.xacro"/>
 
   <xacro:property name="kuroko_joints" value="${[
@@ -28,17 +27,28 @@
     'ankle_l_yaw'
   ]}"/>
 
-  <!-- Effort control (ros2_control joint interfaces + transmissions) -->
-  <xacro:macro name="kuroko_command_interface_effort" params="controller_yaml:=''">
-    <xacro:gazebo_ros2_control_system/>
-    <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}"/>
-    <xacro:set_effort_interfaces joints="${kuroko_joints}"/>
+  <!-- Effort control (ros2_control joint command/state interfaces) -->
+  <xacro:macro name="kuroko_command_interface_effort" params="controller_yaml:='' state_ifs:=${['position','velocity','effort']}">
+    <xacro:gazebo_ros2_control_system joints="${kuroko_joints}" command_if="effort" state_ifs="${state_ifs}"/>
+    <xacro:if value="${controller_yaml != ''}">
+      <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}"/>
+    </xacro:if>
   </xacro:macro>
 
-  <!-- Position control (ros2_control joint interfaces + transmissions) -->
-  <xacro:macro name="kuroko_command_interface_position" params="controller_yaml:=''">
-    <xacro:gazebo_ros2_control_system/>
-    <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}"/>
-    <xacro:set_position_interfaces joints="${kuroko_joints}"/>
+  <!-- Position control (ros2_control joint command/state interfaces) -->
+  <xacro:macro name="kuroko_command_interface_position" params="controller_yaml:='' state_ifs:=${['position','velocity','effort']}">
+    <xacro:gazebo_ros2_control_system joints="${kuroko_joints}" command_if="position" state_ifs="${state_ifs}"/>
+    <xacro:if value="${controller_yaml != ''}">
+      <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}"/>
+    </xacro:if>
   </xacro:macro>
+
+  <!-- Velocity control (ros2_control joint command/state interfaces) -->
+  <xacro:macro name="kuroko_command_interface_velocity" params="controller_yaml:='' state_ifs:=${['position','velocity','effort']}">
+    <xacro:gazebo_ros2_control_system joints="${kuroko_joints}" command_if="velocity" state_ifs="${state_ifs}"/>
+    <xacro:if value="${controller_yaml != ''}">
+      <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}"/>
+    </xacro:if>
+  </xacro:macro>
+
 </robot>
