@@ -85,13 +85,11 @@
     <xacro:enable_gz_imu_plugin/>
 
     <!-- ros2_control (Gazebo Classic): enabled only when gazebo:=true -->
-    <xacro:if value="${gazebo}">
-      <xacro:if value="${gazebo_hardware_interface=='position'}">
-        <xacro:kuroko_command_interface_position controller_yaml="$(arg controller_yaml)" />
-      </xacro:if>
-      <xacro:if value="${gazebo_hardware_interface=='effort'}">
-        <xacro:kuroko_command_interface_effort controller_yaml="$(arg controller_yaml)" />
-      </xacro:if>
+    <xacro:if value="${gazebo_hardware_interface=='position'}">
+      <xacro:kuroko_command_interface_position controller_yaml="$(arg controller_yaml)" />
+    </xacro:if>
+    <xacro:if value="${gazebo_hardware_interface=='effort'}">
+      <xacro:kuroko_command_interface_effort controller_yaml="$(arg controller_yaml)" />
     </xacro:if>
 
   </xacro:macro>
