@@ -73,3 +73,29 @@ joint_trajectory_controller:
     constraints:
       stopped_velocity_tolerance: 1000.0
       goal_time: 0.1
+
+gazebo_ros2_control:
+  ros__parameters:
+    pid_gains:
+      position:
+        chest: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        shoulder_r_pitch: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        shoulder_r_roll: {kp: 42.41, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        elbow_r_front: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        elbow_r_rear: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        shoulder_l_pitch: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        shoulder_l_roll: {kp: 42.41, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        elbow_l_front: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        elbow_l_rear: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        hip_r_roll: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        hip_r_pitch: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        thigh_r_active: {kp: 42.41, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        shin_r_active: {kp: 42.41, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        ankle_r_roll: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        ankle_r_yaw: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        hip_l_roll: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        hip_l_pitch: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        thigh_l_active: {kp: 42.41, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        shin_l_active: {kp: 42.41, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        ankle_l_roll: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
+        ankle_l_yaw: {kp: 16.62, ki: 0.0, kd: 0.0, max_integral_error: 1.0, antiwindup: true}
