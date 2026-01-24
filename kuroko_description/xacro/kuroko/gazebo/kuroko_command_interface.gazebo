@@ -28,17 +28,6 @@
     'ankle_l_yaw'
   ]}"/>
 
-  <!--
-    include_plugin:
-      true  -> emit <gazebo><plugin ... gazebo_ros2_control .../></gazebo>
-      false -> only emit <ros2_control> block (no Gazebo tags)
-
-    This allows:
-      - Spawn model into Gazebo with gazebo:=true (include_plugin:=true)
-      - Provide robot_description with gazebo:=false but still include <ros2_control>
-        so gazebo_ros2_control can parse it (include_plugin:=false)
-  -->
-
   <xacro:macro name="kuroko_command_interface_position" params="controller_yaml:='' state_ifs:=${['position','velocity']}">
     <xacro:gazebo_ros2_control_system joints="${kuroko_joints}" command_if="position" state_ifs="${state_ifs}"/>
     <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}"/>
