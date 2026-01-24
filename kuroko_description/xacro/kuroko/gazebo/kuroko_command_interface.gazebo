@@ -3,6 +3,7 @@
 
   <!-- Kuroko-specific ros2_control interface definitions (Gazebo Classic) -->
   <xacro:include filename="${XACRO_DIR}/gazebo/gazebo_ros2_command_interface.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/gazebo/gazebo_ros2_control_plugin.xacro"/>
 
   <xacro:property name="kuroko_joints" value="${[
     'chest',

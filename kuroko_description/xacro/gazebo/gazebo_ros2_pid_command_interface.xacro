@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Gazebo Classic ros2_control PID command interfaces.
+
+    This file embeds PID gains into URDF under <ros2_control><joint> as:
+      - position_pid: pos_kp, pos_ki, pos_kd, pos_max_integral_error
+      - velocity_pid: vel_kp, vel_ki, vel_kd, vel_max_integral_error
+
+    Provides:
+      - gazebo_ros2_control_pid_system(joints, command_if, pids, state_ifs)
+
+    command_if:
+      - position_pid
+      - velocity_pid
+
+    pids:
+      dict keyed by joint name:
+        {
+          'joint_name': {'kp': 10.0, 'ki': 0.0, 'kd': 0.0, 'max_integral_error': 10000.0},
+          ...
+        }
+  -->
+
+  <xacro:macro name="_state_interfaces_loop" params="ifs">
+    <xacro:if value="${len(ifs) > 0}">
+      <state_interface name="${ifs[0]}"/>
+      <xacro:_state_interfaces_loop ifs="${ifs[1:]}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="_emit_param_if_present" params="param_dict key param_name">
+    <xacro:if value="${param_dict is not None and (key in param_dict)}">
+      <param name="${param_name}">${param_dict[key]}</param>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="_ros2_control_pid_joint"
+               params="joint_name
+                       command_if:='position_pid'
+                       pid:=${{}}
+                       state_ifs:=${['position','velocity','effort']}">
+
+    <joint name="${joint_name}">
+
+      <xacro:if value="${command_if == 'position_pid'}">
+        <xacro:_emit_param_if_present param_dict="${pid}" key="kp" param_name="pos_kp"/>
+        <xacro:_emit_param_if_present param_dict="${pid}" key="ki" param_name="pos_ki"/>
+        <xacro:_emit_param_if_present param_dict="${pid}" key="kd" param_name="pos_kd"/>
+        <xacro:_emit_param_if_present param_dict="${pid}" key="max_integral_error" param_name="pos_max_integral_error"/>
+        <command_interface name="position_pid"/>
+      </xacro:if>
+
+      <xacro:if value="${command_if == 'velocity_pid'}">
+        <xacro:_emit_param_if_present param_dict="${pid}" key="kp" param_name="vel_kp"/>
+        <xacro:_emit_param_if_present param_dict="${pid}" key="ki" param_name="vel_ki"/>
+        <xacro:_emit_param_if_present param_dict="${pid}" key="kd" param_name="vel_kd"/>
+        <xacro:_emit_param_if_present param_dict="${pid}" key="max_integral_error" param_name="vel_max_integral_error"/>
+        <command_interface name="velocity_pid"/>
+      </xacro:if>
+
+      <xacro:_state_interfaces_loop ifs="${state_ifs}"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="_set_pid_command_interfaces"
+               params="joints
+                       command_if:='position_pid'
+                       pids:=${{}}
+                       state_ifs:=${['position','velocity','effort']}">
+
+    <xacro:if value="${len(joints) > 0}">
+      <xacro:_ros2_control_pid_joint
+          joint_name="${joints[0]}"
+          command_if="${command_if}"
+          pid="${pids.get(joints[0], {})}"
+          state_ifs="${state_ifs}"/>
+
+      <xacro:_set_pid_command_interfaces
+          joints="${joints[1:]}"
+          command_if="${command_if}"
+          pids="${pids}"
+          state_ifs="${state_ifs}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <xacro:macro name="gazebo_ros2_control_pid_system"
+               params="joints
+                       command_if:='position_pid'
+                       pids:=${{}}
+                       state_ifs:=${['position','velocity','effort']}">
+
+    <ros2_control name="GazeboSystem" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+
+      <xacro:_set_pid_command_interfaces
+          joints="${joints}"
+          command_if="${command_if}"
+          pids="${pids}"
+          state_ifs="${state_ifs}"/>
+    </ros2_control>
+  </xacro:macro>
+
+</robot>

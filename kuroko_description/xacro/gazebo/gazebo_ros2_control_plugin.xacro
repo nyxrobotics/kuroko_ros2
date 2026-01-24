@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Gazebo Classic gazebo_ros2_control plugin block.
+
+    Usage:
+      <xacro:gazebo_ros2_control_plugin controller_yaml="$(find my_pkg)/config/controllers.yaml"/>
+
+    Optional:
+      robot_param defaults to "robot_description"
+      robot_param_node defaults to "robot_state_publisher"
+  -->
+
+  <xacro:macro name="gazebo_ros2_control_plugin"
+               params="controller_yaml
+                       robot_param:='robot_description'
+                       robot_param_node:='robot_state_publisher'">
+
+    <gazebo>
+      <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+        <parameters>${controller_yaml}</parameters>
+        <robot_param>${robot_param}</robot_param>
+        <robot_param_node>${robot_param_node}</robot_param_node>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>
