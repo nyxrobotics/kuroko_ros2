@@ -6,6 +6,7 @@
   <xacro:arg name="box_visual" default="false"/>
   <!-- Optional ros2_control controller parameters YAML for Gazebo Classic plugin -->
   <xacro:arg name="controller_yaml" default="$(find kuroko_description)/config/ros2_control/joint_trajectory_controller.yaml"/>
+  <xacro:arg name="pid_yaml" default="$(find kuroko_description)/config/ros2_control/gazebo_pid_gains.yaml"/>
 
   <xacro:property name="XACRO_DIR" value="$(find kuroko_description)/xacro" />
 
@@ -89,12 +90,9 @@
 
     <!-- ros2_control block is always present so gazebo_ros2_control can parse robot_description.
          The Gazebo plugin itself is included only when gazebo:=true (spawned model). -->
-    <xacro:if value="${gazebo_command_interface=='position'}">
-      <xacro:kuroko_command_interface_position controller_yaml="$(arg controller_yaml)" />
-    </xacro:if>
-    <xacro:if value="${gazebo_command_interface=='effort'}">
-      <xacro:kuroko_command_interface_effort controller_yaml="$(arg controller_yaml)" />
-    </xacro:if>
+    <xacro:kuroko_command_interface_position controller_yaml="$(arg controller_yaml)" pid_yaml="$(arg pid_yaml)"/>
+
+
   </xacro:macro>
 
   <!-- Instantiate -->

@@ -113,12 +113,18 @@
   </xacro:macro>
 
   <!-- Gazebo Classic plugin block (gazebo_ros2_control) -->
-  <xacro:macro name="gazebo_ros2_control_plugin" params="controller_yaml">
+  <xacro:macro name="gazebo_ros2_control_plugin" params="controller_yaml:='' pid_yaml:=''">
     <gazebo>
       <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-        <parameters>${controller_yaml}</parameters>
+        <xacro:if value="${controller_yaml != ''}">
+          <parameters>${controller_yaml}</parameters>
+        </xacro:if>
+        <xacro:if value="${pid_yaml != ''}">
+          <parameters>${pid_yaml}</parameters>
+        </xacro:if>
       </plugin>
     </gazebo>
   </xacro:macro>
+
 
 </robot>

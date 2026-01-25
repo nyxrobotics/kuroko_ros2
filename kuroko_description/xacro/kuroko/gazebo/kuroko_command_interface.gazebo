@@ -28,14 +28,9 @@
     'ankle_l_yaw'
   ]}"/>
 
-  <xacro:macro name="kuroko_command_interface_position" params="controller_yaml:='' state_ifs:=${['position','velocity']}">
+  <xacro:macro name="kuroko_command_interface_position"
+              params="controller_yaml:='' pid_yaml:='' state_ifs:=${['position','velocity']}">
     <xacro:gazebo_ros2_control_system joints="${kuroko_joints}" command_if="position" state_ifs="${state_ifs}"/>
-    <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}"/>
+    <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}" pid_yaml="${pid_yaml}"/>
   </xacro:macro>
-
-  <xacro:macro name="kuroko_command_interface_effort" params="controller_yaml:='' state_ifs:=${['position','velocity']}">
-    <xacro:gazebo_ros2_control_system joints="${kuroko_joints}" command_if="effort" state_ifs="${state_ifs}"/>
-    <xacro:gazebo_ros2_control_plugin controller_yaml="${controller_yaml}"/>
-  </xacro:macro>
-
 </robot>
