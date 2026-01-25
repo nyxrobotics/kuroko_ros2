@@ -2,9 +2,9 @@
 <robot name="kuroko" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:arg name="gazebo" default="false"/>
-  <xacro:arg name="gazebo_command_interface" default="position"/>
   <xacro:arg name="box_visual" default="false"/>
   <!-- Optional ros2_control controller parameters YAML for Gazebo Classic plugin -->
+  <!-- <xacro:arg name="controller_yaml" default="$(find kuroko_description)/config/ros2_control/joint_trajectory_controller.yaml"/> -->
   <xacro:arg name="controller_yaml" default="$(find kuroko_description)/config/ros2_control/joint_trajectory_controller.yaml"/>
   <xacro:arg name="pid_yaml" default="$(find kuroko_description)/config/ros2_control/gazebo_pid_gains.yaml"/>
 
@@ -46,7 +46,7 @@
   <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/kuroko_command_interface.gazebo"/>
 
   <!-- Main robot model macro -->
-  <xacro:macro name="kuroko_model" params="gazebo gazebo_command_interface box_visual">
+  <xacro:macro name="kuroko_model" params="gazebo box_visual">
 
     <link name="body_link"/>
     <joint name="root_joint" type="fixed">
@@ -96,6 +96,6 @@
   </xacro:macro>
 
   <!-- Instantiate -->
-  <xacro:kuroko_model gazebo="$(arg gazebo)" box_visual="$(arg box_visual)" gazebo_command_interface="$(arg gazebo_command_interface)"/>
+  <xacro:kuroko_model gazebo="$(arg gazebo)" box_visual="$(arg box_visual)"/>
 
 </robot>

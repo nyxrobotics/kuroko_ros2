@@ -25,7 +25,6 @@ from launch.actions import (
     OpaqueFunction,
     RegisterEventHandler,
 )
-from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -33,12 +32,12 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 import xacro
+import yaml
 
 
 def urdf_to_oneline_without_comments(xml_string: str) -> str:
     """
     Remove XML comments and serialize URDF as a single line.
-    This is useful to avoid issues when a backend tries to pass robot_description via CLI arguments.
     """
     dom = minidom.parseString(xml_string)
 
@@ -63,6 +62,43 @@ def _as_bool(s: str) -> bool:
     return str(s).strip().lower() in ("1", "true", "yes", "on")
 
 
+def get_controllers_from_yaml(controller_yaml_path: str) -> dict[str, str]:
+    """
+    Extract controllers defined in a ros2_control YAML.
+
+    Expected structure:
+      controller_manager:
+        ros__parameters:
+          <controller_name>:
+            type: <plugin_class>
+
+    Returns:
+      dict[name] = type_string
+    """
+    if not controller_yaml_path:
+        raise RuntimeError("controller_yaml_path is empty")
+
+    if not os.path.exists(controller_yaml_path):
+        raise RuntimeError(f"controller_yaml does not exist: {controller_yaml_path}")
+
+    with open(controller_yaml_path, "r") as f:
+        data = yaml.safe_load(f) or {}
+
+    params = data.get("controller_manager", {}).get("ros__parameters", {})
+
+    controllers: dict[str, str] = {}
+    for name, cfg in params.items():
+        if isinstance(cfg, dict) and "type" in cfg:
+            controllers[name] = str(cfg["type"])
+
+    if not controllers:
+        raise RuntimeError(
+            f"No controller with 'type' found under controller_manager/ros__parameters in: {controller_yaml_path}"
+        )
+
+    return controllers
+
+
 def _create_runtime_actions(context, *args, **kwargs):
     use_sim_time = _as_bool(LaunchConfiguration("use_sim_time").perform(context))
     entity_name = LaunchConfiguration("entity_name").perform(context)
@@ -77,14 +113,40 @@ def _create_runtime_actions(context, *args, **kwargs):
     print_urdf = _as_bool(LaunchConfiguration("print_urdf").perform(context))
     dump_urdf = _as_bool(LaunchConfiguration("dump_urdf").perform(context))
 
+    controller_yaml = LaunchConfiguration("controller_yaml").perform(context)
+    controllers = get_controllers_from_yaml(controller_yaml)
+
+    # Print controllers list for debugging
+    print("\n========== [kuroko] Controllers found in YAML ==========")
+    print(f"[kuroko] controller_yaml: {controller_yaml}")
+    for name in sorted(controllers.keys()):
+        print(f"[kuroko] - {name}: type={controllers[name]}")
+    print("========== [kuroko] end controllers list ==========\n")
+
+    # Decide activation order:
+    # - Usually joint_state_broadcaster first (if present), then everything else
+    names_sorted = sorted(controllers.keys())
+    if "joint_state_broadcaster" in controllers:
+        activation_order = ["joint_state_broadcaster"] + [n for n in names_sorted if n != "joint_state_broadcaster"]
+    else:
+        activation_order = names_sorted
+
+    print("[kuroko] Controllers activation order:")
+    for n in activation_order:
+        print(f"[kuroko] - {n}")
+
     kuroko_description_share = get_package_share_directory("kuroko_description")
     xacro_file = os.path.join(kuroko_description_share, "xacro", "kuroko", "kuroko.xacro")
 
-    # Policy:
-    # - robot_description is ALWAYS gazebo:=false (control / canonical model)
-    # - spawn uses gazebo:=true via a separate topic "robot_description_gazebo"
-    urdf_control_raw = xacro_to_urdf_xml(xacro_file, {"gazebo": "false"})
-    urdf_spawn_raw = xacro_to_urdf_xml(xacro_file, {"gazebo": "true"})
+    # Pass the same controller_yaml into both URDF variants (gazebo:=false/true)
+    urdf_control_raw = xacro_to_urdf_xml(
+        xacro_file,
+        {"gazebo": "false", "controller_yaml": controller_yaml},
+    )
+    urdf_spawn_raw = xacro_to_urdf_xml(
+        xacro_file,
+        {"gazebo": "true", "controller_yaml": controller_yaml},
+    )
 
     urdf_control = urdf_to_oneline_without_comments(urdf_control_raw)
     urdf_spawn = urdf_to_oneline_without_comments(urdf_spawn_raw)
@@ -125,7 +187,7 @@ def _create_runtime_actions(context, *args, **kwargs):
         parameters=[params_control],
     )
 
-    # Spawn-only publisher: remap its "robot_description" topic to "robot_description_gazebo"
+    # Spawn-only publisher: remap its robot_description topic to robot_description_gazebo
     node_spawn_description_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -135,7 +197,6 @@ def _create_runtime_actions(context, *args, **kwargs):
         remappings=[("robot_description", "robot_description_gazebo")],
     )
 
-    # Spawn position/orientation
     spawn_entity = Node(
         package="gazebo_ros",
         executable="spawn_entity.py",
@@ -160,27 +221,11 @@ def _create_runtime_actions(context, *args, **kwargs):
         ],
     )
 
-    load_joint_state_broadcaster = ExecuteProcess(
-        cmd=[
-            "ros2",
-            "control",
-            "load_controller",
-            "--set-state",
-            "active",
-            "joint_state_broadcaster",
-        ],
-        output="screen",
-    )
-
-    load_joint_trajectory_controller = ExecuteProcess(
-        cmd=[
-            "ros2",
-            "control",
-            "load_controller",
-            "--set-state",
-            "active",
-            "joint_trajectory_controller",
-        ],
+    # Activate ALL controllers found in YAML, sequentially.
+    # Using 'set -e' ensures the process fails fast on any error (bad yaml/type/etc.).
+    cmds = [f"ros2 control load_controller --set-state active {name}" for name in activation_order]
+    activate_all_controllers = ExecuteProcess(
+        cmd=["bash", "-lc", "set -e; " + "; ".join(cmds)],
         output="screen",
     )
 
@@ -188,13 +233,7 @@ def _create_runtime_actions(context, *args, **kwargs):
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=spawn_entity,
-                on_exit=[load_joint_state_broadcaster],
-            )
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=load_joint_state_broadcaster,
-                on_exit=[load_joint_trajectory_controller],
+                on_exit=[activate_all_controllers],
             )
         ),
         node_robot_state_publisher,
@@ -204,8 +243,6 @@ def _create_runtime_actions(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration("use_sim_time")
-
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory("gazebo_ros"), "launch", "gazebo.launch.py")
@@ -213,6 +250,14 @@ def generate_launch_description():
         launch_arguments={
             "world": os.path.join(get_package_share_directory("kuroko_gazebo"), "worlds", "default.world")
         }.items(),
+    )
+
+    kuroko_description_share = get_package_share_directory("kuroko_description")
+    default_controller_yaml = os.path.join(
+        kuroko_description_share,
+        "config",
+        "ros2_control",
+        "joint_trajectory_controller.yaml",
     )
 
     return LaunchDescription(
@@ -227,14 +272,12 @@ def generate_launch_description():
                 default_value="kuroko",
                 description="Spawned entity name in Gazebo",
             ),
-            # Spawn pose (default z=0.34)
             DeclareLaunchArgument("spawn_x", default_value="0.0", description="Spawn position X [m]"),
             DeclareLaunchArgument("spawn_y", default_value="0.0", description="Spawn position Y [m]"),
             DeclareLaunchArgument("spawn_z", default_value="0.34", description="Spawn position Z [m]"),
             DeclareLaunchArgument("spawn_roll", default_value="0.0", description="Spawn roll [rad]"),
             DeclareLaunchArgument("spawn_pitch", default_value="0.0", description="Spawn pitch [rad]"),
             DeclareLaunchArgument("spawn_yaw", default_value="0.0", description="Spawn yaw [rad]"),
-            # Debug options (default OFF)
             DeclareLaunchArgument(
                 "print_urdf",
                 default_value="false",
@@ -244,6 +287,11 @@ def generate_launch_description():
                 "dump_urdf",
                 default_value="false",
                 description="Write cleaned URDFs to /tmp (default: false)",
+            ),
+            DeclareLaunchArgument(
+                "controller_yaml",
+                default_value=default_controller_yaml,
+                description="ros2_control controller YAML passed into xacro (and used to activate all controllers in it)",
             ),
             gazebo,
             OpaqueFunction(function=_create_runtime_actions),
