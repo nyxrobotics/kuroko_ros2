@@ -23,7 +23,7 @@ isaac_policy_player:
     env_yaml_file: "params/env.yaml"
 
     kuroko_description_package: "kuroko_description"
-    controller_yaml_relpath: "config/gz_position_controller.yaml"
+    controller_yaml_relpath: "config/ros2_control/joint_group_position_controller.yaml"
 
     joint_calibration: ""
     joint_velocity_source: "estimate"

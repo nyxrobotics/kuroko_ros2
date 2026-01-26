@@ -202,7 +202,7 @@ class IsaacPolicyPlayer(Node):
         env_yaml_path = Path(env_yaml_param) if env_yaml_param else (policy_dir / "params" / "env.yaml")
 
         controller_yaml_param = str(self.get_parameter("controller_yaml_path").value).strip()
-        default_controller_yaml = desc_share / "config" / "gz_position_controller.yaml"
+        default_controller_yaml = desc_share / "config" / "ros2_control" / "joint_group_position_controller.yaml"
         controller_yaml_path = Path(controller_yaml_param) if controller_yaml_param else default_controller_yaml
 
         self.get_logger().info(f"Policy directory: {policy_dir}")
