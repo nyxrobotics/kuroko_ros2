@@ -31,7 +31,7 @@ isaac_policy_player:
     # ------------------------------------------------------------
     # Execution / timing
     # ------------------------------------------------------------
-    publish_hz: 100.0          # strongly recommended: 50 or 100 (NOT 200 initially)
+    publish_hz: 200.0          # strongly recommended: 50 or 100 (NOT 200 initially)
     use_inference_thread: true
 
     # ------------------------------------------------------------
@@ -52,7 +52,7 @@ isaac_policy_player:
     # ------------------------------------------------------------
     # auto | estimate | message
     joint_velocity_source: "estimate"
-    dq_cutoff_hz: 30.0
+    dq_cutoff_hz: 1000.0
 
     # ------------------------------------------------------------
     # Command input
@@ -64,5 +64,5 @@ isaac_policy_player:
     # ------------------------------------------------------------
     startup_print: true
     debug_print: false
-    debug_print_every: 50
+    debug_print_every: 100
     debug_print_joint_values: false

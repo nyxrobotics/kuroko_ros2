@@ -1,3 +1,4 @@
+# kuroko_isaac_player/policy_player_node.py
 from __future__ import annotations
 
 import math
@@ -17,7 +18,25 @@ from std_msgs.msg import Float64MultiArray
 
 from .env_spec import load_env_spec
 from .observation_builder import ObservationBuilder
-from .policy_loader import load_policy_callable, resolve_policy_path
+from .policy_loader import load_policy_callable
+
+# If your policy_loader.py already provides resolve_policy_path(), this import will work.
+# Otherwise we fall back to a local resolver that also checks exported/policy.pt.
+try:
+    from .policy_loader import resolve_policy_path as _resolve_policy_path  # type: ignore
+except Exception:  # noqa: BLE001
+    _resolve_policy_path = None
+
+
+def _zero_twist() -> Twist:
+    msg = Twist()
+    msg.linear.x = 0.0
+    msg.linear.y = 0.0
+    msg.linear.z = 0.0
+    msg.angular.x = 0.0
+    msg.angular.y = 0.0
+    msg.angular.z = 0.0
+    return msg
 
 
 def _load_controller_joint_names(controller_yaml_path: Path) -> list[str]:
@@ -74,15 +93,53 @@ def _load_controller_joint_names(controller_yaml_path: Path) -> list[str]:
     raise KeyError(f"Could not find joints list in controller yaml: {controller_yaml_path}")
 
 
+def _resolve_policy_path_local(policy_dir: Path, explicit_path: Optional[str]) -> Path:
+    """
+    Local resolver that prefers:
+      1) explicit_path (absolute or relative to policy_dir)
+      2) policy_dir/exported/policy.pt
+      3) newest *.pt in policy_dir/exported/
+      4) policy_dir/policy.pt
+      5) newest *.pt in policy_dir/
+    """
+    if explicit_path:
+        p = Path(explicit_path)
+        if p.is_file():
+            return p
+        p2 = policy_dir / explicit_path
+        if p2.is_file():
+            return p2
+        raise FileNotFoundError(f"policy_path/model_path does not exist: {explicit_path} (also tried {p2})")
+
+    exported = policy_dir / "exported"
+    if exported.is_dir():
+        p = exported / "policy.pt"
+        if p.is_file():
+            return p
+        pts = sorted(exported.glob("*.pt"), key=lambda x: x.stat().st_mtime, reverse=True)
+        if pts:
+            return pts[0]
+
+    p = policy_dir / "policy.pt"
+    if p.is_file():
+        return p
+
+    pts = sorted(policy_dir.glob("*.pt"), key=lambda x: x.stat().st_mtime, reverse=True)
+    if pts:
+        return pts[0]
+
+    raise FileNotFoundError(f"No .pt found in: {policy_dir} (searched exported/ and top-level)")
+
+
 class _DQEstimator:
     """Estimate dq from q differences if /joint_states.velocity is missing/invalid."""
 
     def __init__(self, n: int, cutoff_hz: float = 30.0) -> None:
         self._n = n
+        self._cutoff_hz = float(cutoff_hz)
         self._prev_q: Optional[np.ndarray] = None
         self._prev_t: Optional[float] = None
         self._dq_filt = np.zeros((n,), dtype=np.float32)
-        self._cutoff_hz = float(cutoff_hz)
 
     def reset(self) -> None:
         self._prev_q = None
@@ -117,11 +174,6 @@ class _DQEstimator:
         return self._dq_filt.copy()
 
 
-def _zero_twist() -> Twist:
-    msg = Twist()
-    return msg
-
-
 class IsaacPolicyPlayer(Node):
     def __init__(self) -> None:
         super().__init__("isaac_policy_player")
@@ -130,62 +182,61 @@ class IsaacPolicyPlayer(Node):
         self.declare_parameter("policy_name", "kuroko_walk")
         self.declare_parameter("policy_dir", "")
         self.declare_parameter("policy_path", "")
-        self.declare_parameter("model_path", "")
+        self.declare_parameter("model_path", "")  # legacy alias
 
         self.declare_parameter("env_yaml_path", "")
         self.declare_parameter("controller_yaml_path", "")
 
-        self.declare_parameter("publish_hz", 200.0)
+        self.declare_parameter("publish_hz", 100.0)
         self.declare_parameter("use_inference_thread", True)
 
-        self.declare_parameter("startup_ramp_sec", 2.0)
-        self.declare_parameter("action_clip_abs", 1.0)
-        self.declare_parameter("target_rate_limit", 6.0)
+        self.declare_parameter("require_joint_and_imu", True)
+        self.declare_parameter("cmd_vel_timeout_sec", 1.0)
+        self.declare_parameter("joint_velocity_source", "auto")  # auto | topic | estimate
         self.declare_parameter("dq_cutoff_hz", 30.0)
 
-        self.declare_parameter("cmd_vel_timeout_sec", 1.0)
-        self.declare_parameter("joint_velocity_source", "auto")
-
-        self.declare_parameter("startup_move_to_default", False)
+        self.declare_parameter("startup_move_to_default", True)
         self.declare_parameter("startup_move_duration_sec", 1.0)
+        self.declare_parameter("startup_ramp_sec", 2.0)
+
+        self.declare_parameter("action_clip_abs", 1.0)
+        self.declare_parameter("target_rate_limit", 6.0)
+
         self.declare_parameter("init_last_action_from_joint_states", True)
 
         self.declare_parameter("startup_print", True)
-        self.declare_parameter("debug_print", True)
+        self.declare_parameter("debug_print", False)
         self.declare_parameter("debug_print_every", 50)
-        self.declare_parameter("debug_print_joint_values", True)
+        self.declare_parameter("debug_print_joint_values", False)
 
+        # ---- Resolve paths ----
         pkg_share = Path(get_package_share_directory("kuroko_isaac_player"))
         desc_share = Path(get_package_share_directory("kuroko_description"))
 
-        policy_name = self.get_parameter("policy_name").value
-        default_policy_dir = pkg_share / "trained_data" / policy_name
+        policy_name = str(self.get_parameter("policy_name").value).strip()
+        policy_dir_param = str(self.get_parameter("policy_dir").value).strip()
+        policy_dir = Path(policy_dir_param) if policy_dir_param else (pkg_share / "trained_data" / policy_name)
 
-        policy_dir_param = self.get_parameter("policy_dir").value
-        policy_dir = Path(policy_dir_param) if policy_dir_param else default_policy_dir
+        policy_path_param = str(self.get_parameter("policy_path").value).strip()
+        model_path_param = str(self.get_parameter("model_path").value).strip()
+        explicit = policy_path_param or model_path_param or None
 
-        model_path_param = self.get_parameter("model_path").value
-        policy_path_param = self.get_parameter("policy_path").value
-
-        explicit = None
-        if policy_path_param:
-            explicit = policy_path_param
-        elif model_path_param:
-            explicit = model_path_param
-
-        model_path = Path(
-            resolve_policy_path(
-                str(policy_dir),
-                policy_path=explicit,
-                prefer_exported=True,
-                logger=self.get_logger(),
+        if _resolve_policy_path is not None:
+            model_path = Path(
+                _resolve_policy_path(
+                    str(policy_dir),
+                    policy_path=explicit,
+                    prefer_exported=True,
+                    logger=self.get_logger(),
+                )
             )
-        )
+        else:
+            model_path = _resolve_policy_path_local(policy_dir, explicit)
 
-        env_yaml_param = self.get_parameter("env_yaml_path").value
+        env_yaml_param = str(self.get_parameter("env_yaml_path").value).strip()
         env_yaml_path = Path(env_yaml_param) if env_yaml_param else (policy_dir / "params" / "env.yaml")
 
-        controller_yaml_param = self.get_parameter("controller_yaml_path").value
+        controller_yaml_param = str(self.get_parameter("controller_yaml_path").value).strip()
         default_controller_yaml = desc_share / "config" / "ros2_control" / "joint_group_position_controller.yaml"
         controller_yaml_path = Path(controller_yaml_param) if controller_yaml_param else default_controller_yaml
 
@@ -194,12 +245,13 @@ class IsaacPolicyPlayer(Node):
         self.get_logger().info(f"env_yaml_path: {env_yaml_path}")
         self.get_logger().info(f"controller_yaml_path: {controller_yaml_path}")
 
-        # ---- Load env spec ----
+        # ---- Load env spec (joint order, default pose, observation terms) ----
         env_spec = load_env_spec(str(env_yaml_path))
         self.policy_joint_names = env_spec.policy_joint_names
+        self.default_joint_pos = np.asarray(env_spec.default_joint_pos, dtype=np.float32).reshape(-1)
         self.obs_terms = env_spec.observation_terms_in_order
-        self.default_joint_pos = np.array(env_spec.default_joint_pos, dtype=np.float32)
 
+        # ---- Action config from env.yaml ----
         ajp = env_spec.raw.get("actions", {}).get("joint_pos", {})
         self.action_scale = float(ajp.get("scale", 1.0))
         self.action_offset = float(ajp.get("offset", 0.0))
@@ -221,53 +273,137 @@ class IsaacPolicyPlayer(Node):
             terms_in_order=self.obs_terms,
             default_joint_pos=self.default_joint_pos.tolist(),
         )
-
         self.get_logger().info(f"Observation dim: {self.obs_builder.obs_dim}")
 
-        # ---- Controller mapping ----
+        # ---- Controller joint order + mapping ----
         self.controller_joint_names = _load_controller_joint_names(controller_yaml_path)
         self.policy_to_controller_index = self._build_policy_to_controller_index()
 
-        # ---- ROS I/O ----
-        self.create_subscription(Twist, "/cmd_vel", self._on_cmd, 10)
-        self.create_subscription(Imu, "/kuroko/sensors/imu/data", self._on_imu, 10)
-        self.create_subscription(JointState, "/joint_states", self._on_joint_states, 10)
-        self.pub = self.create_publisher(Float64MultiArray, "/joint_group_position_controller/commands", 10)
+        # ---- Logging controls ----
+        self._startup_print = bool(self.get_parameter("startup_print").value)
+        self._debug_print = bool(self.get_parameter("debug_print").value)
+        self._debug_every = int(self.get_parameter("debug_print_every").value)
+        self._debug_joint_values = bool(self.get_parameter("debug_print_joint_values").value)
 
+        if self._startup_print:
+            self.obs_builder.debug_dump_observation_layout(self.get_logger())
+            self._debug_print_joint_orders_and_mapping()
+            self._debug_print_default_pose()
+
+        # ---- Topic caches ----
         self._latest_cmd = _zero_twist()
         self._latest_cmd_time: Optional[float] = None
         self._latest_imu = Imu()
-        self._got_joint = False
-        self._got_imu = False
 
         self._joint_state_name: Optional[list[str]] = None
         self._joint_state_pos: Optional[np.ndarray] = None
         self._joint_state_vel: Optional[np.ndarray] = None
 
-        self._dq_est = _DQEstimator(len(self.policy_joint_names), self.get_parameter("dq_cutoff_hz").value)
+        self._got_joint = False
+        self._got_imu = False
 
+        # ---- DQ estimator ----
+        self._dq_est = _DQEstimator(
+            n=len(self.policy_joint_names),
+            cutoff_hz=float(self.get_parameter("dq_cutoff_hz").value),
+        )
+
+        # ---- Output smoothing ----
+        self._prev_q_des_policy: Optional[np.ndarray] = None
+        self._prev_pub_t: Optional[float] = None
+
+        # ---- Startup move + ramp ----
+        self._startup_move_enabled = bool(self.get_parameter("startup_move_to_default").value)
+        self._startup_move_duration = float(self.get_parameter("startup_move_duration_sec").value)
+        self._startup_move_active = False
+        self._startup_t0: Optional[float] = None
+        self._startup_q0_ctrl: Optional[np.ndarray] = None
+        self._startup_qt_ctrl: Optional[np.ndarray] = None
+
+        self._policy_enabled = not self._startup_move_enabled
+        self._ramp_sec = float(self.get_parameter("startup_ramp_sec").value)
+        self._ramp_t0 = time.time()
+
+        # ---- last_action init ----
+        self._init_last_action_from_joint_states = bool(self.get_parameter("init_last_action_from_joint_states").value)
+        self._did_init_last_action = False
+
+        # ---- Inference threading ----
+        self._use_inference_thread = bool(self.get_parameter("use_inference_thread").value)
         self._latest_obs: Optional[np.ndarray] = None
         self._latest_action: Optional[np.ndarray] = None
         self._lock = threading.Lock()
+        self._stop = False
+        self._printed_first_infer = False
 
-        self._use_inference_thread = self.get_parameter("use_inference_thread").value
+        # ---- ROS interfaces ----
+        self.create_subscription(Twist, "/cmd_vel", self._on_cmd, 10)
+        self.create_subscription(Imu, "/kuroko/sensors/imu/data", self._on_imu, 10)
+        self.create_subscription(JointState, "/joint_states", self._on_joint_states, 10)
+        self.pub = self.create_publisher(Float64MultiArray, "/joint_group_position_controller/commands", 10)
+
         if self._use_inference_thread:
+            self.get_logger().info("Inference thread enabled")
             self._infer_thread = threading.Thread(target=self._inference_loop, daemon=True)
             self._infer_thread.start()
 
-        hz = self.get_parameter("publish_hz").value
+        hz = float(self.get_parameter("publish_hz").value)
         self.get_logger().info(f"Publishing commands at {hz} Hz")
-        self.create_timer(1.0 / hz, self._on_timer)
+        self.create_timer(1.0 / max(hz, 1.0), self._on_timer)
 
-    # ---------------- mapping ----------------
+    # -------------------------
+    # Debug prints
+    # -------------------------
+    def _debug_print_joint_orders_and_mapping(self) -> None:
+        self.get_logger().info("==== Policy Joint Order (env.yaml) ====")
+        for i, jn in enumerate(self.policy_joint_names):
+            self.get_logger().info(f"[{i:2d}] {jn}")
+
+        self.get_logger().info("==== Controller Command Order (/joint_group_position_controller/commands) ====")
+        for i, jn in enumerate(self.controller_joint_names):
+            self.get_logger().info(f"[{i:2d}] {jn}")
+
+        self.get_logger().info("==== Action → Controller Mapping ====")
+        for pi, jn in enumerate(self.policy_joint_names):
+            ci = self.policy_to_controller_index[pi]
+            self.get_logger().info(f"policy[{pi:2d}] -> joint '{jn}' -> controller[{ci:2d}]")
+
+    def _debug_print_default_pose(self) -> None:
+        self.get_logger().info("==== Default Joint Pose (from env.yaml scene.robot.init_state.joint_pos) ====")
+        self.get_logger().info("---- Policy order ----")
+        for i, jn in enumerate(self.policy_joint_names):
+            self.get_logger().info(f"[{i:2d}] {jn:20s} = {float(self.default_joint_pos[i]): .6f}")
+
+        self.get_logger().info("---- Controller order ----")
+        dmap = {jn: float(self.default_joint_pos[i]) for i, jn in enumerate(self.policy_joint_names)}
+        for ci, jn in enumerate(self.controller_joint_names):
+            v = dmap.get(jn, 0.0)
+            self.get_logger().info(f"[{ci:2d}] {jn:20s} = {v: .6f}")
+
+        self.get_logger().info("==============================================================")
+
+    # -------------------------
+    # Mapping
+    # -------------------------
     def _build_policy_to_controller_index(self) -> list[int]:
         name_to_idx = {jn: i for i, jn in enumerate(self.controller_joint_names)}
         idx: list[int] = []
+        missing: list[str] = []
         for jn in self.policy_joint_names:
-            idx.append(name_to_idx.get(jn, -1))
+            if jn not in name_to_idx:
+                missing.append(jn)
+                idx.append(-1)
+            else:
+                idx.append(name_to_idx[jn])
+
+        if missing:
+            self.get_logger().error(f"Missing joints in controller list: {missing}")
+
         return idx
 
-    # ---------------- callbacks ----------------
+    # -------------------------
+    # Callbacks
+    # -------------------------
     def _on_cmd(self, msg: Twist) -> None:
         self._latest_cmd = msg
         self._latest_cmd_time = time.time()
@@ -279,15 +415,185 @@ class IsaacPolicyPlayer(Node):
     def _on_joint_states(self, msg: JointState) -> None:
         self._got_joint = True
         self._joint_state_name = list(msg.name)
-        self._joint_state_pos = np.array(msg.position, dtype=np.float32)
-        self._joint_state_vel = np.array(msg.velocity, dtype=np.float32) if msg.velocity else None
+        self._joint_state_pos = np.asarray(msg.position, dtype=np.float32) if msg.position else None
+        self._joint_state_vel = np.asarray(msg.velocity, dtype=np.float32) if msg.velocity else None
 
-    # ---------------- timer ----------------
+        # Trigger startup move on the first joint_states.
+        if self._startup_move_enabled and (not self._startup_move_active) and (self._startup_t0 is None):
+            self._startup_t0 = time.time()
+            self._startup_q0_ctrl = self._controller_cmd_from_joint_states(msg)
+            self._startup_qt_ctrl = self._controller_cmd_from_default_pose()
+            self._startup_move_active = True
+
+            self._policy_enabled = False
+            self._ramp_t0 = time.time()
+            self._dq_est.reset()
+            self._prev_q_des_policy = None
+            self._prev_pub_t = None
+
+            if self._startup_print:
+                self.get_logger().info(
+                    f"Startup move enabled: interpolating current pose -> default pose over "
+                    f"{self._startup_move_duration:.3f} s (policy disabled until complete)"
+                )
+
+    # -------------------------
+    # Helpers: startup move command generation
+    # -------------------------
+    def _controller_cmd_from_default_pose(self) -> np.ndarray:
+        dmap = {jn: float(self.default_joint_pos[i]) for i, jn in enumerate(self.policy_joint_names)}
+        out = np.zeros((len(self.controller_joint_names),), dtype=np.float64)
+        for ci, jn in enumerate(self.controller_joint_names):
+            out[ci] = float(dmap.get(jn, 0.0))
+        return out
+
+    def _controller_cmd_from_joint_states(self, msg: JointState) -> np.ndarray:
+        name_to_i = {jn: i for i, jn in enumerate(msg.name)}
+        out = np.zeros((len(self.controller_joint_names),), dtype=np.float64)
+        for ci, jn in enumerate(self.controller_joint_names):
+            si = name_to_i.get(jn, None)
+            if si is None:
+                continue
+            if msg.position and len(msg.position) == len(msg.name):
+                out[ci] = float(msg.position[si])
+        return out
+
+    def _publish_controller_cmd(self, cmd_ctrl: np.ndarray) -> None:
+        msg = Float64MultiArray()
+        msg.data = np.asarray(cmd_ctrl, dtype=np.float64).reshape(-1).tolist()
+        self.pub.publish(msg)
+
+    def _controller_cmd_to_policy_q(self, cmd_ctrl: np.ndarray) -> np.ndarray:
+        cmd_ctrl = np.asarray(cmd_ctrl, dtype=np.float64).reshape(-1)
+        name_to_val = {jn: float(cmd_ctrl[i]) for i, jn in enumerate(self.controller_joint_names)}
+        q = np.zeros((len(self.policy_joint_names),), dtype=np.float32)
+        for pi, jn in enumerate(self.policy_joint_names):
+            q[pi] = float(name_to_val.get(jn, 0.0))
+        return q
+
+    def _measured_q_to_action(self, q_meas_policy: np.ndarray) -> np.ndarray:
+        q = np.asarray(q_meas_policy, dtype=np.float32).reshape(-1)
+        a_scale = float(self.action_scale) if abs(float(self.action_scale)) > 1e-8 else 1.0
+        a_off = float(self.action_offset)
+        base = self.default_joint_pos if self.use_default_offset else 0.0
+        a = (q - a_off - base) / a_scale
+
+        clip_abs = float(self.get_parameter("action_clip_abs").value)
+        if clip_abs > 0.0:
+            a = np.clip(a, -clip_abs, clip_abs)
+        return a.astype(np.float32)
+
+    # -------------------------
+    # cmd_vel helper
+    # -------------------------
+    def _get_cmd_vel_for_obs(self) -> Twist:
+        timeout = float(self.get_parameter("cmd_vel_timeout_sec").value)
+        if self._latest_cmd_time is None:
+            return _zero_twist()
+        if timeout <= 0.0:
+            return self._latest_cmd
+        if (time.time() - self._latest_cmd_time) > timeout:
+            return _zero_twist()
+        return self._latest_cmd
+
+    # -------------------------
+    # JointState -> policy order
+    # -------------------------
+    def _collect_policy_order_q_dq(self) -> Tuple[np.ndarray, np.ndarray, bool]:
+        if self._joint_state_name is None or self._joint_state_pos is None:
+            raise RuntimeError("No /joint_states received yet")
+
+        name_to_i = {jn: i for i, jn in enumerate(self._joint_state_name)}
+        n = len(self.policy_joint_names)
+
+        q = np.zeros((n,), dtype=np.float32)
+        dq_from_msg = np.zeros((n,), dtype=np.float32)
+        vel_ok = False
+
+        for pi, jn in enumerate(self.policy_joint_names):
+            si = name_to_i.get(jn, None)
+            if si is None or self._joint_state_pos is None:
+                continue
+            q[pi] = float(self._joint_state_pos[si])
+
+        if (
+            self._joint_state_vel is not None
+            and len(self._joint_state_name) == len(self._joint_state_vel)
+            and self._joint_state_pos is not None
+            and len(self._joint_state_vel) == len(self._joint_state_pos)
+        ):
+            vel_ok = True
+            for pi, jn in enumerate(self.policy_joint_names):
+                si = name_to_i.get(jn, None)
+                if si is None:
+                    continue
+                dq_from_msg[pi] = float(self._joint_state_vel[si])
+
+        return q, dq_from_msg, vel_ok
+
+    # -------------------------
+    # Timer tick
+    # -------------------------
     def _on_timer(self) -> None:
-        if not (self._got_joint and self._got_imu):
+        # Startup move publishes interpolated commands and blocks policy.
+        if self._startup_move_active:
+            if self._startup_q0_ctrl is None or self._startup_qt_ctrl is None or self._startup_t0 is None:
+                return
+
+            dur = max(float(self._startup_move_duration), 1e-3)
+            now = time.time()
+            alpha = float(np.clip((now - self._startup_t0) / dur, 0.0, 1.0))
+            cmd_ctrl = (1.0 - alpha) * self._startup_q0_ctrl + alpha * self._startup_qt_ctrl
+            self._publish_controller_cmd(cmd_ctrl)
+
+            # Keep last_action consistent with commanded pose during startup.
+            try:
+                q_policy_cmd = self._controller_cmd_to_policy_q(cmd_ctrl)
+                a_cmd = self._measured_q_to_action(q_policy_cmd)
+                self.obs_builder.set_last_action(a_cmd)
+                with self._lock:
+                    self._latest_action = a_cmd.copy()
+                self._did_init_last_action = True
+            except Exception:
+                pass
+
+            if alpha >= 1.0:
+                self._startup_move_active = False
+                self._policy_enabled = True
+                self._ramp_t0 = time.time()
+                self._dq_est.reset()
+                self._prev_q_des_policy = None
+                self._prev_pub_t = None
+                if self._startup_print:
+                    self.get_logger().info("Startup move completed. Policy control enabled.")
             return
 
-        obs = self._build_observation()
+        require_joint_imu = bool(self.get_parameter("require_joint_and_imu").value)
+        if require_joint_imu and not (self._got_joint and self._got_imu):
+            return
+
+        if not self._policy_enabled:
+            return
+
+        cmd = self._get_cmd_vel_for_obs()
+        imu = self._latest_imu
+
+        q, dq_msg, vel_ok = self._collect_policy_order_q_dq()
+
+        now = time.time()
+        src = str(self.get_parameter("joint_velocity_source").value).strip().lower()
+        if src not in ("auto", "topic", "estimate"):
+            src = "auto"
+
+        if src == "estimate":
+            dq = self._dq_est.update(q, now)
+        elif src == "topic":
+            dq = dq_msg if vel_ok else np.zeros_like(q, dtype=np.float32)
+        else:  # auto
+            dq = dq_msg if vel_ok else self._dq_est.update(q, now)
+
+        obs = self.obs_builder.build(cmd, q, dq, imu)
+
         with self._lock:
             self._latest_obs = obs
 
@@ -295,62 +601,135 @@ class IsaacPolicyPlayer(Node):
             self._run_inference_once()
 
         with self._lock:
-            action = self._latest_action
+            action = None if self._latest_action is None else self._latest_action.copy()
+
         if action is None:
             return
 
-        self._publish_action(action)
+        self._publish_action_as_controller_command(action, q, dq, obs)
 
-    # ---------------- observation ----------------
-    def _build_observation(self) -> np.ndarray:
-        name_to_i = {n: i for i, n in enumerate(self._joint_state_name)}
-        q = np.zeros(len(self.policy_joint_names), dtype=np.float32)
-        dq = np.zeros_like(q)
-
-        for pi, jn in enumerate(self.policy_joint_names):
-            si = name_to_i.get(jn)
-            if si is not None:
-                q[pi] = self._joint_state_pos[si]
-
-        dq = self._dq_est.update(q, time.time())
-
-        cmd = self._latest_cmd
-        imu = self._latest_imu
-        return self.obs_builder.build(cmd, q, dq, imu)
-
-    # ---------------- inference ----------------
+    # -------------------------
+    # Inference
+    # -------------------------
     def _run_inference_once(self) -> None:
+        if not self._policy_enabled:
+            return
+
         with self._lock:
             obs = None if self._latest_obs is None else self._latest_obs.copy()
         if obs is None:
             return
 
         action = self.policy(obs)
-        action = np.asarray(action, dtype=np.float32).reshape(-1)
+        action = np.asarray(action, dtype=np.float32)
+        if action.ndim == 2:
+            action = action.reshape(-1)
 
         self.obs_builder.set_last_action(action)
         with self._lock:
             self._latest_action = action
 
+        if self._startup_print and (not self._printed_first_infer):
+            self._printed_first_infer = True
+            self.get_logger().info("==== First inference completed ====")
+
     def _inference_loop(self) -> None:
-        while rclpy.ok():
+        while (not self._stop) and rclpy.ok():
+            if not self._policy_enabled:
+                time.sleep(0.002)
+                continue
             self._run_inference_once()
-            time.sleep(0.001)
 
-    # ---------------- publish ----------------
-    def _publish_action(self, action: np.ndarray) -> None:
-        q_des = self.action_scale * action + self.action_offset
+    # -------------------------
+    # Action -> target + publish
+    # -------------------------
+    def _startup_gain(self) -> float:
+        if self._ramp_sec <= 0.0:
+            return 1.0
+        t = time.time() - self._ramp_t0
+        return float(np.clip(t / self._ramp_sec, 0.0, 1.0))
+
+    def _action_to_target_q(self, action_policy_order: np.ndarray, gain: float) -> np.ndarray:
+        a = np.asarray(action_policy_order, dtype=np.float32).reshape(-1)
+
+        clip_abs = float(self.get_parameter("action_clip_abs").value)
+        if clip_abs > 0.0:
+            a = np.clip(a, -clip_abs, clip_abs)
+
+        a = gain * a
+
+        tgt = (self.action_scale * a) + self.action_offset
         if self.use_default_offset:
-            q_des = q_des + self.default_joint_pos
+            tgt = tgt + self.default_joint_pos
 
-        cmd = np.zeros(len(self.controller_joint_names), dtype=np.float64)
+        if isinstance(self.action_clip, (list, tuple)) and len(self.action_clip) == 2:
+            lo, hi = float(self.action_clip[0]), float(self.action_clip[1])
+            tgt = np.clip(tgt, lo, hi)
+
+        return tgt.astype(np.float32)
+
+    def _rate_limit_target(self, q_des: np.ndarray, now: float) -> np.ndarray:
+        q_des = np.asarray(q_des, dtype=np.float32).reshape(-1)
+
+        if self._prev_q_des_policy is None or self._prev_pub_t is None:
+            self._prev_q_des_policy = q_des.copy()
+            self._prev_pub_t = float(now)
+            return q_des
+
+        dt = float(now - self._prev_pub_t)
+        if dt <= 1e-6:
+            return self._prev_q_des_policy.copy()
+
+        rate = float(self.get_parameter("target_rate_limit").value)
+        if rate <= 0.0:
+            self._prev_q_des_policy = q_des.copy()
+            self._prev_pub_t = float(now)
+            return q_des
+
+        max_delta = rate * dt
+        dq = q_des - self._prev_q_des_policy
+        dq = np.clip(dq, -max_delta, max_delta)
+        out = self._prev_q_des_policy + dq
+
+        self._prev_q_des_policy = out.copy()
+        self._prev_pub_t = float(now)
+        return out
+
+    def _publish_action_as_controller_command(
+        self,
+        action_policy_order: np.ndarray,
+        q: np.ndarray,
+        dq: np.ndarray,
+        obs: np.ndarray,
+    ) -> None:
+        now = time.time()
+        gain = self._startup_gain()
+
+        q_des_policy = self._action_to_target_q(action_policy_order, gain=gain)
+        q_des_policy = self._rate_limit_target(q_des_policy, now)
+
+        cmd_ctrl = np.zeros((len(self.controller_joint_names),), dtype=np.float64)
         for pi, ci in enumerate(self.policy_to_controller_index):
-            if ci >= 0:
-                cmd[ci] = float(q_des[pi])
+            if ci < 0:
+                continue
+            cmd_ctrl[ci] = float(q_des_policy[pi])
 
-        msg = Float64MultiArray()
-        msg.data = cmd.tolist()
-        self.pub.publish(msg)
+        if self._debug_print and self._debug_every > 0:
+            # Lightweight periodic debug (avoid flooding)
+            tick = int(now * 1000.0)  # not a real tick, but stable enough for sampling
+            if (tick % self._debug_every) == 0:
+                self.get_logger().info(
+                    f"gain={gain:.3f} obs(min/max)={float(obs.min()):.3f}/{float(obs.max()):.3f} "
+                    f"action(min/max)={float(np.min(action_policy_order)):.3f}/{float(np.max(action_policy_order)):.3f}"
+                )
+                if self._debug_joint_values:
+                    for i, jn in enumerate(self.policy_joint_names):
+                        self.get_logger().info(
+                            f"[{i:2d}] {jn:20s} q={float(q[i]): .4f} dq={float(dq[i]): .4f} "
+                            f"a={float(action_policy_order[i]): .4f} q_des={float(q_des_policy[i]): .4f}"
+                        )
+
+        self._publish_controller_cmd(cmd_ctrl)
 
 
 def main(args=None) -> None:
