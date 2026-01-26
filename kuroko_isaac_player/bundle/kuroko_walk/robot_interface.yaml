@@ -16,8 +16,15 @@ joints:
   default_pos: {}
 term_inputs: {}
 control:
-  sink: ros2_control_topic
-  mode: position_targets
-  topic: /joint_group_pos_controller/commands
-  rate_hz: 200
-  decimation: 4
+  type: forward_command_controller
+  controller_name: /joint_group_position_controller
+  controller_manager_name: /controller_manager
+  command_topic: /joint_group_position_controller/commands
+  command_msg_type: std_msgs/msg/Float64MultiArray
+  rate_hz: 50
+  command_joint_order: null
+  command_joint_order_resolution:
+    method: ros_param
+    node: /joint_group_position_controller
+    param: joints
+  policy_joint_order_source: action_config.json

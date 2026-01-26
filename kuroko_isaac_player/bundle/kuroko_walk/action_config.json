@@ -1,6 +1,6 @@
 {
   "type": "joint_position",
-  "joint_order": [
+  "policy_joint_order": [
     "chest",
     "hip_l_roll",
     "hip_r_roll",
