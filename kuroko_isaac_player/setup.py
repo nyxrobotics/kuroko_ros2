@@ -13,9 +13,14 @@ setup(
         ("share/" + package_name, ["package.xml"]),
         (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
         (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
-        # trained data
+        # trained data (top-level)
         (os.path.join("share", package_name, "trained_data", "kuroko_walk"), glob("trained_data/kuroko_walk/*.pt")),
+        (os.path.join("share", package_name, "trained_data", "kuroko_walk"), glob("trained_data/kuroko_walk/*.onnx")),
+        # trained data params
         (os.path.join("share", package_name, "trained_data", "kuroko_walk", "params"), glob("trained_data/kuroko_walk/params/*.yaml")),
+        # exported policies (Isaac Lab)
+        (os.path.join("share", package_name, "trained_data", "kuroko_walk", "exported"), glob("trained_data/kuroko_walk/exported/*.pt")),
+        (os.path.join("share", package_name, "trained_data", "kuroko_walk", "exported"), glob("trained_data/kuroko_walk/exported/*.onnx")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,

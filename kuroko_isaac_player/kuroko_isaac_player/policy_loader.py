@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -13,6 +14,105 @@ except Exception as exc:  # noqa: BLE001
     raise RuntimeError(
         "PyTorch is required to run the policy. Install it in your environment (pip/conda)."
     ) from exc
+
+
+def resolve_policy_path(
+    policy_dir: str,
+    *,
+    policy_path: Optional[str] = None,
+    prefer_exported: bool = True,
+    logger: Any = None,
+) -> str:
+    """
+    Resolve the policy file path.
+
+    Behavior:
+      - If policy_path is provided and exists, return it as-is.
+      - Otherwise search inside policy_dir:
+          1) exported/policy.pt (preferred)
+          2) exported/*.pt
+          3) policy_dir/policy.pt
+          4) policy_dir/*.pt
+        and pick the "best" candidate.
+
+    Notes:
+      - We do NOT attempt to validate TorchScript here. The actual loader will try torch.jit.load first.
+      - This is designed to avoid missing Isaac Lab's common output: <run>/exported/policy.pt
+    """
+    base = Path(policy_dir)
+
+    if policy_path:
+        p = Path(policy_path)
+        if p.is_file():
+            return str(p)
+        # If user gave a relative path, try relative to policy_dir as well.
+        p2 = base / policy_path
+        if p2.is_file():
+            return str(p2)
+        raise FileNotFoundError(f"policy_path does not exist: {policy_path} (also tried {p2})")
+
+    def _mtime(path: Path) -> float:
+        try:
+            return path.stat().st_mtime
+        except Exception:
+            return 0.0
+
+    candidates: List[Path] = []
+
+    exported = base / "exported"
+    if prefer_exported and exported.is_dir():
+        # Most common Isaac Lab output
+        p = exported / "policy.pt"
+        if p.is_file():
+            candidates.append(p)
+
+        # Any other .pt inside exported/
+        candidates.extend(sorted(exported.glob("*.pt")))
+
+    # Also consider top-level
+    p = base / "policy.pt"
+    if p.is_file():
+        candidates.append(p)
+    candidates.extend(sorted(base.glob("*.pt")))
+
+    # De-duplicate while keeping order
+    seen: set[Path] = set()
+    uniq: List[Path] = []
+    for c in candidates:
+        c_abs = c.resolve()
+        if c_abs in seen:
+            continue
+        seen.add(c_abs)
+        uniq.append(c)
+
+    # Filter obvious non-policy artifacts if they exist
+    # (keep this conservative; only remove patterns that are very unlikely to be a deployable policy)
+    filtered: List[Path] = []
+    for c in uniq:
+        name = c.name.lower()
+        if name.endswith(".pt") and any(x in name for x in ["optimizer", "replay", "buffer"]):
+            continue
+        filtered.append(c)
+
+    if not filtered:
+        raise FileNotFoundError(
+            f"No .pt policy file found under: {base} (searched exported/ and top-level)."
+        )
+
+    # Prefer exact "policy.pt" names first (exported/policy.pt already first if prefer_exported=True).
+    exact_policy = [c for c in filtered if c.name == "policy.pt"]
+    if exact_policy:
+        # If multiple exist, pick the newest by mtime.
+        best = max(exact_policy, key=_mtime)
+        if logger:
+            logger.info(f"Resolved policy path: {best} (picked newest policy.pt)")
+        return str(best)
+
+    # Otherwise pick newest .pt by mtime.
+    best = max(filtered, key=_mtime)
+    if logger:
+        logger.info(f"Resolved policy path: {best} (picked newest .pt)")
+    return str(best)
 
 
 def _to_numpy(x: Any) -> np.ndarray:
@@ -256,7 +356,9 @@ def load_policy_callable(
             logger.warn(f"Missing keys when loading actor state_dict: {missing}")
         if unexpected:
             logger.warn(f"Unexpected keys when loading actor state_dict: {unexpected}")
-        logger.info(f"Loaded policy from checkpoint as MLP: obs_dim={in_dim}, act_dim={out_dim}, hidden={list(hidden)}")
+        logger.info(
+            f"Loaded policy from checkpoint as MLP: obs_dim={in_dim}, act_dim={out_dim}, hidden={list(hidden)}"
+        )
 
     def _call(obs_np: np.ndarray) -> np.ndarray:
         obs = torch.from_numpy(obs_np).to(dev)

@@ -13,10 +13,12 @@ class _SafeLoaderWithIsaacTags(yaml.SafeLoader):
 
 
 def _construct_python_tuple(loader: yaml.Loader, node: yaml.Node):
+    # OmegaConf/Hydra may emit python/tuple tags; convert to list for simplicity.
     return list(loader.construct_sequence(node))
 
 
 def _construct_builtins_slice(loader: yaml.Loader, node: yaml.Node):
+    # Some Isaac Lab configs use a builtins.slice tag.
     if isinstance(node, yaml.SequenceNode):
         seq = loader.construct_sequence(node)
         start = stop = step = None
@@ -90,12 +92,7 @@ def extract_default_joint_pos(env: Dict[str, Any], policy_joint_names: List[str]
         else:
             out.append(float(jp[jn]))
 
-    # missing is not fatal, but important for correctness
-    if missing:
-        # keep it deterministic and visible
-        # (caller can log raw if needed)
-        pass
-
+    # Missing joints are not fatal here; the caller may log/handle it.
     return out
 
 
@@ -113,30 +110,41 @@ def extract_observation_policy_tokens(env: Dict[str, Any]) -> List[str]:
 
 def extract_active_observation_terms(env: Dict[str, Any]) -> List[str]:
     """
-    Filter by actual contents in observations.policy:
-      - value None   -> drop
-      - value bool   -> drop
-      - value dict   -> keep
+    Extract enabled observation terms from observations.policy.
+
+    Isaac Lab env.yaml sometimes contains "meta" scalar keys inside observations.policy,
+    e.g. concatenate_dim: 1. These are not observation terms and must not hard-fail.
+
+    Rules:
+      - dict  -> enabled if enable!=False (default True)
+      - list  -> enabled
+      - None/bool/int/float/str/... -> treated as meta/config; ignored
     """
     policy_map = extract_observations_policy_map(env)
 
     active: List[str] = []
     for k, v in policy_map.items():
         term = str(k)
-        if v is None:
-            continue
-        if isinstance(v, bool):
-            continue
+
         if isinstance(v, dict):
+            if v.get("enable", True):
+                active.append(term)
+            continue
+
+        if isinstance(v, list):
             active.append(term)
             continue
-        raise TypeError(f"Unsupported observations.policy.{term} type: {type(v)}")
+
+        # Skip meta/scalar fields (concatenate_dim, noise params, etc.)
+        continue
+
     return active
 
 
 def load_env_spec(path: str) -> EnvSpec:
     with open(path, "r") as f:
         data = yaml.load(f, Loader=_SafeLoaderWithIsaacTags)
+
     if data is None:
         data = {}
     if not isinstance(data, dict):
