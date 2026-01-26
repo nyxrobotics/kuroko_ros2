@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="n100mini_gazebo" params="namespace name update_rate">
+  <xacro:macro name="n100mini_gz" params="namespace name update_rate">
     <gazebo reference="${name}_link">
       <material>Gazebo/Gray</material>
       <sensor name="imu" type="imu">

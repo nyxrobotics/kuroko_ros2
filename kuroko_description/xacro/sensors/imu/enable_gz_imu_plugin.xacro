@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="enable_gz_imu_plugin">
-    <!-- Loading Gazebo Plugin for IMU -->
+    <!-- Loading gz Plugin for IMU -->
     <gazebo>
       <plugin name="gz::sim::systems::Imu" filename="gz-sim-imu-system"/>
       <plugin name="gz::sim::systems::Magnetometer" filename="gz-sim-magnetometer-system">
