@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Top-level launch: Gazebo Sim world + Kuroko spawn + /clock bridge + ros2_control controllers.
+"""Top-level launch: gz Sim world + Kuroko spawn + /clock bridge + ros2_control controllers.
 
 - Avoids hard-coding the *kuroko_gz* package name by resolving this package's share directory via __file__.
-- Starts Gazebo world (paused by default), spawns Kuroko, bridges /clock from Gazebo to ROS 2,
+- Starts gz world (paused by default), spawns Kuroko, bridges /clock from gz to ROS 2,
   then spawns ros2_control controllers.
 
 Controller YAML lives in *kuroko_description*, so we resolve that via FindPackageShare.
@@ -61,7 +61,7 @@ def generate_launch_description() -> LaunchDescription:
         }.items(),
     )
 
-    # /clock bridge (Gazebo -> ROS 2)
+    # /clock bridge (gz -> ROS 2)
     gz_bridge_inc = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(launch_dir / "gz_bridge.launch.py")),
         launch_arguments={
@@ -69,10 +69,10 @@ def generate_launch_description() -> LaunchDescription:
         }.items(),
     )
 
-    # Controllers
+    # Controllers (spawn all controllers defined in YAML)
     controllers_yaml = LaunchConfiguration("controllers_yaml")
     controllers_inc = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(str(launch_dir / "position_controller.launch.py")),
+        PythonLaunchDescriptionSource(str(launch_dir / "spawn_controllers.launch.py")),
         launch_arguments={
             "controllers_yaml": controllers_yaml,
             "controller_manager": controller_manager,
@@ -92,17 +92,17 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument(
                 "world_name",
                 default_value="empty",
-                description="Gazebo world name (used by ros_gz_sim create -world).",
+                description="gz world name (used by ros_gz_sim create -world).",
             ),
-            DeclareLaunchArgument("robot_name", default_value="kuroko", description="Entity name in Gazebo."),
+            DeclareLaunchArgument("robot_name", default_value="kuroko", description="Entity name in gz."),
             DeclareLaunchArgument("x", default_value="0.0"),
             DeclareLaunchArgument("y", default_value="0.0"),
             DeclareLaunchArgument("z", default_value="0.35"),
             DeclareLaunchArgument("yaw", default_value="3.14", description="Yaw (rad)."),
             DeclareLaunchArgument(
                 "controllers_yaml",
-                default_value=[kuroko_description_share, "/config/gz_position_controller.yaml"],
-                description="Controller YAML (lives in kuroko_description/config).",
+                default_value=[kuroko_description_share, "/config/ros2_control/gz_pid_position.yaml"],
+                description="Controller YAML (lives in kuroko_description/config/ros2_control).",
             ),
             DeclareLaunchArgument(
                 "controller_manager",
