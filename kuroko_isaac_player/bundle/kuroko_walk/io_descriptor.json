@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "observation_group": "policy",
+  "observations": [
+    {
+      "name": "base_ang_vel",
+      "shape": [
+        3
+      ]
+    },
+    {
+      "name": "velocity_commands",
+      "shape": [
+        3
+      ]
+    },
+    {
+      "name": "joint_pos",
+      "shape": [
+        21
+      ]
+    },
+    {
+      "name": "joint_vel",
+      "shape": [
+        21
+      ]
+    },
+    {
+      "name": "actions",
+      "shape": [
+        21
+      ]
+    },
+    {
+      "name": "base_lin_acc_sens",
+      "shape": [
+        3
+      ]
+    }
+  ],
+  "total_dim": 72,
+  "source": {
+    "type": "isaaclab",
+    "file": "exported/IO_descriptors.yaml"
+  },
+  "name_map": {
+    "generated_commands": "velocity_commands",
+    "joint_pos_rel": "joint_pos",
+    "joint_vel_rel": "joint_vel",
+    "last_action": "actions"
+  }
+}

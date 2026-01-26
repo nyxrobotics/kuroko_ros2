@@ -1,0 +1,23 @@
+version: 1
+frames:
+  base_frame: body_link
+sources:
+  imu:
+    msg_type: sensor_msgs/Imu
+    topic: /imu/data
+  joint_states:
+    msg_type: sensor_msgs/JointState
+    topic: /joint_states
+  cmd_vel:
+    msg_type: geometry_msgs/Twist
+    topic: /cmd_vel
+joints:
+  name_map: {}
+  default_pos: {}
+term_inputs: {}
+control:
+  sink: ros2_control_topic
+  mode: position_targets
+  topic: /joint_group_pos_controller/commands
+  rate_hz: 200
+  decimation: 4
