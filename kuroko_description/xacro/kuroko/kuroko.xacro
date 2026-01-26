@@ -37,9 +37,10 @@
   <xacro:include filename="${XACRO_DIR}/kuroko/gazebo/leg_l.gazebo"/>
 
   <xacro:include filename="${XACRO_DIR}/sensors/range/tfluna.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/sensors/imu/enable_gz_imu_plugin.xacro"/>
+  <!-- <xacro:include filename="${XACRO_DIR}/sensors/imu/enable_gz_imu_plugin.xacro"/> -->
   <xacro:include filename="${XACRO_DIR}/sensors/imu/imu_n100mini.xacro"/>
-  <xacro:include filename="${XACRO_DIR}/sensors/camera/enable_gz_rendering_plugin.xacro"/>
+  <xacro:include filename="${XACRO_DIR}/sensors/imu/imu_n100mini_gazebo.xacro"/>
+  <!-- <xacro:include filename="${XACRO_DIR}/sensors/camera/enable_gz_rendering_plugin.xacro"/> -->
   <xacro:include filename="${XACRO_DIR}/sensors/camera/usb_camera.xacro"/>
 
   <!-- Gazebo Classic ros2_control helper -->
@@ -70,9 +71,11 @@
     <xacro:leg_l_xacro gazebo="${gazebo}" box_visual="${box_visual}"/>
     <xacro:leg_l_gazebo/>
 
-    <xacro:imu_n100mini parent="waist_link" name="imu" namespace="/kuroko/sensors/imu">
+    <xacro:imu_n100mini parent="waist_link" name="imu">
       <origin xyz="-0.04 0 -0.01" rpy="0 0 0"/>
     </xacro:imu_n100mini>
+    <xacro:n100mini_gazebo name="imu" namespace="/kuroko/sensors/imu"/>
+
 
     <!-- <xacro:usb_camera parent="waist_link" name="camera" namespace="/kuroko/sensors/camera">
       <origin xyz="0.07 0 -0.026" rpy="0 0 0"/>
@@ -82,7 +85,7 @@
       <origin xyz="0.07 0 -0.044" rpy="0 0 0"/>
     </xacro:tfluna> -->
 
-    <!-- Gazebo-specific sensor/plugins only when gazebo:=true -->
+    <!-- gz sensor/plugins -->
     <!-- <xacro:if value="${gazebo}">
       <xacro:enable_gz_rendering_plugin/>
       <xacro:enable_gz_imu_plugin/>

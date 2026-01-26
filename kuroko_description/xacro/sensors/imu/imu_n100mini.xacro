@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:include filename="imu_n100mini_gz.xacro"/>
-  <xacro:macro name="imu_n100mini" params="name parent:='base_link' update_rate:=400 *origin namespace">
+  <xacro:macro name="imu_n100mini" params="name parent:='base_link' *origin">
     <xacro:property name="depth" value="0.01"/>
     <xacro:property name="width" value="0.01"/>
     <xacro:property name="height" value="0.01"/>
@@ -33,6 +32,5 @@
       <disableFixedJointLumping>true</disableFixedJointLumping>
       <preserveFixedJoint>true</preserveFixedJoint>
     </gazebo>
-    <xacro:n100mini_gz name="${name}" update_rate="${update_rate}" namespace="${namespace}"/>
   </xacro:macro>
 </robot>

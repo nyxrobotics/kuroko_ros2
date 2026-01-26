@@ -9,12 +9,6 @@
         <topic>${namespace}/data</topic>
         <gz_frame_id>${name}_link</gz_frame_id>
       </sensor>
-      <sensor name="magnetometer" type="magnetometer">
-        <always_on>true</always_on>
-        <update_rate>${update_rate}</update_rate>
-        <topic>${namespace}/mag</topic>
-        <gz_frame_id>${name}_link</gz_frame_id>
-      </sensor>
     </gazebo>
   </xacro:macro>
 </robot>

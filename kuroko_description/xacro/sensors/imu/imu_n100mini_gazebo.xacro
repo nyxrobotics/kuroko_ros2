@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <!--
+    Gazebo Classic + ROS 2 IMU sensor definition for the N100mini.
+
+    This uses gazebo_ros_pkgs' SensorPlugin:
+      filename="libgazebo_ros_imu_sensor.so"
+
+    Notes:
+      - Update rate is set on the <sensor> element (ROS 2 migration policy).
+      - Topic is configured via ROS 2 remapping inside <ros>.
+      - If <frame_name> is omitted, it defaults to the parent link name.
+  -->
+
+  <xacro:macro name="n100mini_gazebo" params="namespace name update_rate:=400">
+    <gazebo reference="${name}_link">
+      <material>Gazebo/Gray</material>
+
+      <sensor name="imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>${update_rate}</update_rate>
+
+        <!-- Optional: add noise here if you want (sdformat noise blocks). -->
+
+        <plugin name="${name}_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+          <ros>
+            <!-- Publishes to: ${namespace}/data -->
+            <namespace>${namespace}</namespace>
+            <remapping>~/out:=data</remapping>
+          </ros>
+
+          <!-- Explicit frame id (optional). If omitted, defaults to ${name}_link. -->
+          <frame_name>${name}_link</frame_name>
+
+          <!-- REP-145 compliant behaviour (recommended) -->
+          <initial_orientation_as_reference>true</initial_orientation_as_reference>
+        </plugin>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+</robot>
