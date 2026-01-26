@@ -1,0 +1,217 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 1000
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    pid_controller:
+      type: pid_controller/PidController
+
+joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: true
+
+pid_controller:
+  ros__parameters:
+    use_sim_time: true
+
+    # Target joints (same names as URDF joints)
+    dof_names:
+      - chest
+      - shoulder_r_pitch
+      - shoulder_r_roll
+      - elbow_r_front
+      - elbow_r_rear
+      - shoulder_l_pitch
+      - shoulder_l_roll
+      - elbow_l_front
+      - elbow_l_rear
+      - hip_r_roll
+      - hip_r_pitch
+      - thigh_r_active
+      - shin_r_active
+      - ankle_r_roll
+      - ankle_r_yaw
+      - hip_l_roll
+      - hip_l_pitch
+      - thigh_l_active
+      - shin_l_active
+      - ankle_l_roll
+      - ankle_l_yaw
+
+    # PID output interface (requires <command_interface name="effort"> in URDF)
+    command_interface: effort
+
+    # Position control: reference is position, state feedback is position
+    reference_and_state_interfaces: ["position"]
+
+    gains:
+      chest:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      shoulder_r_pitch:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      shoulder_r_roll:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      elbow_r_front:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      elbow_r_rear:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      shoulder_l_pitch:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      shoulder_l_roll:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      elbow_l_front:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      elbow_l_rear:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      hip_r_roll:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      hip_r_pitch:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      thigh_r_active:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      shin_r_active:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      ankle_r_roll:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      ankle_r_yaw:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      hip_l_roll:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      hip_l_pitch:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      thigh_l_active:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      shin_l_active:
+        p: 42.41
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      ankle_l_roll:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
+
+      ankle_l_yaw:
+        p: 16.62
+        i: 0.0
+        d: 0.0
+        i_clamp_max: 1.0
+        i_clamp_min: -1.0
+        antiwindup: true
