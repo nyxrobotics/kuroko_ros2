@@ -1,6 +1,9 @@
 version: 1
+
 frames:
   base_frame: body_link
+
+# ROS input sources used by term_inputs[*].source
 sources:
   imu:
     msg_type: sensor_msgs/Imu
@@ -11,20 +14,62 @@ sources:
   cmd_vel:
     msg_type: geometry_msgs/Twist
     topic: /cmd_vel
-joints:
-  name_map: {}
-  default_pos: {}
-term_inputs: {}
+
+# Optional joint name remapping + defaults (used by joint_pos_rel when rel=true)
+# joints:
+#   name_map: {}
+#   default_pos: {}
+
+# Term wiring (MUST exist for every observation term in io_descriptor.json)
+term_inputs:
+  base_ang_vel:
+    source: imu
+    vector_field: angular_velocity
+
+  base_lin_acc_sens:
+    source: imu
+    vector_field: linear_acceleration
+    orientation_field: orientation
+    provides_specific_force: false
+    gravity_mag: 9.81
+
+  velocity_commands:
+    source: cmd_vel
+    mapping:
+      lin_x: linear.x
+      lin_y: linear.y
+      ang_z: angular.z
+
+  joint_pos:
+    source: joint_states
+    rel: true
+
+  joint_vel:
+    source: joint_states
+
+  actions:
+    # last_action term is internal state, but base Term requires a valid source.
+    # Using joint_states as a harmless always-present source.
+    source: joint_states
+
 control:
   type: forward_command_controller
+
+  # Controller node name (you explicitly wanted this to be a parameter, not a file dependency)
   controller_name: /joint_group_position_controller
   controller_manager_name: /controller_manager
+
+  # Where we actually publish commands
   command_topic: /joint_group_position_controller/commands
   command_msg_type: std_msgs/msg/Float64MultiArray
   rate_hz: 50
+
+  # Runtime MUST resolve controller joint order via ros2 param get <controller_name> joints
   command_joint_order: null
   command_joint_order_resolution:
     method: ros_param
     node: /joint_group_position_controller
     param: joints
+
+  # Policy joint order comes from action_config.json
   policy_joint_order_source: action_config.json
