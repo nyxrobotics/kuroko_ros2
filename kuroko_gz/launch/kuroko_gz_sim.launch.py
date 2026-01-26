@@ -49,7 +49,7 @@ def generate_launch_description() -> LaunchDescription:
 
     # Robot
     spawn_kuroko_inc = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(str(launch_dir / "spwan_kuroko.launch.py")),
+        PythonLaunchDescriptionSource(str(launch_dir / "spawn_kuroko.launch.py")),
         launch_arguments={
             "robot_name": robot_name,
             "world_name": world_name,

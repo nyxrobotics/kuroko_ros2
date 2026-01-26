@@ -127,7 +127,7 @@ If the joint moves in Gazebo, the controller is working correctly.
   Full system launch (world, robot, clock bridge, controllers)
 - `spawn_world.launch.py`  
   Gazebo world launch
-- `spwan_kuroko.launch.py`  
+- `spawn_kuroko.launch.py`  
   Kuroko robot spawn
 - `gz_bridge.launch.py`  
   Gazebo → ROS 2 `/clock` bridge

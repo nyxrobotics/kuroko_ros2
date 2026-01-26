@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Spawn Kuroko into an existing Gazebo world.
 
-(This file name is intentionally 'spwan_kuroko.launch.py' as requested.)
+(This file name is intentionally 'spawn_kuroko.launch.py' as requested.)
 
 Publishes TF (robot_state_publisher) and spawns the entity via ros_gz_sim/create using robot_description.
 """
