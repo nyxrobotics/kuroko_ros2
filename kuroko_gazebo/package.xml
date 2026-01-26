@@ -17,10 +17,14 @@
   <!-- Tools/nodes used by launch -->
   <exec_depend>xacro</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>gazebo_ros</exec_depend>
-  <exec_depend>gazebo_ros2_control</exec_depend>
   <exec_depend>ros2_control</exec_depend>
   <exec_depend>controller_manager</exec_depend>
+
+  <!-- Gazebo Classic -->
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_ros2_control</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+
 
   <!-- If you use ros2_control / gazebo_ros2_control in your robot description,
        those are usually dependencies of the robot/description packages, but
