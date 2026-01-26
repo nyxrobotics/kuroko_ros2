@@ -28,6 +28,20 @@ except Exception:  # noqa: BLE001
     _resolve_policy_path = None
 
 
+class _ThrottledLogger:
+    """Simple throttle helper to avoid spamming warnings."""
+
+    def __init__(self) -> None:
+        self._last: dict[str, float] = {}
+
+    def warn(self, node: Node, key: str, msg: str, period_sec: float = 2.0) -> None:
+        now = time.time()
+        t0 = self._last.get(key, 0.0)
+        if (now - t0) >= period_sec:
+            self._last[key] = now
+            node.get_logger().warn(msg)
+
+
 def _zero_twist() -> Twist:
     msg = Twist()
     msg.linear.x = 0.0
@@ -178,6 +192,8 @@ class IsaacPolicyPlayer(Node):
     def __init__(self) -> None:
         super().__init__("isaac_policy_player")
 
+        self._twarn = _ThrottledLogger()
+
         # ---- Parameters ----
         self.declare_parameter("policy_name", "kuroko_walk")
         self.declare_parameter("policy_dir", "")
@@ -208,6 +224,8 @@ class IsaacPolicyPlayer(Node):
         self.declare_parameter("debug_print", False)
         self.declare_parameter("debug_print_every", 50)
         self.declare_parameter("debug_print_joint_values", False)
+
+        self.declare_parameter("warn_throttle_sec", 2.0)
 
         # ---- Resolve paths ----
         pkg_share = Path(get_package_share_directory("kuroko_isaac_player"))
@@ -278,6 +296,7 @@ class IsaacPolicyPlayer(Node):
         # ---- Controller joint order + mapping ----
         self.controller_joint_names = _load_controller_joint_names(controller_yaml_path)
         self.policy_to_controller_index = self._build_policy_to_controller_index()
+        self._validate_joint_name_alignment()
 
         # ---- Logging controls ----
         self._startup_print = bool(self.get_parameter("startup_print").value)
@@ -327,6 +346,8 @@ class IsaacPolicyPlayer(Node):
         # ---- last_action init ----
         self._init_last_action_from_joint_states = bool(self.get_parameter("init_last_action_from_joint_states").value)
         self._did_init_last_action = False
+
+        self._unmapped_joints_warned = False
 
         # ---- Inference threading ----
         self._use_inference_thread = bool(self.get_parameter("use_inference_thread").value)
@@ -401,14 +422,54 @@ class IsaacPolicyPlayer(Node):
 
         return idx
 
+    def _validate_joint_name_alignment(self) -> None:
+        throttle = float(self.get_parameter("warn_throttle_sec").value)
+
+        policy_set = set(self.policy_joint_names)
+        ctrl_set = set(self.controller_joint_names)
+
+        missing_in_ctrl = sorted(list(policy_set - ctrl_set))
+        extra_in_ctrl = sorted(list(ctrl_set - policy_set))
+
+        if missing_in_ctrl:
+            self.get_logger().error(
+                f"Controller is missing {len(missing_in_ctrl)} policy joints: {missing_in_ctrl}"
+            )
+
+        if extra_in_ctrl:
+            self._twarn.warn(
+                self,
+                "extra_in_ctrl",
+                f"Controller has {len(extra_in_ctrl)} extra joints not used by policy: {extra_in_ctrl}",
+                period_sec=throttle,
+            )
+
+        bad = [(i, jn) for i, jn in enumerate(self.policy_joint_names) if self.policy_to_controller_index[i] < 0]
+        if bad:
+            self.get_logger().error(
+                "Action→controller mapping contains unmapped joints: "
+                + ", ".join([f"policy[{i}]={jn}" for i, jn in bad])
+            )
+
     # -------------------------
     # Callbacks
     # -------------------------
     def _on_cmd(self, msg: Twist) -> None:
+        throttle = float(self.get_parameter("warn_throttle_sec").value)
+        vals = [msg.linear.x, msg.linear.y, msg.angular.z]
+        if not np.isfinite(np.array(vals, dtype=np.float32)).all():
+            self._twarn.warn(self, "cmd_nan", f"/cmd_vel contains NaN/Inf: {vals}", period_sec=throttle)
+            return
         self._latest_cmd = msg
         self._latest_cmd_time = time.time()
 
     def _on_imu(self, msg: Imu) -> None:
+        throttle = float(self.get_parameter("warn_throttle_sec").value)
+        av = [msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z]
+        la = [msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z]
+        if not np.isfinite(np.array(av + la, dtype=np.float32)).all():
+            self._twarn.warn(self, "imu_nan", "IMU contains NaN/Inf in angular_velocity or linear_acceleration.", period_sec=throttle)
+            return
         self._latest_imu = msg
         self._got_imu = True
 
@@ -418,7 +479,51 @@ class IsaacPolicyPlayer(Node):
         self._joint_state_pos = np.asarray(msg.position, dtype=np.float32) if msg.position else None
         self._joint_state_vel = np.asarray(msg.velocity, dtype=np.float32) if msg.velocity else None
 
-        # Trigger startup move on the first joint_states.
+        throttle = float(self.get_parameter("warn_throttle_sec").value)
+
+        n_name = len(self._joint_state_name)
+        if self._joint_state_pos is not None and len(self._joint_state_pos) != n_name:
+            self._twarn.warn(
+                self,
+                "js_pos_len",
+                f"/joint_states.position length mismatch: len(name)={n_name}, len(position)={len(self._joint_state_pos)}",
+                period_sec=throttle,
+            )
+        if self._joint_state_vel is not None and len(self._joint_state_vel) != n_name:
+            self._twarn.warn(
+                self,
+                "js_vel_len",
+                f"/joint_states.velocity length mismatch: len(name)={n_name}, len(velocity)={len(self._joint_state_vel)}",
+                period_sec=throttle,
+            )
+
+        if self._joint_state_pos is not None and (not np.isfinite(self._joint_state_pos).all()):
+            self.get_logger().error("/joint_states.position contains NaN/Inf values.")
+        if self._joint_state_vel is not None and (not np.isfinite(self._joint_state_vel).all()):
+            self.get_logger().error("/joint_states.velocity contains NaN/Inf values.")
+
+        policy_set = set(self.policy_joint_names)
+        msg_set = set(self._joint_state_name)
+
+        missing = sorted(list(policy_set - msg_set))
+        extra = sorted(list(msg_set - policy_set))
+
+        if missing:
+            self._twarn.warn(
+                self,
+                "js_missing_policy",
+                f"/joint_states is missing {len(missing)} policy joints: {missing}",
+                period_sec=throttle,
+            )
+
+        if extra:
+            self._twarn.warn(
+                self,
+                "js_extra",
+                f"/joint_states has {len(extra)} joints not used by policy: {extra}",
+                period_sec=throttle,
+            )
+
         if self._startup_move_enabled and (not self._startup_move_active) and (self._startup_t0 is None):
             self._startup_t0 = time.time()
             self._startup_q0_ctrl = self._controller_cmd_from_joint_states(msg)
@@ -535,7 +640,6 @@ class IsaacPolicyPlayer(Node):
     # Timer tick
     # -------------------------
     def _on_timer(self) -> None:
-        # Startup move publishes interpolated commands and blocks policy.
         if self._startup_move_active:
             if self._startup_q0_ctrl is None or self._startup_qt_ctrl is None or self._startup_t0 is None:
                 return
@@ -546,7 +650,6 @@ class IsaacPolicyPlayer(Node):
             cmd_ctrl = (1.0 - alpha) * self._startup_q0_ctrl + alpha * self._startup_qt_ctrl
             self._publish_controller_cmd(cmd_ctrl)
 
-            # Keep last_action consistent with commanded pose during startup.
             try:
                 q_policy_cmd = self._controller_cmd_to_policy_q(cmd_ctrl)
                 a_cmd = self._measured_q_to_action(q_policy_cmd)
@@ -714,9 +817,16 @@ class IsaacPolicyPlayer(Node):
                 continue
             cmd_ctrl[ci] = float(q_des_policy[pi])
 
+        if (not self._unmapped_joints_warned) and any(ci < 0 for ci in self.policy_to_controller_index):
+            bad = [(i, jn) for i, jn in enumerate(self.policy_joint_names) if self.policy_to_controller_index[i] < 0]
+            self.get_logger().warn(
+                "Publishing with unmapped joints (these targets are dropped): "
+                + ", ".join([f"policy[{i}]={jn}" for i, jn in bad])
+            )
+            self._unmapped_joints_warned = True
+
         if self._debug_print and self._debug_every > 0:
-            # Lightweight periodic debug (avoid flooding)
-            tick = int(now * 1000.0)  # not a real tick, but stable enough for sampling
+            tick = int(now * 1000.0)
             if (tick % self._debug_every) == 0:
                 self.get_logger().info(
                     f"gain={gain:.3f} obs(min/max)={float(obs.min()):.3f}/{float(obs.max()):.3f} "

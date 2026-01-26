@@ -131,6 +131,7 @@ class ObservationBuilder:
                         dtype=np.float32,
                     )
                 )
+                # parts.append(np.zeros(3, dtype=np.float32))
 
             elif term == "velocity_commands":
                 parts.append(
@@ -147,10 +148,13 @@ class ObservationBuilder:
             elif term == "joint_pos":
                 # Isaac Lab: joint_pos_rel
                 parts.append((q - self._q_default).astype(np.float32))
+                # parts.append(np.zeros_like(dq, dtype=np.float32))
+
 
             elif term == "joint_vel":
                 # Isaac Lab: joint_vel_rel (default vel is 0)
                 parts.append(dq.astype(np.float32))
+                # parts.append(np.zeros_like(dq, dtype=np.float32))
 
             elif term == "actions":
                 parts.append(self.last_action.astype(np.float32))
