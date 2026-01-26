@@ -257,7 +257,7 @@ def generate_launch_description():
         kuroko_description_share,
         "config",
         "ros2_control",
-        "joint_trajectory_controller.yaml",
+        "joint_group_position_controller.yaml",
     )
 
     return LaunchDescription(
