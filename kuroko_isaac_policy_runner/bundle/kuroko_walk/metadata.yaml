@@ -1,5 +1,5 @@
 bundle_format_version: 1
-created_at_utc: '2026-01-26T09:43:18.214121+00:00'
+created_at_utc: '2026-01-28T03:46:14.273166+00:00'
 tool:
   name: isaac_policy_export
   entrypoint: isaac-export-bundle
@@ -11,9 +11,9 @@ layout:
   - policy.pt
   - IO_descriptors.yaml
   runtime_abi_files:
-  - io_descriptor.json
-  - action_config.json
-  - obs_normalization.json
+  - observation_config.yaml
+  - action_config.yaml
+  - obs_normalization.yaml
 runtime_assumptions:
   controller_joint_order_resolution:
     method: ros2_param_get
