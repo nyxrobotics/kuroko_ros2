@@ -43,6 +43,7 @@ control:
   command_topic: /joint_group_position_controller/commands
   command_msg_type: std_msgs/msg/Float64MultiArray
   rate_hz: 50
+  rel: true
   command_joint_order: null
   command_joint_order_resolution:
     method: ros_param
