@@ -4,12 +4,12 @@ frames:
 sources:
   imu:
     msg_type: sensor_msgs/Imu
+    topic: /kuroko/sensors/imu/data_filtered
     # topic: /kuroko/sensors/imu/data
-    topic: /kuroko/sensors/imu/data_vel
   joint_states:
     msg_type: sensor_msgs/JointState
-    # topic: /joint_states
     topic: /joint_states_vel
+    # topic: /joint_states
   cmd_vel:
     msg_type: geometry_msgs/Twist
     topic: /cmd_vel
@@ -38,6 +38,7 @@ term_inputs:
   base_lin_acc_sens:
     source: imu
     data_field: linear_acceleration
+    provides_specific_force: true
 control:
   type: forward_command_controller
   controller_name: /joint_group_position_controller
