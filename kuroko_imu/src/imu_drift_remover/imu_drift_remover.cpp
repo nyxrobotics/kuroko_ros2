@@ -1,4 +1,4 @@
-#include "kuroko_imu/imu_drift_remover.hpp"
+#include "imu_drift_remover/imu_drift_remover.hpp"
 
 #include <algorithm>
 #include <cmath>

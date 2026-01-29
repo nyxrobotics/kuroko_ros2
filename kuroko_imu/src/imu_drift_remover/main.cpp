@@ -1,5 +1,5 @@
 #include <rclcpp/rclcpp.hpp>
-#include "kuroko_imu/imu_drift_remover.hpp"
+#include "imu_drift_remover/imu_drift_remover.hpp"
 
 int main(int argc, char ** argv)
 {
