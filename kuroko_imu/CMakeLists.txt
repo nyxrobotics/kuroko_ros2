@@ -39,10 +39,24 @@ target_include_directories(imu_angular_velocity_overwriter PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
+# IMU accel low-pass filter (norm + direction)
+add_executable(imu_accel_lpf
+  src/imu_accel_lpf/main.cpp
+  src/imu_accel_lpf/imu_accel_lpf.cpp
+)
+ament_target_dependencies(imu_accel_lpf
+  rclcpp sensor_msgs tf2
+)
+target_include_directories(imu_accel_lpf PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
 # Install targets and files
 install(TARGETS
   imu_drift_remover
   imu_angular_velocity_overwriter
+  imu_accel_lpf
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
