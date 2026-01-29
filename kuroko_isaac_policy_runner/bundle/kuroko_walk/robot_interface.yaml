@@ -4,10 +4,12 @@ frames:
 sources:
   imu:
     msg_type: sensor_msgs/Imu
-    topic: /kuroko/sensors/imu/data
+    # topic: /kuroko/sensors/imu/data
+    topic: /kuroko/sensors/imu/data_vel
   joint_states:
     msg_type: sensor_msgs/JointState
-    topic: /joint_states
+    # topic: /joint_states
+    topic: /joint_states_vel
   cmd_vel:
     msg_type: geometry_msgs/Twist
     topic: /cmd_vel

@@ -11,7 +11,7 @@ public:
   : Node("joint_states_velocity_overwriter")
   {
     input_topic_ = this->declare_parameter<std::string>("input_topic", "/joint_states");
-    output_topic_ = this->declare_parameter<std::string>("output_topic", "/joint_states/velocity_overwritten");
+    output_topic_ = this->declare_parameter<std::string>("output_topic", "/joint_states_vel");
     use_header_stamp_ = this->declare_parameter<bool>("use_header_stamp", true);
     zero_effort_ = this->declare_parameter<bool>("zero_effort", false);
 

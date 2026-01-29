@@ -18,7 +18,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'output_topic',
-            default_value='/joint_states_velocity_overwritten',
+            default_value='/joint_states_vel',
             description='Output JointState topic to publish.',
         ),
         DeclareLaunchArgument(
@@ -28,7 +28,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'zero_effort',
-            default_value='true',
+            default_value='false',
             description='If true, effort[] is filled with zeros; if false, original effort is kept when possible.',
         ),
         Node(
