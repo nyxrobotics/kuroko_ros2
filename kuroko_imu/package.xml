@@ -13,6 +13,7 @@
   <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <exec_depend>imu_tools</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
