@@ -13,7 +13,7 @@
       - If <frame_name> is omitted, it defaults to the parent link name.
   -->
 
-  <xacro:macro name="n100mini_gazebo" params="namespace name update_rate:=400">
+  <xacro:macro name="n100mini_gazebo" params="namespace name update_rate:=200">
     <gazebo reference="${name}_link">
       <material>Gazebo/Gray</material>
 

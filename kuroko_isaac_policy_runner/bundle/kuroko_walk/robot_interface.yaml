@@ -7,7 +7,7 @@ sources:
     topic: /kuroko/sensors/imu/data
   joint_states:
     msg_type: sensor_msgs/JointState
-    topic: /joint_states_velocity_overwritten
+    topic: /joint_states
   cmd_vel:
     msg_type: geometry_msgs/Twist
     topic: /cmd_vel

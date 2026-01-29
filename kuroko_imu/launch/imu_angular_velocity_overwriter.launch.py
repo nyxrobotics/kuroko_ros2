@@ -5,8 +5,8 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument("input_topic", default_value="/imu/data"),
-        DeclareLaunchArgument("output_topic", default_value="/imu/data_overwritten"),
+        DeclareLaunchArgument("input_topic", default_value="/kuroko/sensors/imu/data"),
+        DeclareLaunchArgument("output_topic", default_value="/kuroko/sensors/imu/data_vel"),
         DeclareLaunchArgument("use_header_stamp", default_value="true"),
         DeclareLaunchArgument("min_dt", default_value="0.0001"),
         DeclareLaunchArgument("zero_on_first_msg", default_value="true"),

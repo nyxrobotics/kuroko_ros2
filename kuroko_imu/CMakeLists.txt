@@ -12,29 +12,37 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 
-add_library(imu_drift_remover_component SHARED
+# IMU drift remover 
+add_executable(imu_drift_remover
+  src/imu_drift_remover/main.cpp
   src/imu_drift_remover/imu_drift_remover.cpp
 )
-target_include_directories(imu_drift_remover_component PUBLIC
+
+target_include_directories(imu_drift_remover PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(imu_drift_remover_component
+ament_target_dependencies(imu_drift_remover
   rclcpp rclcpp_components sensor_msgs std_msgs
 )
-rclcpp_components_register_nodes(imu_drift_remover_component
-  "kuroko_imu::ImuDriftRemover"
+
+# IMU angular velocity overwriter
+add_executable(imu_angular_velocity_overwriter
+  src/imu_angular_velocity_overwriter/main.cpp
+  src/imu_angular_velocity_overwriter/imu_angular_velocity_overwriter.cpp
+)
+ament_target_dependencies(imu_angular_velocity_overwriter
+  rclcpp sensor_msgs tf2
+)
+target_include_directories(imu_angular_velocity_overwriter PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
 )
 
-add_executable(imu_drift_remover
-  src/imu_drift_remover/main.cpp
-)
-target_link_libraries(imu_drift_remover imu_drift_remover_component)
-ament_target_dependencies(imu_drift_remover rclcpp)
-
+# Install targets and files
 install(TARGETS
-  imu_drift_remover_component
   imu_drift_remover
+  imu_angular_velocity_overwriter
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -47,21 +55,5 @@ install(DIRECTORY include/
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
-
-
-add_executable(imu_angular_velocity_overwriter
-  src/imu_angular_velocity_overwriter/main.cpp
-  src/imu_angular_velocity_overwriter/imu_angular_velocity_overwriter.cpp
-)
-ament_target_dependencies(imu_angular_velocity_overwriter
-  rclcpp
-  sensor_msgs
-  tf2
-)
-target_include_directories(imu_angular_velocity_overwriter PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-
 
 ament_package()
