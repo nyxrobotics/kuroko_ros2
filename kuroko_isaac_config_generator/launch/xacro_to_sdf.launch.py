@@ -19,23 +19,18 @@ def _setup_processes(context, *args, **kwargs):
 
     write_urdf = ExecuteProcess(
         cmd=[
-            "bash",
-            "-lc",
+            "bash", "-lc",
             (
                 f"mkdir -p '{out_dir}' && "
                 f"xacro '{xacro_path}' gazebo:=true controller_yaml:='{controller_yaml}' "
                 f"> '{urdf_path}'"
-            ),
+            )
         ],
         output="screen",
     )
 
     write_sdf = ExecuteProcess(
-        cmd=[
-            "bash",
-            "-lc",
-            f"gz sdf -p '{urdf_path}' > '{sdf_path}'",
-        ],
+        cmd=["bash", "-lc", f"gz sdf -p '{urdf_path}' > '{sdf_path}'"],
         output="screen",
     )
 
