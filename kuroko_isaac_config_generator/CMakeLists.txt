@@ -6,7 +6,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
-find_package(sdformat REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDFORMAT12 REQUIRED sdformat12)
 
 # -----------------------------
 # URDF -> SDF helper executable
@@ -14,8 +15,13 @@ find_package(sdformat REQUIRED)
 add_executable(urdf_to_sdf
   src/usda_generator/urdf_to_sdf/urdf_to_sdf.cpp
 )
-target_include_directories(urdf_to_sdf PRIVATE include)
-target_link_libraries(urdf_to_sdf sdformat::sdformat)
+target_include_directories(urdf_to_sdf PRIVATE
+  include
+  ${SDFORMAT12_INCLUDE_DIRS}
+)
+target_link_directories(urdf_to_sdf PRIVATE ${SDFORMAT12_LIBRARY_DIRS})
+target_link_libraries(urdf_to_sdf ${SDFORMAT12_LIBRARIES})
+target_compile_options(urdf_to_sdf PRIVATE ${SDFORMAT12_CFLAGS_OTHER})
 
 install(TARGETS urdf_to_sdf
   RUNTIME DESTINATION lib/${PROJECT_NAME}

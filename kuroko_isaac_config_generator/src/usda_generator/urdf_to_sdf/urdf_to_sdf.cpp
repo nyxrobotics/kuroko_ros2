@@ -14,7 +14,7 @@ int main(int argc, char** argv)
   const std::string urdf_path = argv[1];
 
   sdf::ParserConfig config;
-  config.SetURDFPreserveFixedJoint(true);
+  config.URDFSetPreserveFixedJoint (true);
 
   sdf::Root root;
   const auto errors = root.Load(urdf_path, config);

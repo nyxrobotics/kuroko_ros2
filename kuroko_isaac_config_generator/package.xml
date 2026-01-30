@@ -14,9 +14,11 @@
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>xacro</exec_depend>
 
-  <!-- URDF/SDF conversion helper -->
-  <build_depend>sdformat</build_depend>
-  <exec_depend>sdformat</exec_depend>
+  <!-- URDF/SDF conversion helper (Ubuntu 22.04 / ROS 2 Humble) -->
+  <!-- NOTE: Use the versioned SDFormat 12 packages to avoid libsdformat-dev resolver issues. -->
+  <build_depend>pkg-config</build_depend>
+  <build_depend>sdformat12</build_depend>
+  <exec_depend>sdformat12</exec_depend>
 
   <!-- Optional: if you want to run ros2 launch -->
   <exec_depend>launch</exec_depend>
