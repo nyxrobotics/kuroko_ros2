@@ -2,30 +2,22 @@
 <package format="3">
   <name>kuroko_isaac_config_generator</name>
   <version>0.1.0</version>
-  <description>Generate Isaac Lab USD assets for Kuroko via URDF->SDF->USD(A) pipeline.</description>
+  <description>Generate SDF (via xacro + gz) and optionally export to USD/USDA for Isaac Lab.</description>
 
-  <maintainer email="you@example.com">you</maintainer>
+  <maintainer email="maintainer@example.com">maintainer</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <!-- Python node runtime -->
   <exec_depend>rclpy</exec_depend>
   <exec_depend>ament_index_python</exec_depend>
-  <exec_depend>xacro</exec_depend>
-
-  <!-- URDF/SDF conversion helper (Ubuntu 22.04 / ROS 2 Humble) -->
-  <!-- NOTE: Use the versioned SDFormat 12 packages to avoid libsdformat-dev resolver issues. -->
-  <build_depend>pkg-config</build_depend>
-  <build_depend>sdformat12</build_depend>
-  <exec_depend>sdformat12</exec_depend>
-
-  <!-- Optional: if you want to run ros2 launch -->
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
+  <exec_depend>xacro</exec_depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <!-- Optional, but valid in Humble/Jammy and helps dev environments -->
+  <build_depend>sdformat12</build_depend>
+  <exec_depend>sdformat12</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
