@@ -1,0 +1,6 @@
+# Joint names (supports Unix-style wildcards via fnmatch)
+# Examples:
+#  - "*_loop"
+#  - "knee_*_passive"
+exclude_from_articulation:
+  - "*_loop"

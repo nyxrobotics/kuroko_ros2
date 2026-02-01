@@ -16,6 +16,7 @@
   <exec_depend>launch_ros</exec_depend>
 
   <!-- Tools used by ExecuteProcess -->
+  <exec_depend>python3</exec_depend>
   <exec_depend>xacro</exec_depend>
   <exec_depend>gz-tools</exec_depend>
 

@@ -114,7 +114,6 @@ mkdir -p ~/tools
 cd ~/tools
 git clone https://github.com/gazebosim/gz-usd.git
 cd gz-usd
-git checkout fortress
 ```
 
 ---
@@ -151,7 +150,6 @@ sudo checkinstall \
   --pkgversion=0.1.0 \
   --fstrans=no \
   --install=no \
-  -D \
   -y
 ```
 
@@ -255,3 +253,17 @@ No URDF or SDF importers are required.
 ## License
 
 Apache-2.0 (same as Gazebo / gz-usd)
+
+
+## Isaac Lab post-processing (USDA edits)
+
+After generating `kuroko.resolved.sdf` and `kuroko.usda`, run:
+
+```bash
+ros2 launch kuroko_isaac_config_generator usda_for_isaaclab.launch.py \
+  input_usda:=/tmp/kuroko_usd_out/kuroko.usda \
+  input_sdf:=/tmp/kuroko_usd_out/kuroko.resolved.sdf \
+  output_usda:=/tmp/kuroko_usd_out/kuroko.isaaclab.usda
+```
+
+Edit patterns in `config/exclude_from_articulation.yaml` (supports wildcards like `*_loop`).
