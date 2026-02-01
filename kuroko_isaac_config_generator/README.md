@@ -114,6 +114,7 @@ mkdir -p ~/tools
 cd ~/tools
 git clone https://github.com/gazebosim/gz-usd.git
 cd gz-usd
+git checkout fortress
 ```
 
 ---
@@ -150,6 +151,7 @@ sudo checkinstall \
   --pkgversion=0.1.0 \
   --fstrans=no \
   --install=no \
+  -D \
   -y
 ```
 
@@ -178,7 +180,7 @@ export PATH=$HOME/tools/gz-usd/build/bin:$PATH
 ### 4. Verify installation
 
 ```bash
-gz usd --help
+sdf2usd --help
 ```
 
 You should see help output for the `gz usd` command.
@@ -204,9 +206,7 @@ Output (default):
 ### 2. Convert SDF to USD / USDA
 
 ```bash
-gz usd \
-  -i /tmp/kuroko_usd_out/kuroko.sdf \
-  -o /tmp/kuroko_usd_out/kuroko.usda
+sdf2usd /tmp/kuroko_usd_out/kuroko.sdf /tmp/kuroko_usd_out/kuroko.usda
 ```
 
 This USD can be loaded directly in Isaac Sim / Isaac Lab.

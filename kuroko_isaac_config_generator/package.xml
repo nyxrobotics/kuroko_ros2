@@ -1,21 +1,26 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>kuroko_isaac_config_generator</name>
-  <version>0.0.0</version>
-  <description>Kuroko Isaac Lab config generator.</description>
-  <maintainer email="nyx@example.com">nyx</maintainer>
+  <version>0.1.0</version>
+  <description>
+    Generate SDF from xacro using Gazebo CLI and convert SDF to USD/USDA using gz-usd.
+  </description>
+
+  <maintainer email="nyx@todo.todo">nyx</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>python3</exec_depend>
-  <exec_depend>python3-ament-index-python</exec_depend>
+  <!-- Launch -->
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
-  <exec_depend>rclpy</exec_depend>
 
-  <!-- We rely on CLI tools: xacro and gz -->
+  <!-- Tools used by ExecuteProcess -->
   <exec_depend>xacro</exec_depend>
+  <exec_depend>gz-tools</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
