@@ -175,22 +175,8 @@ def _process_joint_block(block: str, joint_name: str, sdf_joints: dict[str, SdfJ
         except ValueError:
             max_force = None
 
-    if max_force is not None and max_force <= 1e-6:
-        # Remove drive attributes for this axis
-        block = re.sub(rf'^\s*\w+\s+physics:drive:{re.escape(axis)}:[^\n]*\n', '', block, flags=re.MULTILINE)
-        # Remove applied DriveAPI token(s)
-        block = re.sub(rf'"PhysicsDriveAPI:{re.escape(axis)}"\s*,?\s*', '', block)
-        block = re.sub(r'"PhysicsDriveAPI:%s"' % re.escape(axis), '', block)
-        # If we also added PhysxDrivePerformanceEnvelopeAPI for this axis earlier, remove it too
-        block = re.sub(rf'"PhysxDrivePerformanceEnvelopeAPI:{re.escape(axis)}"\s*,?\s*', '', block)
-        # Clean up empty apiSchemas list formatting
-        block = re.sub(r'apiSchemas\s*=\s*\[\s*,', 'apiSchemas = [', block)
-        block = re.sub(r'\[\s*\]', '[]', block)
-
-        return block
-
     # ④ apply velocity from SDF for actuated joints
-    if info and info.velocity_rad_s and info.velocity_rad_s > 0:
+    if  max_force is not None and max_force > 1e-6 and info and info.velocity_rad_s and info.velocity_rad_s > 0:
         vel_deg = info.velocity_rad_s * 180.0 / math.pi
         vel_deg_str = f"{vel_deg:.6f}".rstrip("0").rstrip(".")
         # Ensure PhysxJointAxisAPI applied and set maxJointVelocity
@@ -209,6 +195,19 @@ def _process_joint_block(block: str, joint_name: str, sdf_joints: dict[str, SdfJ
         else:
             block = re.sub(r'\{\n', '{\n        float physxDrivePerformanceEnvelope:%s:maxActuatorVelocity = %s\n' % (axis, vel_deg_str), block, count=1)
 
+    if max_force is None or max_force <= 1e-6:
+        # Remove drive attributes for this axis
+        block = re.sub(rf'^\s*\w+\s+physics:drive:{re.escape(axis)}:[^\n]*\n', '', block, flags=re.MULTILINE)
+        # Remove applied DriveAPI token(s)
+        block = re.sub(rf'"PhysicsDriveAPI:{re.escape(axis)}"\s*,?\s*', '', block)
+        block = re.sub(r'"PhysicsDriveAPI:%s"' % re.escape(axis), '', block)
+        # If we also added PhysxDrivePerformanceEnvelopeAPI for this axis earlier, remove it too
+        block = re.sub(rf'"PhysxDrivePerformanceEnvelopeAPI:{re.escape(axis)}"\s*,?\s*', '', block)
+        # Clean up empty apiSchemas list formatting
+        block = re.sub(r'apiSchemas\s*=\s*\[\s*,', 'apiSchemas = [', block)
+        block = re.sub(r'\[\s*\]', '[]', block)
+        return block
+    
     return block
 
 
