@@ -29,7 +29,12 @@ class SdfToUsdaNode(Node):
 
         self.declare_parameter("input_sdf", "/tmp/kuroko_usd_out/kuroko.sdf")
         self.declare_parameter("output_usda", "/tmp/kuroko_usd_out/kuroko.usda")
-        self.declare_parameter("isaac_python", "python.sh")
+        # Prefer running Kit Python through Isaac Lab's helper script:
+        #   isaaclab.sh --python <script.py> [args...]
+        # This matches the user's environment where Isaac Lab manages the Python selection.
+        self.declare_parameter("isaaclab_sh", "isaaclab.sh")
+        # Backward-compat: older launch files might still set this.
+        self.declare_parameter("isaac_python", "")
         self.declare_parameter("headless", True)
 
         self._run_once()
@@ -37,7 +42,8 @@ class SdfToUsdaNode(Node):
     def _run_once(self) -> None:
         input_sdf = Path(self.get_parameter("input_sdf").value).expanduser().resolve()
         output_usda = Path(self.get_parameter("output_usda").value).expanduser().resolve()
-        isaac_python = str(self.get_parameter("isaac_python").value)
+        isaaclab_sh = str(self.get_parameter("isaaclab_sh").value)
+        isaac_python_compat = str(self.get_parameter("isaac_python").value)
         headless = self.get_parameter("headless").value
 
         if not input_sdf.exists():
@@ -55,7 +61,16 @@ class SdfToUsdaNode(Node):
         tmp_sdf = output_usda.with_suffix(".resolved.sdf")
         tmp_sdf.write_text(sdf_xml)
 
-        cmd = [isaac_python, str(export_script), "--input_sdf", str(tmp_sdf), "--output_usda", str(output_usda)]
+        # Build command via Isaac Lab helper, falling back to a direct python entry if provided.
+        if isaaclab_sh and isaaclab_sh.strip():
+            cmd = [isaaclab_sh, "--python", str(export_script), "--input_sdf", str(tmp_sdf), "--output_usda", str(output_usda)]
+        elif isaac_python_compat and isaac_python_compat.strip():
+            cmd = [isaac_python_compat, str(export_script), "--input_sdf", str(tmp_sdf), "--output_usda", str(output_usda)]
+        else:
+            raise RuntimeError(
+                "isaaclab_sh is empty. Provide the path to isaaclab.sh (recommended) "
+                "or set isaac_python for a direct Kit python entry (python.sh)."
+            )
         if str(headless).lower() in ("true", "1", "yes"):
             cmd += ["--headless"]
 

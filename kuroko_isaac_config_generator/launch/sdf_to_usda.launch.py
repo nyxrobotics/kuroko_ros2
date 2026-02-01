@@ -9,7 +9,9 @@ def generate_launch_description():
         [
             DeclareLaunchArgument("input_sdf", default_value="/tmp/kuroko_usd_out/kuroko.sdf"),
             DeclareLaunchArgument("output_usda", default_value="/tmp/kuroko_usd_out/kuroko.usda"),
-            DeclareLaunchArgument("isaac_python", default_value="python.sh"),
+            # Path to Isaac Lab helper script. We run Kit Python via:
+            #   isaaclab.sh --python <script.py> [args...]
+            DeclareLaunchArgument("isaaclab_sh", default_value="isaaclab.sh"),
             DeclareLaunchArgument("headless", default_value="true"),
             Node(
                 package="kuroko_isaac_config_generator",
@@ -20,7 +22,7 @@ def generate_launch_description():
                     {
                         "input_sdf": LaunchConfiguration("input_sdf"),
                         "output_usda": LaunchConfiguration("output_usda"),
-                        "isaac_python": LaunchConfiguration("isaac_python"),
+                        "isaaclab_sh": LaunchConfiguration("isaaclab_sh"),
                         "headless": LaunchConfiguration("headless"),
                     }
                 ],
