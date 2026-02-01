@@ -16,6 +16,12 @@ install(DIRECTORY scripts
   USE_SOURCE_PERMISSIONS
 )
 
+# Also install as an executable in libexec so launch can run it reliably.
+install(PROGRAMS
+  scripts/usda_for_isaaclab.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(FILES README.md
   DESTINATION share/${PROJECT_NAME}
 )
