@@ -26,29 +26,23 @@ def _setup(context, *args, **kwargs):
     controller_yaml = str(Path(ctrl_share) / ctrl_rel)
 
     urdf_path = str(Path(out_dir) / f"{basename}.urdf")
-    sdf_path = str(Path(out_dir) / f"{basename}.sdf")
+    sdf_path  = str(Path(out_dir) / f"{basename}.sdf")
 
-    write_urdf = ExecuteProcess(
+    generate = ExecuteProcess(
         cmd=[
             "bash", "-lc",
             (
+                f"set -euo pipefail; "
                 f"mkdir -p '{out_dir}' && "
                 f"xacro '{xacro_path}' gazebo:='{gazebo_arg}' controller_yaml:='{controller_yaml}' "
-                f"> '{urdf_path}'"
+                f"> '{urdf_path}' && "
+                f"gz sdf -p '{urdf_path}' > '{sdf_path}'"
             ),
         ],
         output="screen",
     )
 
-    write_sdf = ExecuteProcess(
-        cmd=[
-            "bash", "-lc",
-            f"gz sdf -p '{urdf_path}' > '{sdf_path}'",
-        ],
-        output="screen",
-    )
-
-    return [write_urdf, write_sdf]
+    return [generate]
 
 
 def generate_launch_description():
