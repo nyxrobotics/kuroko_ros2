@@ -23,7 +23,6 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="0.00125 0.0065 -0.004125" rpy="0 0 0" size="0.092 0.041 0.03625"/>
       </xacro:if>
-      <xacro:box_collision xyz="0.00125 0.0065 -0.004125" rpy="0 0 0" size="0.092 0.041 0.03625"/>
       <xacro:box_inertial xyz="0.00125 0.0065 -0.004125" rpy="0 0 0" size="0.092 0.041 0.03625"
         mass="0.026"/>
     </link>
@@ -74,7 +73,6 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="-0.004745 0 -0.015" rpy="0 0 0" size="0.02349 0.0445 0.044"/>
       </xacro:if>
-      <xacro:box_collision xyz="-0.004745 0 -0.015" rpy="0 0 0" size="0.02349 0.0445 0.044"/>
       <xacro:box_inertial xyz="-0.004745 0 -0.015" rpy="0 0 0" size="0.02349 0.0445 0.044"
         mass="0.008"/>
     </link>
@@ -100,7 +98,6 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
       </xacro:if>
-      <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
       <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.012"/>
     </link>
     <xacro:unless value="$(arg gazebo)">
@@ -147,7 +144,6 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114"/>
       </xacro:if>
-      <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114"/>
       <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0385 0.114" mass="0.013"/>
     </link>
 
@@ -173,7 +169,6 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0345 0.114"/>
       </xacro:if>
-      <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0345 0.114"/>
       <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0345 0.114" mass="0.012"/>
     </link>
     <xacro:unless value="$(arg gazebo)">
@@ -220,7 +215,6 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
       </xacro:if>
-      <xacro:box_collision xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114"/>
       <xacro:box_inertial xyz="0 0 -0.05" rpy="0 0 0" size="0.014 0.0445 0.114" mass="0.016"/>
     </link>
 
@@ -298,7 +292,6 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114"/>
       </xacro:if>
-      <xacro:box_collision xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114"/>
       <xacro:box_inertial xyz="0 0 0.05" rpy="0 0 0" size="0.014 0.0285 0.114" mass="0.011"/>
     </link>
     <xacro:if value="$(arg gazebo)">

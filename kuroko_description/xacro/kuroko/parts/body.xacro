@@ -15,8 +15,8 @@
       <xacro:if value="$(arg box_visual)">
         <xacro:box_visual xyz="0.0084 0.0000 -0.0483" rpy="0 0 0" size="0.1247 0.0560 0.0965"/>
       </xacro:if>
-      <xacro:box_collision xyz="0.0084 0.0000 -0.0513" rpy="0 0 0" size="0.1247 0.0560 0.0935"/>
       <xacro:box_inertial xyz="0.0084 0.0000 -0.0483" rpy="0 0 0" size="0.1247 0.0560 0.0965" mass="0.388"/>
+      <xacro:box_collision xyz="0.0084 0.0000 -0.0483" rpy="0 0 0" size="0.1247 0.028 0.08"/>
     </link>
     <!-- Joint1 -->
     <joint name="chest" type="revolute">
