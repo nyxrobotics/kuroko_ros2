@@ -10,12 +10,34 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
+class SdfJointInfo:
+    __slots__ = ("name", "type", "velocity_rad_s")
+
+    def __init__(self, name: str, jtype: str, velocity_rad_s: float):
+        self.name = name
+        self.type = jtype
+        self.velocity_rad_s = velocity_rad_s
+
+
+
 def _read_exclude_patterns(yaml_path: Path) -> list[str]:
     # Minimal YAML reader (no external deps). Expected shape:
     # exclude_from_articulation:
     #   - "pattern"
+    #
+    # If the file does not exist, create a template file and return an empty list.
     if not yaml_path.exists():
+        yaml_path.parent.mkdir(parents=True, exist_ok=True)
+        yaml_path.write_text(
+            "exclude_from_articulation:\n"
+            "  # Examples:\n"
+            "  # - \"*_loop\"\n"
+            "  # - \"head_joint\"\n",
+            encoding="utf-8",
+        )
+        print(f"[INFO] Created exclude yaml template: {yaml_path}")
         return []
+
     patterns: list[str] = []
     in_list = False
     for raw in yaml_path.read_text(encoding="utf-8").splitlines():
@@ -29,25 +51,20 @@ def _read_exclude_patterns(yaml_path: Path) -> list[str]:
             continue
         if line.startswith("-"):
             item = line[1:].strip()
-            # strip quotes if present
             if (item.startswith('"') and item.endswith('"')) or (item.startswith("'") and item.endswith("'")):
                 item = item[1:-1]
             if item:
                 patterns.append(item)
         else:
-            # stop if a new key appears
+            # Stop if a new YAML key appears.
             if ":" in line:
                 break
+
+    print(f"[INFO] Loaded exclude patterns: {len(patterns)}")
+    if patterns:
+        for pat in patterns:
+            print(f"  - {pat}")
     return patterns
-
-
-class SdfJointInfo:
-    __slots__ = ("name", "type", "velocity_rad_s")
-    def __init__(self, name: str, jtype: str, velocity_rad_s: float):
-        self.name = name
-        self.type = jtype
-        self.velocity_rad_s = velocity_rad_s
-
 
 def _parse_sdf_joints(sdf_path: Path) -> dict[str, SdfJointInfo]:
     # Works for model-only SDF like:
@@ -126,112 +143,171 @@ def _ensure_header_block(usda: str) -> str:
 def _replace_root_name(usda: str) -> str:
     # Rename root prim "kuroko" -> "Robot"
     usda = re.sub(r'^(\s*def\s+Xform\s+)"kuroko"(\s*\()', r'\1"Robot"\2', usda, flags=re.MULTILINE)
-    # Update articulation root apiSchemas: add PhysxArticulationAPI
-    def repl_api(m: re.Match) -> str:
-        pre = m.group(1)
-        items = m.group(2)
-        # Parse tokens inside [...]
-        toks = re.findall(r'"([^"]+)"', items)
-        if "PhysxArticulationAPI" not in toks:
-            toks.append("PhysxArticulationAPI")
-        # Keep PhysicsArticulationRootAPI first if present
-        if "PhysicsArticulationRootAPI" in toks:
-            toks = ["PhysicsArticulationRootAPI"] + [t for t in toks if t != "PhysicsArticulationRootAPI"]
-        return f'{pre}["' + '", "'.join(toks) + '"]'
+
+    # Ensure the root prim has exactly the requested articulation schemas.
+    # We intentionally overwrite the list to match the desired spec:
+    # prepend apiSchemas = ["PhysicsArticulationRootAPI", "PhysxArticulationAPI"]
+    def _force_root_api_schemas(m: re.Match) -> str:
+        indent = m.group(1)
+        return (
+            f'{indent}prepend apiSchemas = ["PhysicsArticulationRootAPI", "PhysxArticulationAPI"]'
+        )
+
     usda = re.sub(
-        r'(def\s+Xform\s+"Robot"\s*\(\s*\n\s*prepend\s+apiSchemas\s*=\s*)\[(.*?)\]',
-        repl_api,
+        r'^(\s*)prepend\s+apiSchemas\s*=\s*\[[^\]]*\]\s*$',
+        _force_root_api_schemas,
         usda,
-        flags=re.DOTALL,
+        flags=re.MULTILINE,
+        count=1,
     )
+
     # Update relationship paths that reference /kuroko...
     usda = usda.replace("</kuroko", "</Robot")
     usda = usda.replace('="/kuroko', '="/Robot')
+
     return usda
 
-
-def _process_joint_block(block: str, joint_name: str, sdf_joints: dict[str, SdfJointInfo], exclude_patterns: list[str]) -> str:
-    axis = "angular"
+def _process_joint_block(
+    block: str,
+    joint_name: str,
+    sdf_joints: dict[str, SdfJointInfo],
+    exclude_patterns: list[str],
+) -> str:
     info = sdf_joints.get(joint_name)
+
+    # Determine the axis to use for velocity propagation.
+    # - revolute / continuous: angular
+    # - prismatic: linear
+    primary_axis = "angular"
     if info and info.type.lower().startswith("pris"):
-        axis = "linear"
-    elif info and info.type.lower().startswith("rev"):
-        axis = "angular"
+        primary_axis = "linear"
 
-    # ① excludeFromArticulation
-    if any(fnmatch.fnmatch(joint_name, pat) for pat in exclude_patterns):
-        if re.search(r'\bphysics:excludeFromArticulation\b', block):
-            block = re.sub(r'\bbool\s+physics:excludeFromArticulation\s*=\s*\d+\s*', 'bool physics:excludeFromArticulation = 1', block)
+    # ① excludeFromArticulation (wildcards supported via fnmatch)
+    if exclude_patterns and any(fnmatch.fnmatch(joint_name, pat) for pat in exclude_patterns):
+        if re.search(r"\bphysics:excludeFromArticulation\b", block):
+            block = re.sub(
+                r"\bbool\s+physics:excludeFromArticulation\s*=\s*\d+\s*",
+                "bool physics:excludeFromArticulation = 1",
+                block,
+            )
         else:
-            # insert right after opening '{'
-            block = re.sub(r'\{\n', '{\n        bool physics:excludeFromArticulation = 1\n', block, count=1)
+            block = re.sub(r"\{\n", "{\n        bool physics:excludeFromArticulation = 1\n", block, count=1)
+        print(f"[INFO] excludeFromArticulation=1: {joint_name}")
 
-    def _find_max_force(text: str, drive_axis: str) -> float | None:
-        m2 = re.search(rf'\bphysics:drive:{re.escape(drive_axis)}:maxForce\s*=\s*([0-9eE+\-.]+)', text)
-        if not m2:
+    def _get_drive_max_force(text: str, axis: str) -> float | None:
+        m = re.search(rf"\bphysics:drive:{re.escape(axis)}:maxForce\s*=\s*([0-9eE+\-.]+)", text)
+        if not m:
             return None
         try:
-            return float(m2.group(1))
+            return float(m.group(1))
         except ValueError:
             return None
 
-    def _remove_drive_axis(text: str, drive_axis: str) -> str:
-        # Remove drive attributes for this axis (tolerate type prefixes like "uniform float", "float", etc.)
+    def _strip_axis_drive(text: str, axis: str) -> str:
+        # Remove any authored attributes for this axis.
+        # Be tolerant of any type prefixes like "uniform float", "custom rel", etc.
         text = re.sub(
-            rf'^\s*(?:\w+\s+)*physics:drive:{re.escape(drive_axis)}:[^\n]*\n',
-            '',
+            rf"^\s*(?:\w+\s+)*\bphysics:drive:{re.escape(axis)}:[^\n]*\n",
+            "",
             text,
             flags=re.MULTILINE,
         )
-        # Remove PhysX drive envelope attributes for this axis as well
         text = re.sub(
-            rf'^\s*(?:\w+\s+)*physxDrivePerformanceEnvelope:{re.escape(drive_axis)}:[^\n]*\n',
-            '',
+            rf"^\s*(?:\w+\s+)*\bphysxDrivePerformanceEnvelope:{re.escape(axis)}:[^\n]*\n",
+            "",
             text,
             flags=re.MULTILINE,
         )
 
-        # Remove applied API token(s)
-        text = re.sub(rf'"PhysicsDriveAPI:{re.escape(drive_axis)}"\s*,?\s*', '', text)
-        text = re.sub(rf'"PhysxDrivePerformanceEnvelopeAPI:{re.escape(drive_axis)}"\s*,?\s*', '', text)
+        # Remove applied API tokens for this axis inside apiSchemas
+        text = re.sub(rf'"PhysicsDriveAPI:{re.escape(axis)}"\s*,?\s*', "", text, flags=re.DOTALL)
+        text = re.sub(rf'"PhysxDrivePerformanceEnvelopeAPI:{re.escape(axis)}"\s*,?\s*', "", text, flags=re.DOTALL)
 
-        # Clean up apiSchemas list formatting
-        text = re.sub(r'apiSchemas\s*=\s*\[\s*,', 'apiSchemas = [', text)
-        text = re.sub(r',\s*\]', ']', text)
-        text = re.sub(r'\[\s*\]', '[]', text)
+        # Clean up any leftover commas or empty lists like [ , "X" ].
+        text = re.sub(r"apiSchemas\s*=\s*\[\s*,", "apiSchemas = [", text)
+        text = re.sub(r",\s*,+", ", ", text)
+        text = re.sub(r"\[\s*\]", "[]", text)
+        text = re.sub(r",\s*\]", "]", text)
         return text
 
-    # ③/④ detect drive maxForce per axis and gate behavior
-    max_force_axis = _find_max_force(block, axis)
+    def _deg_per_sec_from_rad(rad_s: float) -> str:
+        deg = rad_s * 180.0 / math.pi
+        return f"{deg:.6f}".rstrip("0").rstrip(".")
 
-    # Remove drive for any axis that exists and is effectively disabled
-    for drive_axis in ("angular", "linear"):
-        mf = _find_max_force(block, drive_axis)
-        if mf is not None and mf <= 1e-6:
-            block = _remove_drive_axis(block, drive_axis)
+    def _set_or_add_attr(text: str, attr: str, value: str) -> str:
+        # Replace existing
+        if re.search(rf"\b{re.escape(attr)}\b", text):
+            return re.sub(
+                rf"({re.escape(attr)}\s*=\s*)([0-9eE+\-.]+)",
+                rf"\g<1>{value}",
+                text,
+            )
+        # Add right after "{\n"
+        return re.sub(r"\{\n", "{\n        float %s = %s\n" % (attr, value), text, count=1)
 
-    # ④ apply velocity from SDF only for actuated joints (Max Force > 1e-6)
-    if max_force_axis is not None and max_force_axis > 1e-6 and info and info.velocity_rad_s and info.velocity_rad_s > 0:
-        vel_deg = info.velocity_rad_s * 180.0 / math.pi
-        vel_deg_str = f"{vel_deg:.6f}".rstrip("0").rstrip(".")
-        # Ensure PhysxJointAxisAPI applied and set maxJointVelocity (Maximum Joint Velocity)
-        if "PhysxJointAxisAPI:%s" % axis not in block:
-            block = re.sub(r'(prepend\s+apiSchemas\s*=\s*\[)([^\]]*)\]', lambda m2: m2.group(1) + m2.group(2).rstrip() + (", " if m2.group(2).strip() else "") + f'"PhysxJointAxisAPI:{axis}"]', block, flags=re.DOTALL, count=1)
-        if re.search(rf'physxJointAxis:{re.escape(axis)}:maxJointVelocity\b', block):
-            block = re.sub(rf'(physxJointAxis:{re.escape(axis)}:maxJointVelocity\s*=\s*)([0-9eE+\-.]+)', rf'\g<1>{vel_deg_str}', block)
-        else:
-            block = re.sub(r'\{\n', '{\n        float physxJointAxis:%s:maxJointVelocity = %s\n' % (axis, vel_deg_str), block, count=1)
+    def _ensure_api(text: str, api_token: str) -> str:
+        if api_token in text:
+            return text
+        # Append to the first apiSchemas list in this block.
+        def _append(m: re.Match) -> str:
+            head = m.group(1)
+            body = m.group(2)
+            body_stripped = body.strip()
+            if not body_stripped:
+                return f'{head}"{api_token}"]'
+            # ensure trailing comma
+            body2 = body.rstrip()
+            if not body2.rstrip().endswith(","):
+                body2 = body2.rstrip() + ", "
+            return f'{head}{body2}"{api_token}"]'
 
-        # Ensure PhysxDrivePerformanceEnvelopeAPI applied and set maxActuatorVelocity (Max Actuator Velocity)
-        if "PhysxDrivePerformanceEnvelopeAPI:%s" % axis not in block:
-            block = re.sub(r'(prepend\s+apiSchemas\s*=\s*\[)([^\]]*)\]', lambda m2: m2.group(1) + m2.group(2).rstrip() + (", " if m2.group(2).strip() else "") + f'"PhysxDrivePerformanceEnvelopeAPI:{axis}"]', block, flags=re.DOTALL, count=1)
-        if re.search(rf'physxDrivePerformanceEnvelope:{re.escape(axis)}:maxActuatorVelocity\b', block):
-            block = re.sub(rf'(physxDrivePerformanceEnvelope:{re.escape(axis)}:maxActuatorVelocity\s*=\s*)([0-9eE+\-.]+)', rf'\g<1>{vel_deg_str}', block)
-        else:
-            block = re.sub(r'\{\n', '{\n        float physxDrivePerformanceEnvelope:%s:maxActuatorVelocity = %s\n' % (axis, vel_deg_str), block, count=1)
+        return re.sub(r"(prepend\s+apiSchemas\s*=\s*\[)([^\]]*)\]", _append, text, flags=re.DOTALL, count=1)
+
+    # --- Drive removal / velocity propagation ---
+    # ③ If maxForce <= 1e-6 for an axis, remove Drive components for that axis.
+    # ④ If maxForce > 1e-6 for an axis, propagate SDF velocity to:
+    #    - Maximum Joint Velocity: physxJointAxis:<axis>:maxJointVelocity
+    #    - Drive->Advanced->Max Actuator Velocity: physxDrivePerformanceEnvelope:<axis>:maxActuatorVelocity
+    #
+    # IMPORTANT: Only do (④) for joints/axes where maxForce > 1e-6.
+    for axis in ("angular", "linear"):
+        max_force = _get_drive_max_force(block, axis)
+        if max_force is None:
+            continue
+
+        if max_force <= 1e-6:
+            print(f"[INFO] Remove drive (maxForce={max_force:g}) joint={joint_name} axis={axis}")
+            block = _strip_axis_drive(block, axis)
+            continue
+
+        # Actuated axis: only apply velocities to the joint's primary axis.
+        if axis != primary_axis:
+            print(f"[INFO] Skip velocity (non-primary axis) joint={joint_name} axis={axis} maxForce={max_force:g}")
+            continue
+
+        if not info:
+            print(f"[WARN] No SDF joint info for actuated joint: {joint_name} (axis={axis})")
+            continue
+
+        if not info.velocity_rad_s or info.velocity_rad_s <= 0:
+            print(f"[WARN] SDF velocity missing/<=0 for joint={joint_name}: {info.velocity_rad_s}")
+            continue
+
+        vel_deg_str = _deg_per_sec_from_rad(info.velocity_rad_s)
+        print(
+            f"[INFO] Apply velocity joint={joint_name} axis={axis} "
+            f"maxForce={max_force:g} sdf={info.velocity_rad_s:g} rad/s -> {vel_deg_str} deg/s"
+        )
+
+        # Ensure APIs exist
+        block = _ensure_api(block, f"PhysxJointAxisAPI:{axis}")
+        block = _ensure_api(block, f"PhysxDrivePerformanceEnvelopeAPI:{axis}")
+
+        # Set attributes
+        block = _set_or_add_attr(block, f"physxJointAxis:{axis}:maxJointVelocity", vel_deg_str)
+        block = _set_or_add_attr(block, f"physxDrivePerformanceEnvelope:{axis}:maxActuatorVelocity", vel_deg_str)
 
     return block
-
 
 def _edit_usda(input_usda: Path, input_sdf: Path, output_usda: Path, exclude_yaml: Path) -> None:
     usda = input_usda.read_text(encoding="utf-8")
@@ -241,6 +317,7 @@ def _edit_usda(input_usda: Path, input_sdf: Path, output_usda: Path, exclude_yam
     usda = _replace_root_name(usda)
 
     sdf_joints = _parse_sdf_joints(input_sdf)
+    print(f"[INFO] Parsed SDF joints: {len(sdf_joints)}")
     exclude_patterns = _read_exclude_patterns(exclude_yaml)
 
     # Process each joint block (best-effort brace matching at the joint prim level)
@@ -249,6 +326,7 @@ def _edit_usda(input_usda: Path, input_sdf: Path, output_usda: Path, exclude_yam
 
     joint_start_re = re.compile(r'^(\s*def\s+\w*Joint\s+"([^"]+)"\s*\()', re.MULTILINE)
     i = 0
+    processed = 0
     while i < len(lines):
         line = lines[i]
         m = joint_start_re.match(line)
@@ -258,15 +336,16 @@ def _edit_usda(input_usda: Path, input_sdf: Path, output_usda: Path, exclude_yam
             continue
 
         joint_name = m.group(2)
+        processed += 1
+
         # Collect until matching braces for this prim
-        block = [line]
+        block_lines = [line]
         i += 1
 
-        # Copy lines until we see first '{'
         brace_depth = 0
         seen_open = False
         while i < len(lines):
-            block.append(lines[i])
+            block_lines.append(lines[i])
             if "{" in lines[i]:
                 brace_depth += lines[i].count("{")
                 seen_open = True
@@ -276,12 +355,13 @@ def _edit_usda(input_usda: Path, input_sdf: Path, output_usda: Path, exclude_yam
             if seen_open and brace_depth <= 0:
                 break
 
-        block_text = "".join(block)
+        block_text = "".join(block_lines)
         block_text = _process_joint_block(block_text, joint_name, sdf_joints, exclude_patterns)
         out_lines.append(block_text)
 
+    print(f"[INFO] Processed joint prims: {processed}")
     output_usda.write_text("".join(out_lines), encoding="utf-8")
-
+    print(f"[INFO] Wrote output: {output_usda}")
 
 def main() -> None:
     ap = argparse.ArgumentParser()
