@@ -166,20 +166,55 @@ def _process_joint_block(block: str, joint_name: str, sdf_joints: dict[str, SdfJ
             # insert right after opening '{'
             block = re.sub(r'\{\n', '{\n        bool physics:excludeFromArticulation = 1\n', block, count=1)
 
-    # ③/④ detect drive maxForce
-    max_force = None
-    m = re.search(rf'\bphysics:drive:{re.escape(axis)}:maxForce\s*=\s*([0-9eE+\-.]+)', block)
-    if m:
+    def _find_max_force(text: str, drive_axis: str) -> float | None:
+        m2 = re.search(rf'\bphysics:drive:{re.escape(drive_axis)}:maxForce\s*=\s*([0-9eE+\-.]+)', text)
+        if not m2:
+            return None
         try:
-            max_force = float(m.group(1))
+            return float(m2.group(1))
         except ValueError:
-            max_force = None
+            return None
 
-    # ④ apply velocity from SDF for actuated joints
-    if  max_force is not None and max_force > 1e-6 and info and info.velocity_rad_s and info.velocity_rad_s > 0:
+    def _remove_drive_axis(text: str, drive_axis: str) -> str:
+        # Remove drive attributes for this axis (tolerate type prefixes like "uniform float", "float", etc.)
+        text = re.sub(
+            rf'^\s*(?:\w+\s+)*physics:drive:{re.escape(drive_axis)}:[^\n]*\n',
+            '',
+            text,
+            flags=re.MULTILINE,
+        )
+        # Remove PhysX drive envelope attributes for this axis as well
+        text = re.sub(
+            rf'^\s*(?:\w+\s+)*physxDrivePerformanceEnvelope:{re.escape(drive_axis)}:[^\n]*\n',
+            '',
+            text,
+            flags=re.MULTILINE,
+        )
+
+        # Remove applied API token(s)
+        text = re.sub(rf'"PhysicsDriveAPI:{re.escape(drive_axis)}"\s*,?\s*', '', text)
+        text = re.sub(rf'"PhysxDrivePerformanceEnvelopeAPI:{re.escape(drive_axis)}"\s*,?\s*', '', text)
+
+        # Clean up apiSchemas list formatting
+        text = re.sub(r'apiSchemas\s*=\s*\[\s*,', 'apiSchemas = [', text)
+        text = re.sub(r',\s*\]', ']', text)
+        text = re.sub(r'\[\s*\]', '[]', text)
+        return text
+
+    # ③/④ detect drive maxForce per axis and gate behavior
+    max_force_axis = _find_max_force(block, axis)
+
+    # Remove drive for any axis that exists and is effectively disabled
+    for drive_axis in ("angular", "linear"):
+        mf = _find_max_force(block, drive_axis)
+        if mf is not None and mf <= 1e-6:
+            block = _remove_drive_axis(block, drive_axis)
+
+    # ④ apply velocity from SDF only for actuated joints (Max Force > 1e-6)
+    if max_force_axis is not None and max_force_axis > 1e-6 and info and info.velocity_rad_s and info.velocity_rad_s > 0:
         vel_deg = info.velocity_rad_s * 180.0 / math.pi
         vel_deg_str = f"{vel_deg:.6f}".rstrip("0").rstrip(".")
-        # Ensure PhysxJointAxisAPI applied and set maxJointVelocity
+        # Ensure PhysxJointAxisAPI applied and set maxJointVelocity (Maximum Joint Velocity)
         if "PhysxJointAxisAPI:%s" % axis not in block:
             block = re.sub(r'(prepend\s+apiSchemas\s*=\s*\[)([^\]]*)\]', lambda m2: m2.group(1) + m2.group(2).rstrip() + (", " if m2.group(2).strip() else "") + f'"PhysxJointAxisAPI:{axis}"]', block, flags=re.DOTALL, count=1)
         if re.search(rf'physxJointAxis:{re.escape(axis)}:maxJointVelocity\b', block):
@@ -187,7 +222,7 @@ def _process_joint_block(block: str, joint_name: str, sdf_joints: dict[str, SdfJ
         else:
             block = re.sub(r'\{\n', '{\n        float physxJointAxis:%s:maxJointVelocity = %s\n' % (axis, vel_deg_str), block, count=1)
 
-        # Ensure PhysxDrivePerformanceEnvelopeAPI applied and set maxActuatorVelocity
+        # Ensure PhysxDrivePerformanceEnvelopeAPI applied and set maxActuatorVelocity (Max Actuator Velocity)
         if "PhysxDrivePerformanceEnvelopeAPI:%s" % axis not in block:
             block = re.sub(r'(prepend\s+apiSchemas\s*=\s*\[)([^\]]*)\]', lambda m2: m2.group(1) + m2.group(2).rstrip() + (", " if m2.group(2).strip() else "") + f'"PhysxDrivePerformanceEnvelopeAPI:{axis}"]', block, flags=re.DOTALL, count=1)
         if re.search(rf'physxDrivePerformanceEnvelope:{re.escape(axis)}:maxActuatorVelocity\b', block):
@@ -195,19 +230,6 @@ def _process_joint_block(block: str, joint_name: str, sdf_joints: dict[str, SdfJ
         else:
             block = re.sub(r'\{\n', '{\n        float physxDrivePerformanceEnvelope:%s:maxActuatorVelocity = %s\n' % (axis, vel_deg_str), block, count=1)
 
-    if max_force is None or max_force <= 1e-6:
-        # Remove drive attributes for this axis
-        block = re.sub(rf'^\s*\w+\s+physics:drive:{re.escape(axis)}:[^\n]*\n', '', block, flags=re.MULTILINE)
-        # Remove applied DriveAPI token(s)
-        block = re.sub(rf'"PhysicsDriveAPI:{re.escape(axis)}"\s*,?\s*', '', block)
-        block = re.sub(r'"PhysicsDriveAPI:%s"' % re.escape(axis), '', block)
-        # If we also added PhysxDrivePerformanceEnvelopeAPI for this axis earlier, remove it too
-        block = re.sub(rf'"PhysxDrivePerformanceEnvelopeAPI:{re.escape(axis)}"\s*,?\s*', '', block)
-        # Clean up empty apiSchemas list formatting
-        block = re.sub(r'apiSchemas\s*=\s*\[\s*,', 'apiSchemas = [', block)
-        block = re.sub(r'\[\s*\]', '[]', block)
-        return block
-    
     return block
 
 
