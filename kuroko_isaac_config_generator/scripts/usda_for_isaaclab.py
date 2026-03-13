@@ -167,6 +167,42 @@ def _replace_root_name(usda: str) -> str:
 
     return usda
 
+
+def _ensure_physics_scene_block(usda: str) -> str:
+    # Insert a PhysicsScene prim under the Robot Xform if it does not exist.
+    if re.search(r'^\s*def\s+PhysicsScene\s+\"PhysicsScene\"\b', usda, flags=re.MULTILINE):
+        return usda
+
+    m = re.search(r'^\s*def\s+Xform\s+\"Robot\"\b[^{]*\{', usda, flags=re.MULTILINE | re.DOTALL)
+    if not m:
+        print("[WARN] Robot Xform block not found; cannot insert PhysicsScene", file=sys.stderr)
+        return usda
+
+    line_start = usda.rfind("\n", 0, m.start()) + 1
+    indent = re.match(r"(\s*)", usda[line_start:m.start()]).group(1)
+    inner_indent = indent + "    "
+
+    scene = (
+        "\n"
+        f"{inner_indent}def PhysicsScene \"PhysicsScene\" (\n"
+        f"{inner_indent}    prepend apiSchemas = [\"PhysxSceneAPI\"]\n"
+        f"{inner_indent})\n"
+        f"{inner_indent}{{\n"
+        f"{inner_indent}    uniform token physxScene:broadphaseType = \"MBP\"\n"
+        f"{inner_indent}    bool physxScene:enableGPUDynamics = 0\n"
+        f"{inner_indent}    uniform uint physxScene:maxPositionIterationCount = 16\n"
+        f"{inner_indent}    uniform uint physxScene:maxVelocityIterationCount = 1\n"
+        f"{inner_indent}    uniform uint physxScene:minPositionIterationCount = 16\n"
+        f"{inner_indent}    uniform uint physxScene:minVelocityIterationCount = 1\n"
+        f"{inner_indent}    uniform token physxScene:solverType = \"PGS\"\n"
+        f"{inner_indent}    uint physxScene:timeStepsPerSecond = 500\n"
+        f"{inner_indent}}}\n"
+    )
+
+    usda = usda[: m.end()] + scene + usda[m.end() :]
+    print("[INFO] Inserted PhysicsScene under Robot")
+    return usda
+
 def _process_joint_block(
     block: str,
     joint_name: str,
@@ -315,6 +351,7 @@ def _edit_usda(input_usda: Path, input_sdf: Path, output_usda: Path, exclude_yam
     # ⑤ stage metadata + rename root
     usda = _ensure_header_block(usda)
     usda = _replace_root_name(usda)
+    usda = _ensure_physics_scene_block(usda)
 
     sdf_joints = _parse_sdf_joints(input_sdf)
     print(f"[INFO] Parsed SDF joints: {len(sdf_joints)}")
